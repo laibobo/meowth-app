@@ -1,0 +1,45 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/keep-accounts/index",
+    "pages/keep-accounts/edit",
+    "pages/my/account",
+    "pages/my/index",
+    "pages/keep-accounts/detail",
+    "pages/icon-manage/index",
+    "pages/category-config/index"
+  ],
+  "subPackages": [],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "喵喵",
+    "navigationBarBackgroundColor": "#66f9cf",
+    "backgroundColor": "#66f9cf"
+  },
+  "tabBar": {
+    "color": "#565656",
+    "selectedColor": "#66f9cf",
+    "backgroundColor": "#FFFFFF",
+    "list": [
+      {
+        "pagePath": "pages/keep-accounts/detail",
+        "iconPath": "static/image/tabBar/detail.png",
+        "selectedIconPath": "static/image/tabBar/detail-act.png",
+        "text": "明细"
+      },
+      {
+        "pagePath": "pages/keep-accounts/index",
+        "iconPath": "static/image/tabBar/keepAccounts.png",
+        "selectedIconPath": "static/image/tabBar/keepAccounts-act.png",
+        "text": "记账"
+      },
+      {
+        "pagePath": "pages/my/index",
+        "iconPath": "static/image/tabBar/myAccount.png",
+        "selectedIconPath": "static/image/tabBar/myAccount-act.png",
+        "text": "我的"
+      }
+    ]
+  },
+  "usingComponents": {}
+}

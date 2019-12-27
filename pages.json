@@ -1,0 +1,89 @@
+{
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "用户授权"
+			}
+		},
+		{
+			"path": "pages/keep-accounts/index",
+			"style": {
+				"navigationBarTitleText": "记账",
+				"app-plus": {
+					"scrollIndicator": "none"
+				}
+			}
+		},
+		{
+			"path": "pages/keep-accounts/edit",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+		{
+			"path": "pages/my/account",
+			"style": {
+				"navigationBarTitleText": "我的账户"
+			}
+		},
+		{
+			"path": "pages/my/index",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+		{
+			"path": "pages/keep-accounts/detail",
+			"style": {
+				"navigationBarTitleText": "明细"
+			}
+		},
+		{
+			"path": "pages/icon-manage/index",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+		{
+			"path": "pages/category-config/index",
+			"style": {
+				"navigationBarTitleText": "类别设置"
+			}
+		}
+    ],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "喵喵",
+		"navigationBarBackgroundColor": "#66f9cf",
+		"backgroundColor": "#66f9cf",
+		"mp-alipay" : {
+		    "titleBarColor" : "#FFFFFF"
+		}
+	},
+	"tabBar": {
+		"color": "#565656",
+        "selectedColor": "#66f9cf",
+		"backgroundColor": "#FFFFFF",
+		"list": [
+			{
+				"pagePath": "pages/keep-accounts/detail",
+				"iconPath": "static/image/tabBar/detail.png",
+				"selectedIconPath": "static/image/tabBar/detail-act.png",
+				"text": "明细" 
+			},
+			{
+				"pagePath": "pages/keep-accounts/index",
+				"iconPath": "static/image/tabBar/keepAccounts.png",
+				"selectedIconPath": "static/image/tabBar/keepAccounts-act.png",
+				"text": "记账" 
+			},
+			{
+				"pagePath": "pages/my/index",
+				"iconPath": "static/image/tabBar/myAccount.png",
+				"selectedIconPath": "static/image/tabBar/myAccount-act.png",
+				"text": "我的"
+			}
+		]
+	}
+}

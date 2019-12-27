@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "类别设置",
+  "usingComponents": {
+    "uni-segmented-control": "/components/uni-segmented-control/uni-segmented-control",
+    "uni-swipe-action": "/components/uni-swipe-action/uni-swipe-action"
+  }
+}
