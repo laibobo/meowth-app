@@ -53,7 +53,8 @@
 					<view @click="handleUfuncCode('-')">-</view>
 					<view @click="handleUfuncCode('x')">x</view>
 					<view @click="handleUfuncCode('÷')">÷</view>
-					<view class="submit-btn" @click="handleKeyboardSubmit">完成</view>
+					<view class="submit-btn" v-if="!isMoneySum" @click="handleKeyboardSubmit">完成</view>
+					<view class="submit-btn" v-else @click="handleMoneySum">=</view>
 				</view>
 			</view>
 			<view class="icon iconfont close" @click="handleClose">&#xe6e6;</view>
@@ -86,12 +87,14 @@ export default {
 			currentCategoryType: 0,
 			dataList: [],
 			activeCategoryId: '',
+			isMoneySum:false,
 			isRemarkFocus: false,
 			isOpenKeyboard: false,
 			isOpenRemarkPanel: false,
 			fontNumber: 0,
 			maxRemarkLength: 30,
-			checkedUfunc: ''
+			checkedUfunc: '',
+			ufuncArr:['÷','x','+','-']
 		};
 	},
 	onLoad() {
@@ -209,6 +212,7 @@ export default {
 		},
 		handleConfirmRemark() {
 			this.handlePanel('.keep-panel');
+			this.remark = this.newRemark
 		},
 		handleInputRemark(e) {
 			const remark = e.detail.value;
@@ -216,10 +220,11 @@ export default {
 				return;
 			}
 			this.fontNumber = remark.length;
+			this.newRemark = remark
 			this.remark = remark;
 		},
 		handleDeleteKeyCode() {
-			const moneyStr = this.money;
+			const moneyStr = this.money.toString();
 			if (moneyStr === '') {
 				return;
 			}
@@ -228,19 +233,21 @@ export default {
 		},
 		handleKeyCode(e) {
 			const code = e.currentTarget.dataset.code;
-			const ufuncArr =['÷','x','+','-']
+			const ufuncArr = this.ufuncArr
 			const moneyRule = /^[0-9]+(\.?)([0-9]{1,2})?$/;
 			const isNumberRule = /[0-9]\d*/;
-			const moneyStr = this.money;
+			const moneyStr = this.money.toString();
 			const moneyStrLength = moneyStr.length - 1;
 
 			if (moneyStr !== '' && !isNumberRule.test(code) && moneyStr.indexOf('.') === moneyStrLength) {
 				return;
 			}
 			const tepMoney = moneyStr + code;
+			this.isMoneySum = /\d+([+x÷-]\d+)+/.test(tepMoney)
+			
 			const lastChar = moneyStr.substring(moneyStrLength);
-
-			if ((lastChar === ufuncArr[0] || lastChar === ufuncArr[1] || lastChar === ufuncArr[2] || lastChar === ufuncArr[3])) {
+			
+			if(/[+x÷-]/.test(lastChar)){
 				if(code === '.'){
 					return;
 				}				
@@ -249,7 +256,6 @@ export default {
 				if ((isStartZero && code === '0') || (isStartZero && isNumberRule.test(code))) {
 					return;
 				}
-				
 				
 				let isNoPass = true
 				let isIncludeUfunc = false
@@ -272,34 +278,18 @@ export default {
 			this.money = tepMoney;
 		},
 		handleUfuncCode(code) {
-			const moneyStr = this.money;
-			const ufuncArr = ['+', '-', 'x', '÷'];
-			const lastChar = moneyStr.substring(moneyStr.length - 1);
-			if (ufuncArr.includes(lastChar) || lastChar === '.') {
+			const moneyStr = this.money.toString();
+			const lastChar = moneyStr.substring(moneyStr.length - 1);			
+			if(/[+x÷-]/.test(lastChar) || lastChar === '.'){
 				return;
 			}
+			const ufuncArr = this.ufuncArr
 			let isMoneyCount = false
 			for(let i = 0;i < ufuncArr.length;i++){
 				const ufunc = ufuncArr[i]
-				if(lastChar !== ufunc && moneyStr.indexOf(ufunc) > -1 && ufuncArr.indexOf(code) > -1){
-					const splitArr = moneyStr.split(ufunc)
+				if(lastChar !== ufunc && moneyStr.indexOf(ufunc) > -1 && ufuncArr.indexOf(code) > -1){					
 					isMoneyCount = true
-					let moneyCount = 0
-					switch(ufunc){
-						case '+':
-							moneyCount = Number(splitArr[0]) + Number(splitArr[1])
-						break;
-						case '-':
-							moneyCount = Number(splitArr[0]) - Number(splitArr[1])
-						break;
-						case 'x':
-							moneyCount = Number(splitArr[0]) * Number(splitArr[1])
-						break;
-						case '÷':
-							moneyCount = Number(splitArr[0]) / Number(splitArr[1])
-						break;
-					}
-					this.money = Math.floor(moneyCount * 100) / 100 + code
+					this._sumMoney(moneyStr,ufunc)
 					break
 				}
 			}
@@ -307,6 +297,21 @@ export default {
 				return
 			}
 			this.money = moneyStr + code;
+		},
+		/**
+		 * =按钮操作 金额合计
+		 * */
+		handleMoneySum(){
+			const ufuncArr = this.ufuncArr
+			const moneyStr = this.money.toString()
+			for(let i = 0;i < ufuncArr.length;i++){
+				const ufunc = ufuncArr[i]
+				if(moneyStr.indexOf(ufunc) > -1){					
+					this._sumMoney(moneyStr,ufunc)
+					break
+				}
+			}
+			this.isMoneySum = false
 		},
 		/**
 		 * 操作账单金额
@@ -335,7 +340,28 @@ export default {
 			const dateArr = date.split('-');
 			this.keepDate = date;
 			this.showKeepDate = `${dateArr[0]}年${dateArr[1]}月${dateArr[2]}日`;
-		}
+		},
+		_sumMoney(moneyStr,ufunc){
+			const splitArr = moneyStr.split(ufunc)
+			let moneyCount = 0
+			const number1 = Number(splitArr[0])
+			const number2 = Number(splitArr[1])
+			switch(ufunc){
+				case '+':
+					moneyCount = number1 + number2
+				break;
+				case '-':
+					moneyCount = number1 - number2
+				break;
+				case 'x':
+					moneyCount = number1 * number2
+				break;
+				case '÷':
+					moneyCount = number1 / number2
+				break;
+			}
+			this.money = Math.floor(moneyCount * 100) / 100
+		},
 	}
 };
 </script>
@@ -480,6 +506,7 @@ export default {
 			font-size: 28rpx;
 			display: block;
 			max-width: 605rpx;
+			margin-right: 5rpx;
 			box-sizing: border-box;
 			overflow: hidden;
 			white-space: nowrap;
