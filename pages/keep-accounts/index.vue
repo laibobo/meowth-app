@@ -72,6 +72,7 @@
 </template>
 
 <script>
+const app = getApp()
 import RemarkPanel from './remark-panel.vue'
 export default {
 	components:{
@@ -97,16 +98,12 @@ export default {
 		};
 	},
 	onLoad() {
-		this.getCategoryList();
-		const nowDate = new Date();
-		const year = nowDate.getFullYear();
-		const month = nowDate.getMonth();
-		const day = nowDate.getDate();
-		this.keepDate = `${year}-${month}-${day}`;
-		this.showKeepDate = `${year}年${month}月${day}日`;
+		this.setKeepDate()
+		this._db = app.globalData.wxDB
 	},
 	onShow() {
 		const _this = this;
+		this.getCategoryList();
 		//获取tabs组件的高度，由此来计算scroll-view组件的高度
 		uni.createSelectorQuery()
 		.select('.tabs')
@@ -309,16 +306,50 @@ export default {
 		 * 自定义键盘-关闭
 		 * */
 		handleClose() {
+			this.setKeepDate()
 			this.isOpenKeyboard = false;
 			this.activeCategoryId = '';
+			this.money = ''
+			this.remark = ''
 			this.scrollHeight = this.windowHeight;
 		},
 		/**
 		 * 自定义键盘-完成操作
 		 * */
 		handleKeyboardSubmit() {
-			this.isOpenKeyboard = false;
-			this.scrollHeight = this.windowHeight;
+			const money = this.money.toString().replace(/[\.+x÷-]$/,'')
+			if(money === '' || Number(money) === 0){
+				return
+			}
+			const keepDate = this.keepDate
+			const keepWeek = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][new Date(keepDate).getDay()]
+			const dateArr = keepDate.split('-')
+			const categoryId = this.activeCategoryId
+			const categoryType = this.currentCategoryType
+			const remark = this.remark
+			const keepMoney = parseFloat(money)
+			this._db.collection('AccountsRecord').add({
+				data:{
+					keepMoney,
+					remark,
+					categoryId,
+					categoryType,
+					keepWeek,
+					keepDate,
+					keepYear:dateArr[0],
+					keepMonth:dateArr[1],
+					keepDay:dateArr[2],
+					createDate:new Date()
+				}
+			}).then(res=>{
+				if(res.errMsg == 'collection.add:ok'){
+					uni.showToast({
+						title:'添加成功',
+						icon:'success'
+					})
+					this.handleClose()
+				}
+			}).catch(console.error)
 		},
 		/**
 		 * 选择账单日期
@@ -328,6 +359,14 @@ export default {
 			const dateArr = date.split('-');
 			this.keepDate = date;
 			this.showKeepDate = `${dateArr[0]}年${dateArr[1]}月${dateArr[2]}日`;
+		},
+		setKeepDate(){
+			const nowDate = new Date();
+			const year = nowDate.getFullYear();
+			const month = nowDate.getMonth() + 1;
+			const day = nowDate.getDate();
+			this.keepDate = `${year}-${month}-${day}`;
+			this.showKeepDate = `${year}年${month}月${day}日`;
 		},
 		_sumMoney(moneyStr,ufunc,code=''){
 			const splitArr = moneyStr.split(ufunc)
