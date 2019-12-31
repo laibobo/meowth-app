@@ -40,7 +40,14 @@ export default {
 	},
 	methods: {
 		getCategoryList() {
-			const type = this.currentCategoryType;
+			const type =Number(this.currentCategoryType);
+			
+			// this._db.collection('Category').where({
+			// 	type
+			// }).limit(50).get().then(result=>{
+			// 	console.log('result:',result)
+			// 	this.dataList = result.data
+			// }).catch(console.error)
 			wx.cloud
 				.callFunction({
 					name: 'getCategoryList',
@@ -48,8 +55,7 @@ export default {
 						type
 					}
 				})
-				.then(({ result }) => {					
-					console.log(result)
+				.then(({ result }) => {
 					this.dataList = result.data
 				})
 				.catch(console.error);

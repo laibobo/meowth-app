@@ -132,7 +132,7 @@ export default {
 				}
 			}).then(res=>{
 				uni.navigateBack({
-					delta:2
+					delta:1
 				})
 			})
 		}

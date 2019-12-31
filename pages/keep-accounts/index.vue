@@ -306,10 +306,6 @@ export default {
 			this.isMoneySum = false
 		},
 		/**
-		 * 操作账单金额
-		 * */
-		handleMoney() {},
-		/**
 		 * 自定义键盘-关闭
 		 * */
 		handleClose() {
