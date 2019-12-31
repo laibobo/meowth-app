@@ -4,6 +4,7 @@
 			<view :class="['tabs-item', { active: currentCategoryType === 0 }]" @click="handleTabsItem(0)">支出</view>
 			<view :class="['tabs-item', { active: currentCategoryType === 1 }]" @click="handleTabsItem(1)">收入</view>
 		</view>
+		<!-- 类别列表 -->
 		<scroll-view class="category-scroll" scroll-y="true" :style="getScrollHeight">
 			<view class="tabs-container">
 				<view v-for="(item, index) in dataList" :key="index" :class="['category', { active: item._id === activeCategoryId }]" @click="handleKeep(item._id)">
@@ -16,6 +17,7 @@
 				</view>
 			</view>
 		</scroll-view>
+		<!-- 记账面板 -->
 		<view class="keep-panel" v-if="isOpenKeyboard">
 			<view class="form">
 				<view class="flex">
@@ -59,22 +61,22 @@
 			</view>
 			<view class="icon iconfont close" @click="handleClose">&#xe6e6;</view>
 		</view>
-		<view class="remark-panel" v-if="isOpenRemarkPanel">
-			<view class="header">
-				<view class="icon iconfont cancel-btn" @click="handleCancelRemark">&#xe6e7;</view>
-				<text>请添加备注</text>
-				<text class="confirm-btn" @click="handleConfirmRemark">确定</text>
-			</view>
-			<view class="input-col">
-				<input placeholder="请输入备注内容" :value="remark" cursor-spacing="50" maxlength="30" :focus="isRemarkFocus" @input="handleInputRemark" />
-			</view>
-			<view class="hint">{{ fontNumber }}/{{ maxRemarkLength }}</view>
-		</view>
+		<!-- 备注面板 -->
+		<remark-panel
+			class="remarkp"
+			:visible.sync="isOpenRemarkPanel"
+			:content="remark"
+			@confirm="handleConfirmRemark"
+			@close="handleCancelRemark" />
 	</view>
 </template>
 
 <script>
+import RemarkPanel from './remark-panel.vue'
 export default {
+	components:{
+		RemarkPanel
+	},
 	data() {
 		return {
 			tabsHeight: 0,
@@ -88,11 +90,8 @@ export default {
 			dataList: [],
 			activeCategoryId: '',
 			isMoneySum:false,
-			isRemarkFocus: false,
 			isOpenKeyboard: false,
 			isOpenRemarkPanel: false,
-			fontNumber: 0,
-			maxRemarkLength: 30,
 			checkedUfunc: '',
 			ufuncArr:['÷','x','+','-']
 		};
@@ -110,18 +109,18 @@ export default {
 		const _this = this;
 		//获取tabs组件的高度，由此来计算scroll-view组件的高度
 		uni.createSelectorQuery()
-			.select('.tabs')
-			.boundingClientRect(e => {
-				_this.tabsHeight = e.height;
-				uni.getSystemInfo({
-					success: function(res) {
-						const scrollHeight = res.windowHeight - _this.tabsHeight;
-						_this.scrollHeight = scrollHeight;
-						_this.windowHeight = scrollHeight;
-					}
-				});
-			})
-			.exec();
+		.select('.tabs')
+		.boundingClientRect(e => {
+			_this.tabsHeight = e.height;
+			uni.getSystemInfo({
+				success: function(res) {
+					const scrollHeight = res.windowHeight - _this.tabsHeight;
+					_this.scrollHeight = scrollHeight;
+					_this.windowHeight = scrollHeight;
+				}
+			});
+		})
+		.exec();
 	},
 	computed: {
 		getScrollHeight() {
@@ -172,56 +171,49 @@ export default {
 		 * */
 		handleKeep(id) {
 			this.activeCategoryId = id;
-			this.handlePanel('.keep-panel');
+			this.isOpenKeyboard = true
+			this.isOpenRemarkPanel = false
+			this.calculateScrollHeight();
 		},
-		handlePanel(panelClass) {
-			let isOpt = false;
-			if (panelClass === '.keep-panel' && this.isOpenKeyboard === false) {
-				this.isOpenKeyboard = true;
-				this.isOpenRemarkPanel = false;
-				isOpt = true;
-			} else if (panelClass === '.remark-panel' && this.isOpenRemarkPanel === false) {
-				this.isOpenRemarkPanel = true;
-				this.isOpenKeyboard = false;
-				isOpt = true;
+		//计算列表容器高度
+		calculateScrollHeight() {
+			let panelClass,isOpt = false
+			
+			if(this.isOpenKeyboard){
+				panelClass = '.keep-panel'
 			}
-			if (isOpt) {
-				const _this = this;
-				const windowHeight = this.windowHeight;
+			if(this.isOpenRemarkPanel){
+				panelClass = '.remarkp'
+			}
+			
+			if (panelClass!=undefined) {
 				setTimeout(_ => {
 					uni.createSelectorQuery()
 						.select(panelClass)
 						.boundingClientRect(e => {
-							_this.scrollHeight = windowHeight - e.height;
+							this.scrollHeight = this.windowHeight - e.height;
 						})
 						.exec();
 				});
 			}
 		},
 		handleOpenRemarkPanel() {
-			this.handlePanel('.remark-panel');
-			this.isRemarkFocus = true;
+			this.isOpenRemarkPanel = true
+			this.isOpenKeyboard = false
+			this.calculateScrollHeight()
 		},
 		handleCancelRemark() {
-			this.handlePanel('.keep-panel');
+			this.isOpenKeyboard = true
+			this.calculateScrollHeight()
 			if (this.optRemarkBtnText === '修改') {
 				return;
 			}
 			this.remark = '';
-			this.fontNumber = 0;
 		},
-		handleConfirmRemark() {
-			this.handlePanel('.keep-panel');
-			this.remark = this.newRemark
-		},
-		handleInputRemark(e) {
-			const remark = e.detail.value;
-			if (this.maxRemarkLength < remark.length) {
-				return;
-			}
-			this.fontNumber = remark.length;
-			this.newRemark = remark
-			this.remark = remark;
+		handleConfirmRemark(value) {
+			this.isOpenKeyboard = true
+			this.calculateScrollHeight()
+			this.remark = value
 		},
 		handleDeleteKeyCode() {
 			const moneyStr = this.money.toString();
@@ -289,7 +281,7 @@ export default {
 				const ufunc = ufuncArr[i]
 				if(lastChar !== ufunc && moneyStr.indexOf(ufunc) > -1 && ufuncArr.indexOf(code) > -1){					
 					isMoneyCount = true
-					this._sumMoney(moneyStr,ufunc)
+					this._sumMoney(moneyStr,ufunc,code)
 					break
 				}
 			}
@@ -341,7 +333,7 @@ export default {
 			this.keepDate = date;
 			this.showKeepDate = `${dateArr[0]}年${dateArr[1]}月${dateArr[2]}日`;
 		},
-		_sumMoney(moneyStr,ufunc){
+		_sumMoney(moneyStr,ufunc,code=''){
 			const splitArr = moneyStr.split(ufunc)
 			let moneyCount = 0
 			const number1 = Number(splitArr[0])
@@ -360,7 +352,7 @@ export default {
 					moneyCount = number1 / number2
 				break;
 			}
-			this.money = Math.floor(moneyCount * 100) / 100
+			this.money =`${Math.floor(moneyCount * 100) / 100}${code}`
 		},
 	}
 };
@@ -392,43 +384,6 @@ export default {
 	transform: scale(0.5, 0.5);
 	box-sizing: border-box;
 	animation: blink 1s linear infinite;
-}
-.remark-panel {
-	width: 750rpx;
-	height: auto;
-	padding: 20rpx 40rpx 150rpx;
-	box-sizing: border-box;
-	display: flex;
-	background: #fff;
-	border-radius: 20rpx;
-	flex-direction: column;
-	position: fixed;
-	left: 0;
-	bottom: 0;
-	border-top: 1px solid #eee;
-	.header {
-		display: flex;
-		justify-content: space-between;
-		font-size: 32rpx;
-		letter-spacing: 1rpx;
-		align-items: center;
-		.confirm-btn {
-			color: #4eb27b;
-		}
-	}
-	.input-col {
-		margin: 60rpx 0 0;
-		border-bottom: 1rpx solid #eeeeee;
-		padding-bottom: 25rpx;
-		color: #333333;
-		font-size: 32rpx;
-	}
-	.hint {
-		display: block;
-		font-size: 24rpx;
-		color: DBDBDB;
-		margin: 20rpx 0 0;
-	}
 }
 .keep-panel {
 	width: 750rpx;
