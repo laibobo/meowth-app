@@ -3,7 +3,12 @@
 		<view class="header">
 			<view class="search-col">
 				<label>{{ year }}年</label>
-				<picker class="searchdate-picker" mode="date" fields="month" :value="searchDate" @change="bindSearchDateChange">
+				<picker 
+					class="searchdate-picker" 
+					mode="date" 
+					fields="month" 
+					:value="searchDate" 
+					@change="bindSearchDateChange">
 					<view class="uni-input">
 						{{ month }}
 						<text class="fz10">月</text>
@@ -13,52 +18,29 @@
 			<view class="info">
 				<view>
 					<label>收入</label>
-					<view class="money">30.00</view>
+					<view class="money">{{incomeSum}}</view>
 				</view>
 				<view>
 					<label>支出</label>
-					<view class="money">2223.42</view>
+					<view class="money">{{expenditureSum}}</view>
 				</view>
 			</view>
 		</view>
 		<view class="list">
-			<view class="list-item">
+			<view class="list-item" v-for="(item,index) in keepLogs" :key="index">
 				<view class="summary">
-					<text class="date">11月23日 星期六</text>
+					<text class="date">{{item[0].keepMonth}}月{{item[0].keepDay}}日 {{item[0].keepWeek}}</text>
 					<view class="expenses">
-						<text>收入:9</text>
-						<text>支出:15</text>
+						<text>收入:{{getYearMoneySum(1,item)}}</text>
+						<text>支出:{{getYearMoneySum(0,item)}}</text>
 					</view>
 				</view>
-				<view class="di-info">
+				<view class="di-info" v-for="(childItem,idx) in item" :key="idx">
 					<view class="typeinfo">
 						<view class="icon-col"><view class="icon iconfont">&#xe662;</view></view>
-						<text class="explain">买秒买</text>
+						<text class="explain">{{childItem.remark}}</text>
 					</view>
-					<text class="money">9336</text>
-				</view>
-			</view>
-			<view class="list-item">
-				<view class="summary">
-					<text class="date">11月23日 星期六</text>
-					<view class="expenses">
-						<text>收入:9</text>
-						<text>支出:15</text>
-					</view>
-				</view>
-				<view class="di-info">
-					<view class="typeinfo">
-						<view class="icon-col"><view class="icon iconfont">&#xe662;</view></view>
-						<text class="explain">买秒买</text>
-					</view>
-					<text class="money">9336</text>
-				</view>
-				<view class="di-info">
-					<view class="typeinfo">
-						<view class="icon-col"><view class="icon iconfont">&#xe662;</view></view>
-						<text class="explain">买秒买</text>
-					</view>
-					<text class="money">9336</text>
+					<text class="money">{{childItem.categoryType===1?'+':'-'}}{{childItem.keepMoney}}</text>
 				</view>
 			</view>
 		</view>
@@ -66,12 +48,16 @@
 </template>
 
 <script>
+const app = getApp()
 export default {
 	data() {
 		return {
 			searchDate: '',
 			year: '',
-			month: ''
+			month: '',
+			keepLogs:{},
+			incomeSum:0,
+			expenditureSum:0
 		};
 	},
 	onLoad() {
@@ -81,8 +67,38 @@ export default {
 		this.year = year;
 		this.month = month;
 		this.searchDate = `${year}-${month}`;
+		this._db = app.globalData.wxDB
+	},
+	onShow(){
+		this.getNowYearMonthAccountLog()
 	},
 	methods: {
+		getNowYearMonthAccountLog(){
+			this._db.collection('AccountsRecord').where({
+				_openid:app.globalData.openid,
+				keepYear:this.year,
+				keepMonth:this.month
+			}).get().then(res=>{ 
+				this.keepLogs = this._dataGroup(res.data)
+				this.incomeSum = this.getYearMoneySum(1,res.data)
+				this.expenditureSum = this.getYearMoneySum(0,res.data)
+			})
+		},
+		getYearMoneySum(type,list=[]){
+			let result = list.filter(o=>o.categoryType === type).map(p=>p.keepMoney)
+			if(result.length > 0){
+				return result.reduce((a,b)=>a+b)
+			}
+			return 0
+		},
+		_dataGroup(data){
+			let keyContainer = {}
+			data.forEach(element=>{
+				keyContainer[element.keepDay] = keyContainer[element.keepDay] || []
+				keyContainer[element.keepDay].push(element)
+			})
+			return keyContainer
+		},
 		bindSearchDateChange(e) {
 			const value = e.target.value;
 			const dateArr = value.split('-');

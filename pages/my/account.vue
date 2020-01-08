@@ -48,7 +48,7 @@
 				uni.chooseImage({
 					count:1,
 					success(res) {
-						_this.photo=res.tempFilePaths[0]
+						//_this.photo=res.tempFilePaths[0]
 					}					
 				})
 			},
@@ -74,9 +74,9 @@
 			&:before{
 				content: '';
 				position: absolute;
-				left: 0;
+				left: 25rpx;
 				bottom: -1rpx;
-				width: 1500rpx;
+				width: 1400rpx;
 				border-bottom: 1px solid #DCDCDC;
 				transform-origin: 0 0;
 				transform: scale(0.5, 0.5);

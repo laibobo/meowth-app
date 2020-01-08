@@ -7,7 +7,7 @@
 		<!-- 类别列表 -->
 		<scroll-view class="category-scroll" scroll-y="true" :style="getScrollHeight">
 			<view class="tabs-container">
-				<view v-for="(item, index) in dataList" :key="index" :class="['category', { active: item._id === activeCategoryId }]" @click="handleKeep(item._id)">
+				<view v-for="(item, index) in dataList" :key="index" :class="['category', { active: item._id === activeCategoryId }]" @click="handleKeep(item._id,item.name)">
 					<view class="icon-col"><view class="icon iconfont" v-html="item.icon"></view></view>
 					<text class="explain">{{ item.name }}</text>
 				</view>
@@ -90,6 +90,7 @@ export default {
 			currentCategoryType: 0,
 			dataList: [],
 			activeCategoryId: '',
+			activeCategoryName:'',
 			isMoneySum:false,
 			isOpenKeyboard: false,
 			isOpenRemarkPanel: false,
@@ -166,8 +167,9 @@ export default {
 		/**
 		 * 点击类目
 		 * */
-		handleKeep(id) {
+		handleKeep(id,name) {
 			this.activeCategoryId = id;
+			this.activeCategoryName = name
 			this.isOpenKeyboard = true
 			this.isOpenRemarkPanel = false
 			this.calculateScrollHeight();
@@ -309,6 +311,7 @@ export default {
 			this.setKeepDate()
 			this.isOpenKeyboard = false;
 			this.activeCategoryId = '';
+			this.activeCategoryName = ''
 			this.money = ''
 			this.remark = ''
 			this.scrollHeight = this.windowHeight;
@@ -326,7 +329,7 @@ export default {
 			const dateArr = keepDate.split('-')
 			const categoryId = this.activeCategoryId
 			const categoryType = this.currentCategoryType
-			const remark = this.remark
+			const remark = this.activeCategoryName + this.remark
 			const keepMoney = parseFloat(money)
 			this._db.collection('AccountsRecord').add({
 				data:{
@@ -335,10 +338,10 @@ export default {
 					categoryId,
 					categoryType,
 					keepWeek,
-					keepDate,
-					keepYear:dateArr[0],
-					keepMonth:dateArr[1],
-					keepDay:dateArr[2],
+					keepDate:new Date(`${keepDate} 00:00:00`),
+					keepYear:Number(dateArr[0]),
+					keepMonth:Number(dateArr[1]),
+					keepDay:Number(dateArr[2]),
 					createDate:new Date()
 				}
 			}).then(res=>{
@@ -363,8 +366,14 @@ export default {
 		setKeepDate(){
 			const nowDate = new Date();
 			const year = nowDate.getFullYear();
-			const month = nowDate.getMonth() + 1;
-			const day = nowDate.getDate();
+			let month = nowDate.getMonth() + 1;
+			let day = nowDate.getDate();
+			if(month < 10){
+				month = '0'+month
+			}
+			if(day < 10){
+				day = '0'+day
+			}			
 			this.keepDate = `${year}-${month}-${day}`;
 			this.showKeepDate = `${year}年${month}月${day}日`;
 		},

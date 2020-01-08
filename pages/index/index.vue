@@ -23,6 +23,11 @@ export default {
 		app.globalData.wxDB =  wx.cloud.database({
 			env: 'develop-tm3ye'
 		}) 
+		wx.cloud.callFunction({
+			name:'login'
+		}).then(res=>{
+			app.globalData.openid = res.result.openid
+		})
 		console.log(wx.env)
 		let _this = this;
 		wx.getSetting({
@@ -68,6 +73,7 @@ export default {
 					_openid: res.openid
 				}).get().then(userRes=>{			
 					const userInfo = getApp().globalData.userInfo
+					console.log('app',getApp().globalData)
 					if(userRes.data.length === 0){
 						var date = new Date()
 						db.collection('User').add({
@@ -99,13 +105,13 @@ export default {
 							data.nickName = userInfo.NickName
 						}
 						
-						db.collection('User').doc(userRes.data._id).update({
-							data
-						}).then(updateRes=>{
-							console.log('更新用户信息成功！',updateRes)
-						}).catch(err=>{
-							console.error(err)
-						})
+						// db.collection('User').doc(userRes.data._id).update({
+						// 	data
+						// }).then(updateRes=>{
+						// 	console.log('更新用户信息成功！',updateRes)
+						// }).catch(err=>{
+						// 	console.error(err)
+						// })
 					}
 				})
 			}).catch(err=>{

@@ -2,14 +2,13 @@
 	const app = getApp()
 	export default {
 		onLaunch: function() {
-			console.log('App Launch')
 			wx.cloud.init({
 				env:'develop-tm3ye',
 				traceUser: true
-			})
+			})			
 		},
 		onShow: function() {
-			console.log('App Show')
+			
 		},
 		onHide: function() {
 			console.log('App Hide')
