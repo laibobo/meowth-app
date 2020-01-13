@@ -30,7 +30,7 @@
 	.iconfont {
 	  font-family:"iconfont" !important;
 	  font-size:48rpx;
-	  color: #3E3E3E;
+	  color: #F5B134;
 	  font-weight: 500;
 	  font-style:normal;
 	  -webkit-font-smoothing: antialiased;

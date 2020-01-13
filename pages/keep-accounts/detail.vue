@@ -24,6 +24,10 @@
 					<label>支出</label>
 					<view class="money">{{expenditureSum}}</view>
 				</view>
+				<view>
+					<label>结余</label>
+					<view class="money">{{incomeSum-expenditureSum}}</view>
+				</view>
 			</view>
 		</view>
 		<view class="list">
@@ -31,8 +35,8 @@
 				<view class="summary">
 					<text class="date">{{item[0].keepMonth}}月{{item[0].keepDay}}日 {{item[0].keepWeek}}</text>
 					<view class="expenses">
-						<text>收入:{{getYearMoneySum(1,item)}}</text>
-						<text>支出:{{getYearMoneySum(0,item)}}</text>
+						<text class="income">收入 {{getYearMoneySum(1,item)}}</text>
+						<text class="expend">支出 {{getYearMoneySum(0,item)}}</text>
 					</view>
 				</view>
 				<view class="di-info" v-for="(childItem,idx) in item" :key="idx">
@@ -40,7 +44,8 @@
 						<view class="icon-col"><view class="icon iconfont">&#xe662;</view></view>
 						<text class="explain">{{childItem.remark}}</text>
 					</view>
-					<text class="money">{{childItem.categoryType===1?'+':'-'}}{{childItem.keepMoney}}</text>
+					<text class="money income" v-if="childItem.categoryType===1">+{{childItem.keepMoney}}</text>
+					<text class="money expend" v-else>-{{childItem.keepMoney}}</text>
 				</view>
 			</view>
 		</view>
@@ -123,11 +128,11 @@ export default {
 		padding: 0 30rpx 10rpx;
 		display: flex;
 		background: $uni-theme-bg-color;
-		color: #423114;
+		color: $uni-theme-font-color;
 		font-size: 38rpx;
 		letter-spacing: 1rpx;
 		label {
-			color: #ab8b29;
+			color: $uni-theme-font-color;
 			font-size: 28rpx;
 			margin-bottom: 10rpx;
 			display: block;
@@ -147,7 +152,7 @@ export default {
 				display: block;
 				height: 40rpx;
 				width: 1rpx;
-				background: #000;
+				background: #fff;
 				position: absolute;
 				right: 38rpx;
 				bottom: 20rpx;
@@ -162,9 +167,9 @@ export default {
 						display: block;
 						width: 0;
 						height: 0;
-						border-width: 20rpx 12rpx;
+						border-width: 15rpx 12rpx;
 						border-style: solid;
-						border-color: #363533 transparent transparent transparent;
+						border-color: #fff transparent transparent transparent;
 						position: absolute;
 						top: 50%;
 						margin-top: -4rpx;
@@ -176,9 +181,18 @@ export default {
 	}
 
 	.list {
+		
 		.list-item {
 			width: 750rpx;
 			letter-spacing: 1rpx;
+			.income{
+				color: #FB5E33;
+				font-weight: 600;
+			}
+			.expend{
+				color: #30AC84;
+				font-weight: 600;
+			}
 			.summary {
 				display: flex;
 				justify-content: space-between;
@@ -199,6 +213,11 @@ export default {
 					-moz-box-sizing: border-box;
 					box-sizing: border-box;
 				}
+				.date{
+					color: #000;
+					font-size: 28rpx;
+				}
+				
 				.expenses {
 					text {
 						margin-left: 50rpx;
@@ -233,7 +252,7 @@ export default {
 						align-items: center;
 						.iconfont {
 							font-size: 38rpx;
-							color: $uni-theme-active-color;
+							color: $uni-theme-icon-color;
 						}
 					}
 				}

@@ -3,13 +3,11 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "用户授权"
 			}
 		},
 		{
 			"path": "pages/keep-accounts/index",
 			"style": {
-				"navigationBarTitleText": "记账",
 				"app-plus": {
 					"scrollIndicator": "none"
 				}
@@ -53,18 +51,18 @@
 		}
     ],
 	"globalStyle": {
-		"navigationBarTextStyle": "black",
+		"navigationBarTextStyle": "#fff",
 		"navigationBarTitleText": "喵喵",
-		"navigationBarBackgroundColor": "#66f9cf",
-		"backgroundColor": "#66f9cf",
+		"navigationBarBackgroundColor": "#E62B30",
+		"backgroundColor": "#E62B30",
 		"mp-alipay" : {
 		    "titleBarColor" : "#FFFFFF"
 		}
 	},
 	"tabBar": {
-		"color": "#565656",
-        "selectedColor": "#66f9cf",
-		"backgroundColor": "#FFFFFF",
+		"color": "#fff",
+        "selectedColor": "#F0F06E",
+		"backgroundColor": "#E62B30",
 		"list": [
 			{
 				"pagePath": "pages/keep-accounts/detail",

@@ -1,7 +1,7 @@
 <template>
 	<view class="category-col">
 		<view class="tabs">
-			<uni-segmented-control :current="currentCategoryType" :values="items" @clickItem="handleTabsItem" style-type="button" active-color="#343233"></uni-segmented-control>
+			<uni-segmented-control :current="currentCategoryType" :values="items" @clickItem="handleTabsItem" style-type="button" active-color="#E62B30" color="#fff"></uni-segmented-control>
 		</view>
 		<view class="category-scroll">
 			<view class="category-item" v-for="(categorys, index) in dataList" :key="index" :data-id="categorys._id">
@@ -90,7 +90,7 @@ export default {
 <style lang="scss" scoped>
 .tabs {
 	position: fixed;
-	background-color: #66f9cf;
+	background-color: #E62B30;
 	width: 750rpx;
 	left: 0;
 	top: 0;
@@ -101,7 +101,7 @@ export default {
 		margin-bottom: 20rpx;
 		.segmented-control-item {
 			&.active {
-				color: #66f9cf !important;
+				color: #F0F06E !important;
 			}
 		}
 	}

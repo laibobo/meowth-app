@@ -576,12 +576,16 @@ export default {
 		.tabs-item {
 			width: 120rpx;
 			font-size: 32rpx;
-			height: 70rpx;
+			height: 75rpx;
+			line-height: 75rpx;
 			text-align: center;
-			border-bottom: 1px solid $uni-theme-active-color;
+			border-bottom: 4rpx solid transparent;
 			box-sizing: border-box;
+			color:$uni-theme-tab-font-color;
 			&.active {
-				border-color: #000;
+				border-color: transparent;
+				color:$uni-theme-active-tab-font-color;
+				font-size:36rpx;
 			}
 		}
 	}
@@ -609,7 +613,10 @@ export default {
 				}
 				&.active {
 					.icon-col {
-						background: $uni-theme-bg-color;
+						background: $uni-theme-active-icon-bgcolor;						
+						.iconfont{
+							color:#fff !important;	
+						}
 					}
 				}
 				text {

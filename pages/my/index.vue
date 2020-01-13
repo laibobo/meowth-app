@@ -63,13 +63,13 @@
 			border-bottom: 2rpx solid $uni-border-color;
 			padding: 40rpx 0;
 			box-sizing: border-box;
-			color: #c8c7cc;
+			color: #333;
 			image{
 				width: 120rpx;
 				height: 120rpx;
 				border-radius: 60rpx;
 				vertical-align: middle;
-				margin-right: 20rpx;
+				margin-right: 40rpx;
 			}
 		}
 		.statistic{
@@ -82,7 +82,7 @@
 					display: block;
 					font-size: 24rpx;
 					&:last-child{				
-						color: #c8c7cc;
+						color: #565656;
 					}
 				}
 			}
