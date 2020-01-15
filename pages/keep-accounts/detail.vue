@@ -30,7 +30,7 @@
 				</view>
 			</view>
 		</view>
-		<view class="list">
+		<scroll-view class="list" scroll-y="true" :style="getScrollHeight">
 			<view class="list-item" v-for="(item,index) in keepLogs" :key="index">
 				<view class="summary">
 					<text class="date">{{item[0].keepMonth}}月{{item[0].keepDay}}日 {{item[0].keepWeek}}</text>
@@ -48,12 +48,13 @@
 					<text class="money expend" v-else>-{{childItem.keepMoney}}</text>
 				</view>
 			</view>
-		</view>
+		</scroll-view>
 	</view>
 </template>
 
 <script>
 const app = getApp()
+import {getElement} from '@/public/index.js'
 export default {
 	data() {
 		return {
@@ -62,13 +63,17 @@ export default {
 			month: '',
 			keepLogs:{},
 			incomeSum:0,
-			expenditureSum:0
+			expenditureSum:0,
+			scrollHeight:0
 		};
 	},
 	onLoad() {
 		const nowDate = new Date();
 		const year = nowDate.getFullYear();
-		const month = nowDate.getMonth() + 1;
+		let month = nowDate.getMonth() + 1;
+		if(month<10){
+			month = '0'+ month
+		}
 		this.year = year;
 		this.month = month;
 		this.searchDate = `${year}-${month}`;
@@ -76,13 +81,26 @@ export default {
 	},
 	onShow(){
 		this.getNowYearMonthAccountLog()
+		const that = this
+		getElement('.header').then(e=>{
+			uni.getSystemInfo({
+				success: function(res) {
+					that.scrollHeight = res.windowHeight - e.height;
+				}
+			});
+		});
+	},
+	computed: {
+		getScrollHeight() {
+			return `height:${this.scrollHeight}px;`;
+		}
 	},
 	methods: {
 		getNowYearMonthAccountLog(){
 			this._db.collection('AccountsRecord').where({
 				_openid:app.globalData.openid,
 				keepYear:this.year,
-				keepMonth:this.month
+				keepMonth:Number(this.month)
 			}).get().then(res=>{ 
 				this.keepLogs = this._dataGroup(res.data)
 				this.incomeSum = this.getYearMoneySum(1,res.data)

@@ -1,31 +1,28 @@
 <template>
 	<view class="category-col">
-		<view class="tabs">
-			<uni-segmented-control :current="currentCategoryType" :values="items" @clickItem="handleTabsItem" style-type="button" active-color="#E62B30" color="#fff"></uni-segmented-control>
-		</view>
-		<view class="category-scroll">
+		<tabs class="tabs-col" :current="currentCategoryType" :values="items" @clickItem="handleTabsItem"></tabs>
+		<scroll-view class="category-scroll" scroll-y="true" :style="getScrollHeight">
 			<view class="category-item" v-for="(categorys, index) in dataList" :key="index" :data-id="categorys._id">
 				<view class="icon-col"><view class="icon iconfont" v-html="categorys.icon"></view></view>
 				{{ categorys.name }}
 			</view>
-		</view>
+		</scroll-view>
 		<view class="add-category-btn" @click="handleAddCategory">+添加类别</view>
 	</view>
 </template>
 
 <script>
-import uniSegmentedControl from '@/components/uni-segmented-control/uni-segmented-control.vue';
-import { uniSwipeAction } from '@/components/uni-swipe-action/uni-swipe-action.vue';
+import Tabs from '@/components/tabs/tabs.vue'
+import {getElement} from '@/public/index.js'
 const app = getApp();
 export default {
-	components: { uniSegmentedControl, uniSwipeAction },
+	components: { Tabs },
 	data() {
 		return {
 			isRefreshData: false,
 			dataList: [],
 			items: ['支出', '收入'],
-			currentCategoryType: 0,
-			_db: null
+			currentCategoryType: 0
 		};
 	},
 	onLoad(options) {
@@ -35,8 +32,20 @@ export default {
 		this.currentCategoryType = options.categoryType || 0
 	},
 	onShow() {
-		console.log('app:', app);
 		this.getCategoryList();
+		const that = this
+		getElement('.tabs-col').then(e=>{
+			uni.getSystemInfo({
+				success: function(res) {
+					that.scrollHeight = res.windowHeight - e.height;
+				}
+			});
+		});
+	},
+	computed:{
+		getScrollHeight(){
+			return `height:${this.scrollHeight}px;`
+		}
 	},
 	methods: {
 		getCategoryList() {
@@ -88,23 +97,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.tabs {
-	position: fixed;
-	background-color: #E62B30;
-	width: 750rpx;
-	left: 0;
-	top: 0;
-	z-index: 10;
-}
 .category-col {
-	/deep/.segmented-control {
-		margin-bottom: 20rpx;
-		.segmented-control-item {
-			&.active {
-				color: #F0F06E !important;
-			}
-		}
-	}
 	.add-category-btn {
 		background: #fff;
 		width: 750rpx;

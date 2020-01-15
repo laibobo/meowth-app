@@ -84,7 +84,7 @@ export default {
 	},
 	onLoad(option){
 		this.categoryType = option.categoryType
-		var that = this
+		const that = this
 		wx.getSystemInfo({
 			success:function(res){
 				that.scrollHeight = res.windowHeight
@@ -150,7 +150,10 @@ export default {
 	border-radius: 40rpx;
 }
 @mixin app-bg-theme{
-	background-color: #66f9cf !important;
+	background: $uni-theme-active-icon-bgcolor !important;
+	.iconfont {
+		color: #fff !important;
+	}
 }
 .active{
 	@include app-bg-theme;
@@ -165,7 +168,7 @@ page{
 	height: 100rpx;
 	box-sizing: border-box;
 	padding: 0 25rpx;
-	border-bottom: 1px solid #eeeeee;
+	border-bottom: 2rpx solid #eeeeee;
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -177,7 +180,7 @@ page{
 	input[type='text'] {
 		display: block;
 		font-size: 24rpx;
-		border-bottom: 1px solid #565656;
+		border-bottom: 1rpx solid #F5F5F5;
 		width: 500rpx;
 		margin: 0 20rpx;
 	}
@@ -188,7 +191,7 @@ page{
 		height: 50rpx;
 		line-height: 50rpx;
 		text-align: center;
-		background: #66f9cf;
+		background: #F0F06E;
 		font-size: 24rpx;
 		border: none;
 	}
