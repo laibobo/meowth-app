@@ -3,7 +3,8 @@
 		<view class="header">
 			<view 
 				class="icon iconfont cancel-btn"
-				@click="handleCancelRemark">&#xe6e7;</view>
+				@click="handleCancelRemark"
+				style="color: #000;">&#xe6e7;</view>
 			<text>请添加备注</text>
 			<text class="confirm-btn" @click="handleConfirmRemark">确定</text>
 		</view>

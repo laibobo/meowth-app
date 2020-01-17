@@ -51,7 +51,7 @@
 					<view @click="handleKeyCode" data-code=".">.</view>
 					<view @click="handleKeyCode" data-code="0">0</view>
 					<view @click="handleDeleteKeyCode">
-						<view class="icon iconfont">&#xe6eb;</view>
+						<view class="icon iconfont" style="color: red;">&#xe6eb;</view>
 					</view>
 				</view>
 				<view class="m-keyboard-tool">
@@ -454,7 +454,7 @@
 			font-size: 50rpx;
 			color: #000;
 			border-bottom: 2rpx solid #dbdbdb;
-			margin: 20rpx 40rpx 0;
+			margin: 0 40rpx;
 			font-size: 80rpx;
 			font-weight: 600;
 			padding-bottom: 10rpx;
@@ -572,7 +572,7 @@
 						width: 184rpx;
 						height: 204rpx;
 						line-height: 204rpx;
-						background: $uni-theme-bg-color;
+						font-size: 48rpx;
 					}
 				}
 			}

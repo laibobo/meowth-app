@@ -7,11 +7,11 @@
 			</view>
 			<view class="statistic">
 				<view>
-					<text>--</text>
+					<text>{{sumDay}}</text>
 					<text>记账总天数</text>
 				</view>
 				<view>
-					<text>--</text>
+					<text>{{sumLog}}</text>
 					<text>记账总笔数</text>
 				</view>
 			</view>
@@ -28,18 +28,50 @@
 		data() {
 			return {
 				photoUrl:'',
-				nickName:''
+				nickName:'',
+				sumDay:'--',
+				sumLog:'--'
 			}
 		},
-		onLoad(){
-			this.photoUrl = app.globalData.userInfo.avatarUrl
-			this.nickName = app.globalData.userInfo.nickName
+		onShow(){
+			const userInfo = uni.getStorageSync('user.info') || {}
+			this.nickName = userInfo.nickName
+			const _self = this
+			if(userInfo.isCustomPhoto){
+				wx.cloud.downloadFile({
+				  fileID: userInfo.avatarUrl,
+				  success: res => {
+				    _self.photoUrl = res.tempFilePath
+				  },
+				  fail: console.error
+				})
+			}else{
+				this.photoUrl = userInfo.avatarUrl
+			}
+			this.getKeepAccountsInfo()
 		},
 		methods: {
 			openUserInfo(){
 				uni.navigateTo({
 					url: './account'
 				});
+			},
+			getKeepAccountsInfo(){
+				const db = app.globalData.wxDB
+				const $ = db.command.aggregate
+			 	const _od = db.collection('AccountsRecord').aggregate().match({
+					_openid:uni.getStorageSync('user.openid')
+				})
+				_od.group({
+				  _id: '$keepDate'
+				}).end().then(res=>{
+					this.sumDay = res.list.length
+				})
+				_od.group({
+				  _id: '$createDate'
+				}).end().then(res=>{
+					this.sumLog = res.list.length
+				})
 			}
 		}
 	}

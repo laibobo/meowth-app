@@ -20,12 +20,12 @@
 	/*每个页面公共css */
 	@font-face {
 	  font-family: 'iconfont';  /* project id 1479363 */
-	  src: url('//at.alicdn.com/t/font_1479363_g3ndm8qmgad.eot');
-	  src: url('//at.alicdn.com/t/font_1479363_g3ndm8qmgad.eot?#iefix') format('embedded-opentype'),
-	  url('//at.alicdn.com/t/font_1479363_g3ndm8qmgad.woff2') format('woff2'),
-	  url('//at.alicdn.com/t/font_1479363_g3ndm8qmgad.woff') format('woff'),
-	  url('//at.alicdn.com/t/font_1479363_g3ndm8qmgad.ttf') format('truetype'),
-	  url('//at.alicdn.com/t/font_1479363_g3ndm8qmgad.svg#iconfont') format('svg');
+	  src: url('//at.alicdn.com/t/font_1479363_sfos4utxwqd.eot');
+	  src: url('//at.alicdn.com/t/font_1479363_sfos4utxwqd.eot?#iefix') format('embedded-opentype'),
+	  url('//at.alicdn.com/t/font_1479363_sfos4utxwqd.woff2') format('woff2'),
+	  url('//at.alicdn.com/t/font_1479363_sfos4utxwqd.woff') format('woff'),
+	  url('//at.alicdn.com/t/font_1479363_sfos4utxwqd.ttf') format('truetype'),
+	  url('//at.alicdn.com/t/font_1479363_sfos4utxwqd.svg#iconfont') format('svg');
 	}
 	.iconfont {
 	  font-family:"iconfont" !important;
@@ -35,5 +35,8 @@
 	  font-style:normal;
 	  -webkit-font-smoothing: antialiased;
 	  -moz-osx-font-smoothing: grayscale;
-	}	
+	}
+	page{
+		font-family: 'Helvetica Neue', Helvetica, sans-serif;
+	}
 </style>
