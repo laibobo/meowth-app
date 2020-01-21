@@ -49,6 +49,14 @@
 				"navigationBarTitleText": "类别设置"
 			}
 		}
+        ,{
+            "path" : "pages/invoice/index",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/invoice/ae",
+            "style" : {}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "#fff",

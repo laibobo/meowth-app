@@ -3,12 +3,7 @@
 		<view class="header">
 			<view class="search-col">
 				<label>{{ year }}年</label>
-				<picker 
-					class="searchdate-picker" 
-					mode="date" 
-					fields="month" 
-					:value="searchDate" 
-					@change="bindSearchDateChange">
+				<picker class="searchdate-picker" mode="date" fields="month" :value="searchDate" @change="bindSearchDateChange">
 					<view class="uni-input">
 						{{ month }}
 						<text class="fz10">月</text>
@@ -18,34 +13,34 @@
 			<view class="info">
 				<view>
 					<label>收入</label>
-					<view class="money">{{incomeSum}}</view>
+					<view class="money">{{ incomeSum }}</view>
 				</view>
 				<view>
 					<label>支出</label>
-					<view class="money">{{expenditureSum}}</view>
+					<view class="money">{{ expenditureSum }}</view>
 				</view>
 				<view>
 					<label>结余</label>
-					<view class="money">{{incomeSum-expenditureSum}}</view>
+					<view class="money">{{ incomeSum - expenditureSum }}</view>
 				</view>
 			</view>
 		</view>
 		<scroll-view class="list" scroll-y="true" :style="getScrollHeight">
-			<view class="list-item" v-for="(item,index) in keepLogs" :key="index">
+			<view class="list-item" v-for="(item, index) in keepLogs" :key="index">
 				<view class="summary">
-					<text class="date">{{item[0].keepMonth}}月{{item[0].keepDay}}日 {{item[0].keepWeek}}</text>
+					<text class="date">{{ item[0].keepMonth }}月{{ item[0].keepDay }}日 {{ item[0].keepWeek }}</text>
 					<view class="expenses">
-						<text class="income">收入 {{getYearMoneySum(1,item)}}</text>
-						<text class="expend">支出 {{getYearMoneySum(0,item)}}</text>
+						<text class="income">收入 {{ getYearMoneySum(1, item) }}</text>
+						<text class="expend">支出 {{ getYearMoneySum(0, item) }}</text>
 					</view>
 				</view>
-				<view class="di-info" v-for="(childItem,idx) in item" :key="idx">
+				<view class="di-info" v-for="(childItem, idx) in item" :key="idx">
 					<view class="typeinfo">
 						<view class="icon-col"><view class="icon iconfont">&#xe662;</view></view>
-						<text class="explain">{{childItem.remark}}</text>
+						<text class="explain">{{ childItem.remark }}</text>
 					</view>
-					<text class="money income" v-if="childItem.categoryType===1">+{{childItem.keepMoney}}</text>
-					<text class="money expend" v-else>-{{childItem.keepMoney}}</text>
+					<text class="money income" v-if="childItem.categoryType === 1">+{{ childItem.keepMoney }}</text>
+					<text class="money expend" v-else>-{{ childItem.keepMoney }}</text>
 				</view>
 			</view>
 		</scroll-view>
@@ -53,36 +48,36 @@
 </template>
 
 <script>
-const app = getApp()
-import {getElement} from '@/public/index.js'
+const app = getApp();
+import { getElement } from '@/public/index.js';
 export default {
 	data() {
 		return {
 			searchDate: '',
 			year: '',
 			month: '',
-			keepLogs:{},
-			incomeSum:0,
-			expenditureSum:0,
-			scrollHeight:0
+			keepLogs: {},
+			incomeSum: 0,
+			expenditureSum: 0,
+			scrollHeight: 0
 		};
 	},
 	onLoad() {
 		const nowDate = new Date();
 		const year = nowDate.getFullYear();
 		let month = nowDate.getMonth() + 1;
-		if(month<10){
-			month = '0'+ month
+		if (month < 10) {
+			month = '0' + month;
 		}
 		this.year = year;
 		this.month = month;
 		this.searchDate = `${year}-${month}`;
-		this._db = app.globalData.wxDB
+		this._db = app.globalData.wxDB;
 	},
-	onShow(){
-		this.getNowYearMonthAccountLog()
-		const that = this
-		getElement('.header').then(e=>{
+	onShow() {
+		this.getNowYearMonthAccountLog();
+		const that = this;
+		getElement('.header').then(e => {
 			uni.getSystemInfo({
 				success: function(res) {
 					that.scrollHeight = res.windowHeight - e.height;
@@ -96,31 +91,35 @@ export default {
 		}
 	},
 	methods: {
-		getNowYearMonthAccountLog(){
-			this._db.collection('AccountsRecord').where({
-				_openid:app.globalData.openid,
-				keepYear:this.year,
-				keepMonth:Number(this.month)
-			}).get().then(res=>{ 
-				this.keepLogs = this._dataGroup(res.data)
-				this.incomeSum = this.getYearMoneySum(1,res.data)
-				this.expenditureSum = this.getYearMoneySum(0,res.data)
-			})
+		getNowYearMonthAccountLog() {
+			this._db
+				.collection('AccountsRecord')
+				.where({
+					_openid: uni.getStorageSync('user.openid'),
+					keepYear: Number(this.year),
+					keepMonth: Number(this.month)
+				})
+				.get()
+				.then(res => {
+					this.keepLogs = this._dataGroup(res.data);
+					this.incomeSum = this.getYearMoneySum(1, res.data);
+					this.expenditureSum = this.getYearMoneySum(0, res.data);
+				});
 		},
-		getYearMoneySum(type,list=[]){
-			let result = list.filter(o=>o.categoryType === type).map(p=>p.keepMoney)
-			if(result.length > 0){
-				return result.reduce((a,b)=>a+b)
+		getYearMoneySum(type, list = []) {
+			let result = list.filter(o => o.categoryType === type).map(p => p.keepMoney);
+			if (result.length > 0) {
+				return result.reduce((a, b) => a + b);
 			}
-			return 0
+			return 0;
 		},
-		_dataGroup(data){
-			let keyContainer = {}
-			data.forEach(element=>{
-				keyContainer[element.keepDay] = keyContainer[element.keepDay] || []
-				keyContainer[element.keepDay].push(element)
-			})
-			return keyContainer
+		_dataGroup(data) {
+			let keyContainer = {};
+			data.forEach(element => {
+				keyContainer[element.keepDay] = keyContainer[element.keepDay] || [];
+				keyContainer[element.keepDay].push(element);
+			});
+			return keyContainer;
 		},
 		bindSearchDateChange(e) {
 			const value = e.target.value;
@@ -128,6 +127,7 @@ export default {
 			this.year = dateArr[0];
 			this.month = dateArr[1];
 			this.searchDate = value;
+			this.getNowYearMonthAccountLog();
 		}
 	}
 };
@@ -199,16 +199,15 @@ export default {
 	}
 
 	.list {
-		
 		.list-item {
 			width: 750rpx;
 			letter-spacing: 1rpx;
-			.income{
-				color: #FB5E33;
+			.income {
+				color: #fb5e33;
 				font-weight: 600;
 			}
-			.expend{
-				color: #30AC84;
+			.expend {
+				color: #30ac84;
 				font-weight: 600;
 			}
 			.summary {
@@ -231,11 +230,11 @@ export default {
 					-moz-box-sizing: border-box;
 					box-sizing: border-box;
 				}
-				.date{
+				.date {
 					color: #000;
 					font-size: 28rpx;
 				}
-				
+
 				.expenses {
 					text {
 						margin-left: 50rpx;
@@ -281,4 +280,9 @@ export default {
 .fz10 {
 	font-size: 22rpx;
 }
+</style>
+<style>
+	page{
+		background: #fff;
+	}
 </style>

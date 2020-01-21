@@ -12,8 +12,8 @@
 </template>
 
 <script>
-import Tabs from '@/components/tabs/tabs.vue'
-import {getElement} from '@/public/index.js'
+import Tabs from '@/components/tabs/tabs.vue';
+import { getElement } from '@/public/index.js';
 const app = getApp();
 export default {
 	components: { Tabs },
@@ -27,14 +27,14 @@ export default {
 	},
 	onLoad(options) {
 		const that = this;
-		this._db = app.globalData.wxDB
-		console.log(options)
-		this.currentCategoryType = options.categoryType || 0
+		this._db = app.globalData.wxDB;
+		console.log(options);
+		this.currentCategoryType = options.categoryType || 0;
 	},
 	onShow() {
 		this.getCategoryList();
-		const that = this
-		getElement('.tabs-col').then(e=>{
+		const that = this;
+		getElement('.tabs-col').then(e => {
 			uni.getSystemInfo({
 				success: function(res) {
 					that.scrollHeight = res.windowHeight - e.height;
@@ -42,15 +42,15 @@ export default {
 			});
 		});
 	},
-	computed:{
-		getScrollHeight(){
-			return `height:${this.scrollHeight}px;`
+	computed: {
+		getScrollHeight() {
+			return `height:${this.scrollHeight}px;`;
 		}
 	},
 	methods: {
 		getCategoryList() {
-			const type =Number(this.currentCategoryType);
-			
+			const type = Number(this.currentCategoryType);
+
 			// this._db.collection('Category').where({
 			// 	type
 			// }).limit(50).get().then(result=>{
@@ -61,11 +61,12 @@ export default {
 				.callFunction({
 					name: 'getCategoryList',
 					data: {
-						type
+						type,
+						_openid:uni.getStorageSync('user.openid')
 					}
 				})
 				.then(({ result }) => {
-					this.dataList = result.data
+					this.dataList = result.data;
 				})
 				.catch(console.error);
 		},
@@ -142,4 +143,9 @@ export default {
 		}
 	}
 }
+</style>
+<style>
+	page{
+		background: #fff;
+	}
 </style>
