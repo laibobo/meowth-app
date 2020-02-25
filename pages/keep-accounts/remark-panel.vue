@@ -83,9 +83,6 @@ export default {
 	background: #fff;
 	border-radius: 20rpx;
 	flex-direction: column;
-	position: fixed;
-	left: 0;
-	bottom: 0;
 	border-top: 1px solid #eee;
 	.header {
 		display: flex;

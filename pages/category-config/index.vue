@@ -2,7 +2,8 @@
 	<view class="category-col">
 		<tabs class="tabs-col" :current="currentCategoryType" :values="items" @clickItem="handleTabsItem"></tabs>
 		<scroll-view class="category-scroll" scroll-y="true" :style="getScrollHeight">
-			<view class="category-item" v-for="(categorys, index) in dataList" :key="index" :data-id="categorys._id">
+			<view class="category-item" v-for="(categorys, index) in dataList" :key="index" :data-id="categorys._id" @click="handleDeleteCategory">
+				<view class="icon-col delete-btn"><view class="icon iconfont">&#xe6ed;</view></view>
 				<view class="icon-col"><view class="icon iconfont" v-html="categorys.icon"></view></view>
 				{{ categorys.name }}
 			</view>
@@ -28,7 +29,6 @@ export default {
 	onLoad(options) {
 		const that = this;
 		this._db = app.globalData.wxDB;
-		console.log(options);
 		this.currentCategoryType = options.categoryType || 0;
 	},
 	onShow() {
@@ -50,19 +50,12 @@ export default {
 	methods: {
 		getCategoryList() {
 			const type = Number(this.currentCategoryType);
-
-			// this._db.collection('Category').where({
-			// 	type
-			// }).limit(50).get().then(result=>{
-			// 	console.log('result:',result)
-			// 	this.dataList = result.data
-			// }).catch(console.error)
 			wx.cloud
 				.callFunction({
 					name: 'getCategoryList',
 					data: {
 						type,
-						_openid:uni.getStorageSync('user.openid')
+						openid:uni.getStorageSync('user.openid')
 					}
 				})
 				.then(({ result }) => {
@@ -70,17 +63,35 @@ export default {
 				})
 				.catch(console.error);
 		},
-		handleDeleteCategory() {
+		deleteCategoryCorrelationData(categoryId){
+			wx.cloud.callFunction({
+				name:'deleteKeepAccounts',
+				data:{
+					categoryId,
+					openid:uni.getStorageSync('user.openid')
+				}
+			}).then(({result})=>{
+				this._db.collection('Category')
+					.doc(categoryId)
+					.remove()
+					.then(res=>{
+						if(res.errMsg.indexOf('ok') > -1){
+							this.getCategoryList()
+						}
+					})
+			})
+		},
+		handleDeleteCategory(e){
+			const _self = this
 			uni.showModal({
-				title: '提示',
-				content: '确认要删除吗？',
+				title: '警告',
+				content: '删除类别会同时删除该类别下的所有记账',
 				success: function(res) {
 					if (res.confirm) {
-						_this.deleteCategory();
+						_self.deleteCategoryCorrelationData(e.currentTarget.dataset.id);
 					}
 				}
 			});
-			// this._db.collection('Category').doc('');
 		},
 		handleTabsItem(index) {
 			if (this.currentCategoryType !== index) {
@@ -138,6 +149,13 @@ export default {
 				margin-right: 20rpx;
 				.icon {
 					font-size: 35rpx;
+				}
+			}
+			.delete-btn{
+				background-color: initial;
+				.icon {
+					font-size: 50rpx;
+					color: red;
 				}
 			}
 		}

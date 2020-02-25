@@ -2,13 +2,14 @@
 	<view class="page">
 		<tabs class="tabs-col" :values="tabValues" :current="currentCategoryType" @clickItem="handleTabsItem"></tabs>
 		<!-- 类别列表 -->
-		<scroll-view class="category-scroll" scroll-y="true" :style="getScrollHeight">
+		<scroll-view class="category-scroll" :scroll-top="scrollTop" scroll-y="true" :style="getScrollHeight">
 			<view class="tabs-container">
-				<view v-for="(item, index) in dataList" :key="index" :class="['category', { active: item._id === activeCategoryId }]" @click="handleKeep(item._id, item.name)">
+				<view v-for="(item, index) in dataList" :key="index" :class="['category', { 'category-active': item._id === activeCategoryId }]" :data-id="item._id" :data-name="item.name"  @click="handleKeep">
 					<view class="icon-col"><view class="icon iconfont" v-html="item.icon"></view></view>
 					<text class="explain">{{ item.name }}</text>
-				</view>
-				<view class="category" @click="handleDeploy">
+				</view>				
+				<loading v-if="isLoading" class="loading"></loading>
+				<view v-else class="category" @click="handleDeploy">
 					<view class="icon-col"><view class="icon iconfont">&#xe6df;</view></view>
 					<text class="explain">设置</text>
 				</view>
@@ -75,6 +76,7 @@ export default {
 	},
 	data() {
 		return {
+			isLoading:true,
 			tabValues: ['支出', '收入'],
 			windowHeight: 0,
 			scrollHeight: 0,
@@ -90,7 +92,8 @@ export default {
 			isOpenKeyboard: false,
 			isOpenRemarkPanel: false,
 			checkedUfunc: '',
-			ufuncArr: ['÷', 'x', '+', '-']
+			ufuncArr: ['÷', 'x', '+', '-'],
+			scrollTop:0
 		};
 	},
 	onLoad() {
@@ -100,14 +103,12 @@ export default {
 	onShow() {
 		const that = this;
 		this.getCategoryList();
-		getElement('.tabs-col').then(e => {
-			uni.getSystemInfo({
-				success: function(res) {
-					const scrollHeight = res.windowHeight - e.height;
-					that.scrollHeight = scrollHeight;
-					that.windowHeight = scrollHeight;
-				}
-			});
+		uni.getSystemInfo({
+			success: function(res) {
+				const windowHeight = res.windowHeight;
+				that.scrollHeight = windowHeight;
+				that.windowHeight = windowHeight;
+			}
 		});
 	},
 	computed: {
@@ -124,6 +125,8 @@ export default {
 		 * */
 		getCategoryList() {
 			const type = this.currentCategoryType;
+			this.dataList = []
+			this.isLoading = true
 			wx.cloud
 				.callFunction({
 					name: 'getCategoryList',
@@ -134,6 +137,7 @@ export default {
 				})
 				.then(({ result }) => {
 					this.dataList = result.data;
+					this.isLoading = false
 				})
 				.catch(console.error);
 		},
@@ -158,9 +162,10 @@ export default {
 		/**
 		 * 点击类目
 		 * */
-		handleKeep(id, name) {
-			this.activeCategoryId = id;
-			this.activeCategoryName = name;
+		handleKeep(e) {
+			const data = e.currentTarget
+			this.activeCategoryId = data.dataset.id;
+			this.activeCategoryName = data.dataset.name;
 			this.isOpenKeyboard = true;
 			this.isOpenRemarkPanel = false;
 			this.calculateScrollHeight();
@@ -169,24 +174,33 @@ export default {
 		calculateScrollHeight() {
 			let panelClass,
 				isOpt = false;
-
 			if (this.isOpenKeyboard) {
 				panelClass = '.keep-panel';
 			}
 			if (this.isOpenRemarkPanel) {
 				panelClass = '.remarkp';
 			}
-
 			if (panelClass != undefined) {
 				setTimeout(_ => {
 					uni.createSelectorQuery()
 						.select(panelClass)
 						.boundingClientRect(e => {
-							this.scrollHeight = this.windowHeight - e.height;
+							console.log('e.height:',this.windowHeight,this.scrollHeight,e.height)
+							this.scrollHeight = parseFloat(this.windowHeight) - parseFloat(e.height);
+							
+							this.setScrollListTop()
 						})
 						.exec();
 				});
 			}
+		},
+		setScrollListTop(){
+			uni.createSelectorQuery()
+				.select('.category-active')
+				.boundingClientRect(e=>{
+					console.log('setScrollListTop:',e)
+					this.scrollTop = e.top - 60
+				}).exec();
 		},
 		handleOpenRemarkPanel() {
 			this.isOpenRemarkPanel = true;
@@ -416,7 +430,11 @@ export default {
 		opacity: 0;
 	}
 }
-
+.remarkp{
+	position: absolute;
+	left: 0;
+	bottom: 0;
+}
 .m-focus {
 	height: 100rpx;
 	border: 1rpx solid #eee;
@@ -428,6 +446,11 @@ export default {
 	transform: scale(0.5, 0.5);
 	box-sizing: border-box;
 	animation: blink 1s linear infinite;
+}
+.loading{
+	position: fixed;
+	top: 150rpx;
+	left: 340rpx;
 }
 
 .keep-panel {
@@ -581,46 +604,20 @@ export default {
 }
 
 .page {
-	padding-top: 35px;
-
-	.tabs {
-		display: flex;
-		width: 750rpx;
-		justify-content: center;
-		align-items: center;
-		box-sizing: border-box;
-		background: $uni-theme-bg-color;
+	.tabs-col{
 		position: fixed;
 		left: 0;
 		top: 0;
-		z-index: 10;
-
-		.tabs-item {
-			width: 120rpx;
-			font-size: 32rpx;
-			height: 75rpx;
-			line-height: 75rpx;
-			text-align: center;
-			border-bottom: 4rpx solid transparent;
-			box-sizing: border-box;
-			color: $uni-theme-tab-font-color;
-
-			&.active {
-				border-color: transparent;
-				color: $uni-theme-active-tab-font-color;
-				font-size: 36rpx;
-			}
-		}
 	}
 
 	.category-scroll {
 		box-sizing: border-box;
-
+		padding-top: 64rpx;
 		.tabs-container {
 			padding: 20rpx 30rpx;
 			display: flex;
 			flex-wrap: wrap;
-
+			box-sizing: border-box;
 			.category {
 				text-align: center;
 				margin-right: 97.5rpx;
@@ -640,7 +637,7 @@ export default {
 					background: #f5f5f5;
 				}
 
-				&.active {
+				&.category-active {
 					.icon-col {
 						background: $uni-theme-active-icon-bgcolor;
 

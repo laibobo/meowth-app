@@ -1,9 +1,10 @@
 <script>
 const app = getApp();
+const config = require('./public/config.js')
 export default {
 	onLaunch: function() {
 		wx.cloud.init({
-			env: 'develop-tm3ye',
+			env: config.cloud_env,
 			traceUser: true
 		});
 	},
@@ -17,11 +18,13 @@ export default {
 <style>
 /*每个页面公共css */
 @font-face {
-	font-family: 'iconfont'; /* project id 1479363 */
-	src: url('//at.alicdn.com/t/font_1479363_inficijrxg.eot');
-	src: url('//at.alicdn.com/t/font_1479363_inficijrxg.eot?#iefix') format('embedded-opentype'), url('//at.alicdn.com/t/font_1479363_inficijrxg.woff2') format('woff2'),
-		url('//at.alicdn.com/t/font_1479363_inficijrxg.woff') format('woff'), url('//at.alicdn.com/t/font_1479363_inficijrxg.ttf') format('truetype'),
-		url('//at.alicdn.com/t/font_1479363_inficijrxg.svg#iconfont') format('svg');
+  font-family: 'iconfont';  /* project id 1479363 */
+  src: url('//at.alicdn.com/t/font_1479363_5yo4u342hsp.eot');
+  src: url('//at.alicdn.com/t/font_1479363_5yo4u342hsp.eot?#iefix') format('embedded-opentype'),
+  url('//at.alicdn.com/t/font_1479363_5yo4u342hsp.woff2') format('woff2'),
+  url('//at.alicdn.com/t/font_1479363_5yo4u342hsp.woff') format('woff'),
+  url('//at.alicdn.com/t/font_1479363_5yo4u342hsp.ttf') format('truetype'),
+  url('//at.alicdn.com/t/font_1479363_5yo4u342hsp.svg#iconfont') format('svg');
 }
 .iconfont {
 	font-family: 'iconfont' !important;

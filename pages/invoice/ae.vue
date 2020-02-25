@@ -8,7 +8,7 @@
 			</view>
 			<view class="uni-form-item uni-column">
 				<view class="title">税号</view>
-				<input class="uni-input" name="tfn" placeholder="15-20位税号" :value="form.tfn" />
+				<input class="uni-input" name="tfn" minlength="15" maxlength="20" placeholder="15-20位税号" :value="form.tfn" />
 			</view>
 			<view class="uni-form-item uni-column">
 				<view class="title">单位地址</view>
@@ -99,17 +99,42 @@ export default {
 				});
 				return false;
 			}
-			app.globalData.wxDB
-				.collection('InvoiceManage')
-				.add({
-					data: data
-				})
-				.then(res => {
-					uni.navigateBack({
-						delta: 1
+			if(this.isEdit){
+				app.globalData.wxDB.collection('InvoiceManage')
+					.doc(this.form._id)
+					.update({
+						data:{
+							companyName:data.companyName,
+							bankAccount:data.bankAccount,
+							bankOfDeposit:data.bankOfDeposit,
+							companyAddr:data.companyAddr,
+							tel:data.tel,
+							tfn:data.tfn
+						}
+					}).then(result=>{
+						uni.navigateBack({
+							delta: 1
+						})
+					}).catch(err=>{
+						uni.showModal({
+							title:'错误提示',
+							content:'编辑失败！程序异常'
+						})
+						console.error(err)
 					})
-				})
-				.catch(console.error);
+			}else{
+				app.globalData.wxDB
+					.collection('InvoiceManage')
+					.add({
+						data: data
+					})
+					.then(res => {
+						uni.navigateBack({
+							delta: 1
+						})
+					})
+					.catch(console.error);
+			}
 		}
 	}
 };

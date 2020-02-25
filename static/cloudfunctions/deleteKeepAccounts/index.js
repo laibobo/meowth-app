@@ -8,10 +8,10 @@ const db = cloud.database()
 
 exports.main = async(event,context)=>{
 	try{
-		return await db.collection('Category').where({
-			type:event.type,
+		return await db.collection('AccountsRecord').where({
+			categoryId:event.categoryId,
 			_openid:event.openid
-		}).get()
+		}).remove()
 	}catch(e){
 		console.error(e)
 	}  

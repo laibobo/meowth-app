@@ -2,7 +2,7 @@
 	<view>
 		<view class="header">
 			<view class="userinfo" data-url="./account" @click="navigateTo">
-				<image :src="photoUrl"></image>
+				<image :src="photoUrl" :fade-show="false" mode="aspectFit"></image>
 				<text>{{ nickName }}</text>
 			</view>
 			<view class="statistic">

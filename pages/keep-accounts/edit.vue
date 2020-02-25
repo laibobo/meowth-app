@@ -3,39 +3,87 @@
 		<view class="info">
 			<view>
 				<label>类型</label>
-				<text>支出</text>
+				<text>{{categoryType}}</text>
+			</view>
+			<view>
+				<label>类别</label>
+				<text>{{categoryName}}</text>
 			</view>
 			<view>
 				<label>金额</label>
-				<text>9999.33</text>
+				<text>{{keepMoney}}</text>
 			</view>
 			<view>
 				<label>日期</label>
-				<text>2019年11月23日 星期六</text>
+				<text>{{keepDate}}</text>
 			</view>
 			<view>
 				<label>备注</label>
-				<text>哈茶哈哈是的哈哈茶哈哈是的哈哈茶哈哈是的哈哈茶哈哈是的哈哈茶哈哈是的哈哈茶哈哈是的哈哈茶哈哈是的哈哈茶哈哈是的哈哈茶哈哈是的哈</text>
+				<text>{{remark}}</text>
 			</view>
 		</view>
-		<view class="icon-col"><view class="icon iconfont">&#xe662;</view></view>
-		<view class="btn-col">
-			<button @click="handleEdit">编辑</button>
-			<button @click="handleDelete">删除</button>
-		</view>
+		<view class="icon-col"><view class="icon iconfont" v-html="categoryIcon"></view></view>
 	</view>
 </template>
 <script>
+const app = getApp()
 export default {
 	data() {
-		return {};
+		return {
+			_db:null,
+			keepAccountId:'',
+			categoryType:'',
+			keepMoney:'',
+			keepDate:'',
+			remark:'',
+			categoryName:'',
+			categoryIcon:''
+		};
 	},
-	methods: {
-		handleEdit() {
-			console.log('编辑');
+	onLoad(options){
+		this._db = app.globalData.wxDB;
+		this.keepAccountId = options.keepAccountId
+	},
+	onShow(){
+		this.getKeepAccountInfo()
+	},
+	methods:{
+		getCategoryInfo(categoryId){
+			this._db.collection('Category')
+				.doc(categoryId)
+				.get()
+				.then(result=>{
+					if(result.errMsg === 'document.get:ok'){
+						this.categoryName = result.data.name
+						this.categoryIcon = result.data.icon
+					}
+				})
 		},
-		handleDelete() {
-			console.log('删除');
+		getKeepAccountInfo(){
+			this._db.collection('AccountsRecord')
+			.doc(this.keepAccountId)
+			.get()
+			.then(result=>{
+				console.log('result:',result)
+				if(result.errMsg === 'document.get:ok'){
+					const data = result.data
+					this.getCategoryInfo(data.categoryId)
+					this.categoryType = data.categoryType === 0?'支出':'收入'
+					this.keepMoney = data.keepMoney
+					this.keepDate = `${data.keepYear}年${data.keepMonth}月${data.keepDay}日`
+					this.remark = data.remark
+				}else{
+					uni.showModal({
+						title:'提示',
+						content:result.errMsg
+					})
+				}
+			}).catch(err=>{
+				uni.showModal({
+					title:'提示',
+					content:'获取数据失败！程序异常'
+				})
+			})
 		}
 	}
 };
@@ -126,4 +174,9 @@ export default {
 		}
 	}
 }
+</style>
+<style>
+	page{
+		background: #fff;
+	}
 </style>

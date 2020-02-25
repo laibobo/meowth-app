@@ -34,14 +34,24 @@
 						<text class="expend">支出 {{ getYearMoneySum(0, item) }}</text>
 					</view>
 				</view>
-				<view class="di-info" v-for="(childItem, idx) in item" :key="idx">
-					<view class="typeinfo">
-						<view class="icon-col"><view class="icon iconfont">&#xe662;</view></view>
-						<text class="explain">{{ childItem.remark }}</text>
-					</view>
-					<text class="money income" v-if="childItem.categoryType === 1">+{{ childItem.keepMoney }}</text>
-					<text class="money expend" v-else>-{{ childItem.keepMoney }}</text>
-				</view>
+				<uni-swipe-action>
+					<uni-swipe-action-item v-for="(childItem, idx) in item" :key="idx" :options="getSwipeOptions(childItem._id)" @click="handleSwipe">
+				        <view class="di-info">
+				        	<view class="typeinfo">
+				        		<view class="icon-col"><view class="icon iconfont">&#xe662;</view></view>
+				        		<text class="explain">{{ childItem.remark }}</text>
+				        	</view>
+				        	<text class="money income" v-if="childItem.categoryType === 1">+{{ childItem.keepMoney }}</text>
+				        	<text class="money expend" v-else>-{{ childItem.keepMoney }}</text>
+				        </view>
+				    </uni-swipe-action-item>
+				</uni-swipe-action>
+				
+			</view>
+			<loading v-if="isLoading" class="s-b"></loading>
+			<view class="s-b" v-else-if="!isLoading && Object.keys(this.keepLogs).length == 0">
+				<image :src="require('@/static/image/nodata.jpg')" mode="aspectFit"></image>
+				<view>无记账记录~</view>
 			</view>
 		</scroll-view>
 	</view>
@@ -50,16 +60,24 @@
 <script>
 const app = getApp();
 import { getElement } from '@/public/index.js';
+import uniSwipeAction from '@/components/uni-swipe-action/uni-swipe-action.vue'
+import uniSwipeActionItem from '@/components/uni-swipe-action-item/uni-swipe-action-item.vue'
+
 export default {
+	components: {
+		uniSwipeAction,
+		uniSwipeActionItem
+	},
 	data() {
 		return {
 			searchDate: '',
 			year: '',
 			month: '',
-			keepLogs: {},
+			keepLogs: [],
 			incomeSum: 0,
 			expenditureSum: 0,
-			scrollHeight: 0
+			scrollHeight: 0,
+			isLoading:true
 		};
 	},
 	onLoad() {
@@ -91,7 +109,35 @@ export default {
 		}
 	},
 	methods: {
+		deleteKeepAccount(id){
+			this._db.collection('AccountsRecord')
+			.doc(id)
+			.remove()
+			.then(result=>{
+				if(result.errMsg === 'document.remove:ok'){
+					uni.showToast({
+						icon:'success',
+						title:'删除成功!'
+					})
+					this.getNowYearMonthAccountLog()
+				}else{
+					uni.showModal({
+						title:'提示',
+						content:result.errMsg 
+					})
+				}
+				
+			}).catch(err=>{
+				console.error(err)
+				uni.showModal({
+					title:'提示',
+					content:'删除失败！程序异常'
+				})
+			})
+		},
 		getNowYearMonthAccountLog() {
+			this.keepLogs = []
+			this.isLoading = true
 			this._db
 				.collection('AccountsRecord')
 				.where({
@@ -101,6 +147,7 @@ export default {
 				})
 				.get()
 				.then(res => {
+					this.isLoading = false
 					this.keepLogs = this._dataGroup(res.data);
 					this.incomeSum = this.getYearMoneySum(1, res.data);
 					this.expenditureSum = this.getYearMoneySum(0, res.data);
@@ -128,6 +175,51 @@ export default {
 			this.month = dateArr[1];
 			this.searchDate = value;
 			this.getNowYearMonthAccountLog();
+		},
+		handleSwipe({content}){
+			const _self = this
+			const keepAccountId = content._id
+			if(content.code === 'detail'){
+				uni.navigateTo({
+					url:'./edit?keepAccountId='+keepAccountId
+				})
+			}else if(content.code === 'edit'){
+				
+			}else if(content.code === 'delete'){
+				uni.showModal({
+					title: '警告',
+					content: '确认删除该条记账吗？',
+					success: function(res) {
+						if (res.confirm) {
+							_self.deleteKeepAccount(keepAccountId)
+						}
+					}
+				});
+			}
+		},
+		getSwipeOptions(id){
+			return [{
+				text: '详细',
+				_id:id,
+				code:'detail',
+				style: {
+					backgroundColor: '#07c160'
+				}
+			},{
+				text: '编辑',
+				_id:id,
+				code:'edit',
+				style: {
+					backgroundColor: '#FFA500'
+				}
+			},{
+				text: '删除',
+				_id:id,
+				code:'delete',
+				style: {
+					backgroundColor: '#dd524d'
+				}
+			}]
 		}
 	}
 };
@@ -217,19 +309,20 @@ export default {
 				font-size: 24rpx;
 				padding: 15rpx 30rpx;
 				position: relative;
-				&:before {
-					content: '';
-					position: absolute;
-					left: 0;
-					bottom: -1rpx;
-					width: 1500rpx;
-					border-bottom: 1px solid #e6e6e6;
-					transform-origin: 0 0;
-					transform: scale(0.5, 0.5);
-					-webkit-box-sizing: border-box;
-					-moz-box-sizing: border-box;
-					box-sizing: border-box;
-				}
+				border-top: 2rpx solid #e6e6e6;
+				// &:before {
+				// 	content: '';
+				// 	position: absolute;
+				// 	left: 0;
+				// 	bottom: -2rpx;
+				// 	width: 1500rpx;
+				// 	border-bottom: 2rpx solid #e6e6e6;
+				// 	transform-origin: 0 0;
+				// 	transform: scale(0.5, 0.5);
+				// 	-webkit-box-sizing: border-box;
+				// 	-moz-box-sizing: border-box;
+				// 	box-sizing: border-box;
+				// }
 				.date {
 					color: #000;
 					font-size: 28rpx;
@@ -245,6 +338,8 @@ export default {
 				&:last-child {
 					border-bottom: none;
 				}
+				width: 750rpx;
+				box-sizing: border-box;
 				padding: 20rpx 30rpx;
 				border-bottom: 1px solid #fdfffe;
 				box-sizing: border-box;
@@ -274,6 +369,17 @@ export default {
 					}
 				}
 			}
+		}
+	}
+	.s-b{
+		position: relative;
+		top: 150rpx;
+		text-align: center;
+		>image{
+			display: block;
+			height: 200rpx;
+			width: 180rpx;
+			margin: 0 auto;
 		}
 	}
 }

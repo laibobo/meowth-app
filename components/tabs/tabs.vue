@@ -57,13 +57,11 @@ export default {
 .tabs {
 	display: flex;
 	width: 750rpx;
+	height: 64rpx;
 	justify-content: center;
 	align-items: center;
 	box-sizing: border-box;
-	background: $uni-theme-bg-color;
-	position: fixed;
-	left: 0;
-	top: 0;
+	background: $uni-theme-bg-color;	
 	z-index: 10;
 	.tabs-item {
 		width: 120rpx;
