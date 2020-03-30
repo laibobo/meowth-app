@@ -20,7 +20,7 @@ export default {
 		},
 		activeColor: {
 			type: String,
-			default: '#F0F06E'
+			default: '#3C3A29'
 		},
 		color: {
 			type: String,
@@ -57,7 +57,7 @@ export default {
 .tabs {
 	display: flex;
 	width: 750rpx;
-	height: 64rpx;
+	height: 75rpx;
 	justify-content: center;
 	align-items: center;
 	box-sizing: border-box;
@@ -66,16 +66,15 @@ export default {
 	.tabs-item {
 		width: 120rpx;
 		font-size: 32rpx;
+		font-weight: 600;
 		height: 75rpx;
 		line-height: 75rpx;
 		text-align: center;
-		border-bottom: 4rpx solid transparent;
+		border-bottom: 8rpx solid transparent;
 		box-sizing: border-box;
 		color: $uni-theme-tab-font-color;
 		&.active {
-			border-color: transparent;
-			color: $uni-theme-active-tab-font-color;
-			font-size: 36rpx;
+			border-color: $uni-theme-active-tab-font-color;
 		}
 	}
 }

@@ -112,7 +112,7 @@
 					font-weight: 600;
 					letter-spacing: 2rpx;
 					&:last-child{
-						background-color: #F0F06E;
+						background-color: #ffd74c;
 					}
 				}
 			}

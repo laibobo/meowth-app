@@ -1,5 +1,6 @@
 <template>
 	<view class="page">
+		<add-btn class="add-btn"></add-btn>
 		<view class="header">
 			<view class="search-col">
 				<label>{{ year }}年</label>
@@ -38,7 +39,7 @@
 					<uni-swipe-action-item v-for="(childItem, idx) in item" :key="idx" :options="getSwipeOptions(childItem._id)" @click="handleSwipe">
 				        <view class="di-info">
 				        	<view class="typeinfo">
-				        		<view class="icon-col"><view class="icon iconfont">&#xe662;</view></view>
+				        		<view class="icon-col"><view class="icon iconfont" v-html="childItem.categorys[0].icon"></view></view>
 				        		<text class="explain">{{ childItem.remark }}</text>
 				        	</view>
 				        	<text class="money income" v-if="childItem.categoryType === 1">+{{ childItem.keepMoney }}</text>
@@ -49,8 +50,8 @@
 				
 			</view>
 			<loading v-if="isLoading" class="s-b"></loading>
-			<view class="s-b" v-else-if="!isLoading && Object.keys(this.keepLogs).length == 0">
-				<image :src="require('@/static/image/nodata.jpg')" mode="aspectFit"></image>
+			<view class="s-b" v-else-if="!isLoading && Object.keys(keepLogs).length == 0">
+				<image :src="require('@/static/image/nodata.png')" mode="aspectFit"></image>
 				<view>无记账记录~</view>
 			</view>
 		</scroll-view>
@@ -62,11 +63,13 @@ const app = getApp();
 import { getElement } from '@/public/index.js';
 import uniSwipeAction from '@/components/uni-swipe-action/uni-swipe-action.vue'
 import uniSwipeActionItem from '@/components/uni-swipe-action-item/uni-swipe-action-item.vue'
+import addBtn from '@/components/add-btn/add-btn.vue'
 
 export default {
 	components: {
 		uniSwipeAction,
-		uniSwipeActionItem
+		uniSwipeActionItem,
+		addBtn
 	},
 	data() {
 		return {
@@ -138,20 +141,25 @@ export default {
 		getNowYearMonthAccountLog() {
 			this.keepLogs = []
 			this.isLoading = true
-			this._db
-				.collection('AccountsRecord')
-				.where({
-					_openid: uni.getStorageSync('user.openid'),
+			wx.cloud.callFunction({
+				name:'getKeepAccountList',
+				data:{
+					openid:uni.getStorageSync('user.openid'),
 					keepYear: Number(this.year),
 					keepMonth: Number(this.month)
+				}
+			}).then(res=>{
+				this.isLoading = false
+				const list = res.result.list
+				this.keepLogs = this._dataGroup(list);
+				this.incomeSum = this.getYearMoneySum(1, list);
+				this.expenditureSum = this.getYearMoneySum(0, list);
+			}).catch(err=>{
+				uni.showModal({
+					title:'系统异常',
+					content:err
 				})
-				.get()
-				.then(res => {
-					this.isLoading = false
-					this.keepLogs = this._dataGroup(res.data);
-					this.incomeSum = this.getYearMoneySum(1, res.data);
-					this.expenditureSum = this.getYearMoneySum(0, res.data);
-				});
+			})
 		},
 		getYearMoneySum(type, list = []) {
 			let result = list.filter(o => o.categoryType === type).map(p => p.keepMoney);
@@ -184,7 +192,9 @@ export default {
 					url:'./edit?keepAccountId='+keepAccountId
 				})
 			}else if(content.code === 'edit'){
-				
+				uni.navigateTo({
+					url:'./index?keepAccountId='+keepAccountId
+				})
 			}else if(content.code === 'delete'){
 				uni.showModal({
 					title: '警告',
@@ -228,6 +238,12 @@ export default {
 <style lang="scss" scoped>
 .page {
 	padding-top: 110rpx;
+	.add-btn{
+		position: fixed;
+		right: 40rpx;
+		bottom: 80rpx;
+		z-index: 10;
+	}
 	.header {
 		width: 750rpx;
 		height: 110rpx;
@@ -238,11 +254,11 @@ export default {
 		padding: 0 30rpx 10rpx;
 		display: flex;
 		background: $uni-theme-bg-color;
-		color: $uni-theme-font-color;
+		color: #383437;
 		font-size: 38rpx;
 		letter-spacing: 1rpx;
 		label {
-			color: $uni-theme-font-color;
+			color:#A37D0B;
 			font-size: 28rpx;
 			margin-bottom: 10rpx;
 			display: block;
@@ -279,7 +295,7 @@ export default {
 						height: 0;
 						border-width: 15rpx 12rpx;
 						border-style: solid;
-						border-color: #fff transparent transparent transparent;
+						border-color: #383437 transparent transparent transparent;
 						position: absolute;
 						top: 50%;
 						margin-top: -4rpx;
@@ -289,7 +305,7 @@ export default {
 			}
 		}
 	}
-
+	
 	.list {
 		.list-item {
 			width: 750rpx;
@@ -324,7 +340,7 @@ export default {
 				// 	box-sizing: border-box;
 				// }
 				.date {
-					color: #000;
+					color: #A1A1A1;
 					font-size: 28rpx;
 				}
 
@@ -353,6 +369,7 @@ export default {
 					align-items: center;
 					.explain {
 						margin-left: 30rpx;
+						width: 500rpx;
 					}
 					.icon-col {
 						width: 75rpx;
@@ -364,13 +381,15 @@ export default {
 						align-items: center;
 						.iconfont {
 							font-size: 38rpx;
-							color: $uni-theme-icon-color;
+							color: #FED845;
+							font-weight: 600;
 						}
 					}
 				}
 			}
 		}
 	}
+	
 	.s-b{
 		position: relative;
 		top: 150rpx;
@@ -391,4 +410,5 @@ export default {
 	page{
 		background: #fff;
 	}
+	
 </style>

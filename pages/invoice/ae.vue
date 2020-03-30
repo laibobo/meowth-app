@@ -27,8 +27,8 @@
 				<input class="uni-input" name="bankAccount" placeholder="银行账号" :value="form.bankAccount" />
 			</view>
 			<view class="uni-btn-v">
-				<button form-type="submit">保存</button>
-				<button class="del-btn" v-if="isEdit" @click="handleDel">删除</button>
+				<button form-type="submit" hover-class="btnhover">保存</button>
+				<button class="del-btn" v-if="isEdit" @click="handleDel" hover-class="btnhover">删除</button>
 			</view>
 		</form>
 	</view>
@@ -143,6 +143,9 @@ export default {
 <style lang="scss">
 .col {
 	margin-top: 40rpx;
+	.btnhover{
+		color: $uni-btn-hover-color !important;
+	}
 	.uni-form-item {
 		background: #fff;
 		padding: 20rpx;

@@ -5,7 +5,7 @@
 			<view>{{ item.companyName }}</view>
 			<text>税号：{{ item.tfn }}</text>
 		</view>
-		<view class="v-button" @click="openAdd">+ 添加发票信息</view>
+		<view class="v-button" @click="openAdd" hover-class="btnhover">+ 添加发票信息</view>
 	</view>
 </template>
 
@@ -42,7 +42,6 @@ export default {
 			});
 		},
 		openEdit(e) {
-			console.log(e.currentTarget.dataset.item)
 			uni.navigateTo({
 				url: './ae?item='+encodeURIComponent(JSON.stringify(e.currentTarget.dataset.item)) 
 			});
@@ -51,9 +50,12 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" s>
 .list {
 	padding-bottom: 100rpx;
+	.btnhover{
+		color: $uni-btn-hover-color !important;
+	}
 	.info-chunk {
 		margin: 20rpx;
 		height: 140rpx;

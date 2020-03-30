@@ -18,14 +18,9 @@
 		<!-- 记账面板 -->
 		<view class="keep-panel" v-if="isOpenKeyboard">
 			<view class="form">
-				<view class="flex">
-					<picker class="keepdate-picker" mode="date" :value="keepDate" @change="handleKeepDateChange">
-						<view class="uni-input">{{ showKeepDate }}</view>
-					</picker>
-				</view>
 				<view class="money-col">
 					<text class="mark">￥</text>
-					<text>{{ money }}</text>
+					<text class="moneyshow">{{ money }}</text>
 					<text class="m-focus"></text>
 				</view>
 				<view class="r-p">
@@ -35,29 +30,33 @@
 			</view>
 			<view class="m-keyboard">
 				<view class="m-keyboard-code">
-					<view @click="handleKeyCode" data-code="1">1</view>
-					<view @click="handleKeyCode" data-code="2">2</view>
-					<view @click="handleKeyCode" data-code="3">3</view>
-					<view @click="handleKeyCode" data-code="4">4</view>
-					<view @click="handleKeyCode" data-code="5">5</view>
-					<view @click="handleKeyCode" data-code="6">6</view>
-					<view @click="handleKeyCode" data-code="7">7</view>
-					<view @click="handleKeyCode" data-code="8">8</view>
-					<view @click="handleKeyCode" data-code="9">9</view>
-					<view @click="handleKeyCode" data-code=".">.</view>
-					<view @click="handleKeyCode" data-code="0">0</view>
-					<view @click="handleDeleteKeyCode"><view class="icon iconfont" style="color: red;">&#xe6eb;</view></view>
+					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="1">1</view>
+					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="2">2</view>
+					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="3">3</view>
+					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="4">4</view>
+					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="5">5</view>
+					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="6">6</view>
+					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="7">7</view>
+					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="8">8</view>
+					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="9">9</view>
+					<view @click="handleKeyCode" hover-class="keyboarhover" data-code=".">.</view>
+					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="0">0</view>
+					<view @click="handleDeleteKeyCode" hover-class="keyboarhover"><view class="icon iconfont" style="color: red;">&#xe6eb;</view></view>
 				</view>
 				<view class="m-keyboard-tool">
-					<view @click="handleUfuncCode('+')">+</view>
-					<view @click="handleUfuncCode('-')">-</view>
-					<view @click="handleUfuncCode('x')">x</view>
-					<view @click="handleUfuncCode('÷')">÷</view>
-					<view class="submit-btn" v-if="!isMoneySum" @click="handleKeyboardSubmit">完成</view>
-					<view class="submit-btn" v-else @click="handleMoneySum">=</view>
+					<view class="s-zo" hover-class="keyboarhover">
+						<picker class="keepdate-picker" mode="date" :value="keepDate" @change="handleKeepDateChange" :disabled="keepAccountId !== ''">
+							<view class="uni-input">{{ getShowKeepDate }}</view>
+						</picker>
+					</view>
+					<view @click="handleUfuncCode('+')" hover-class="keyboarhover">+</view>
+					<view @click="handleUfuncCode('-')" hover-class="keyboarhover">-</view>
+					<view @click="handleUfuncCode('x')" hover-class="keyboarhover">x</view>
+					<view @click="handleUfuncCode('÷')" hover-class="keyboarhover">÷</view>					
+					<view class="submit-btn s-zo" v-if="!isMoneySum" @click="handleKeyboardSubmit">完成</view>
+					<view class="submit-btn s-zo" v-else @click="handleMoneySum">=</view>
 				</view>
 			</view>
-			<view class="icon iconfont close" @click="handleClose">&#xe6e6;</view>
 		</view>
 		<!-- 备注面板 -->
 		<remark-panel class="remarkp" :visible.sync="isOpenRemarkPanel" :content="remark" @confirm="handleConfirmRemark" @close="handleCancelRemark" />
@@ -80,7 +79,6 @@ export default {
 			tabValues: ['支出', '收入'],
 			windowHeight: 0,
 			scrollHeight: 0,
-			showKeepDate: '',
 			keepDate: '',
 			money: '',
 			remark: '',
@@ -93,16 +91,20 @@ export default {
 			isOpenRemarkPanel: false,
 			checkedUfunc: '',
 			ufuncArr: ['÷', 'x', '+', '-'],
-			scrollTop:0
+			scrollTop:0,
+			keepAccountId:''
 		};
 	},
-	onLoad() {
+	onLoad(option) {
 		this.setKeepDate();
 		this._db = app.globalData.wxDB;
+		if(Object.keys(option).length > 0){
+			this.keepAccountId = option.keepAccountId
+			
+		}
 	},
 	onShow() {
 		const that = this;
-		this.getCategoryList();
 		uni.getSystemInfo({
 			success: function(res) {
 				const windowHeight = res.windowHeight;
@@ -110,8 +112,35 @@ export default {
 				that.windowHeight = windowHeight;
 			}
 		});
+		if(this.keepAccountId){
+			this._db.collection('AccountsRecord').doc(this.keepAccountId).get().then(({data})=>{
+				this.currentCategoryType = data.categoryType
+				this.keepDate = data.keepDate
+				this.money = data.keepMoney
+				this.remark = data.remark
+				this.activeCategoryId = data.categoryId
+				this.activeCategoryName = '';
+				this.getCategoryList()
+				this.isOpenRemarkPanel = false;
+				this.isOpenKeyboard = true;
+			}).catch(err=>{
+				uni.showModal({
+					title:'系统异常',
+					content:err
+				})
+			})
+		}else{
+			this.getCategoryList();
+		}	
 	},
 	computed: {
+		getShowKeepDate(){
+			if(this.keepDate){
+				const keepDate = new Date(this.keepDate),date = new Date(),y = keepDate.getFullYear(),m = keepDate.getMonth() + 1,d = keepDate.getDate()						
+				return y == date.getFullYear() && m == (date.getMonth() + 1) && d == date.getDate() ? '今天':`${y}/${m}/${d}`
+			}
+			return ''
+		},
 		getScrollHeight() {
 			return `height:${this.scrollHeight}px;`;
 		},
@@ -138,8 +167,11 @@ export default {
 				.then(({ result }) => {
 					this.dataList = result.data;
 					this.isLoading = false
+					this.calculateScrollHeight();
 				})
-				.catch(console.error);
+				.catch(err=>{
+					console.error(err)
+				});
 		},
 		/**
 		 * 点击tabs项
@@ -185,9 +217,7 @@ export default {
 					uni.createSelectorQuery()
 						.select(panelClass)
 						.boundingClientRect(e => {
-							console.log('e.height:',this.windowHeight,this.scrollHeight,e.height)
-							this.scrollHeight = parseFloat(this.windowHeight) - parseFloat(e.height);
-							
+							this.scrollHeight = parseFloat(this.windowHeight) - parseFloat(e.height);							
 							this.setScrollListTop()
 						})
 						.exec();
@@ -198,8 +228,9 @@ export default {
 			uni.createSelectorQuery()
 				.select('.category-active')
 				.boundingClientRect(e=>{
-					console.log('setScrollListTop:',e)
-					this.scrollTop = e.top - 60
+					if(e){
+						this.scrollTop = e.top - 60	
+					}					
 				}).exec();
 		},
 		handleOpenRemarkPanel() {
@@ -311,18 +342,6 @@ export default {
 			this.isMoneySum = false;
 		},
 		/**
-		 * 自定义键盘-关闭
-		 * */
-		handleClose() {
-			this.setKeepDate();
-			this.isOpenKeyboard = false;
-			this.activeCategoryId = '';
-			this.activeCategoryName = '';
-			this.money = '';
-			this.remark = '';
-			this.scrollHeight = this.windowHeight;
-		},
-		/**
 		 * 自定义键盘-完成操作
 		 * */
 		handleKeyboardSubmit() {
@@ -330,48 +349,76 @@ export default {
 			if (money === '' || Number(money) === 0) {
 				return;
 			}
-			const keepDate = this.keepDate;
-			const keepWeek = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][new Date(keepDate).getDay()];
-			const dateArr = keepDate.split('-');
-			const categoryId = this.activeCategoryId;
-			const categoryType = this.currentCategoryType;
-			const remark = this.activeCategoryName + this.remark;
-			const keepMoney = parseFloat(money);
-			this._db
-				.collection('AccountsRecord')
-				.add({
-					data: {
+			const keepDate = new Date(`${this.keepDate} 00:00:00`)
+				,keepWeek = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][new Date(keepDate).getDay()]
+				,categoryId = this.activeCategoryId
+				,categoryType = this.currentCategoryType
+				,remark = this.activeCategoryName + this.remark
+				,keepMoney = parseFloat(money)
+				,keepYear = keepDate.getFullYear()
+				,keepMonth = keepDate.getMonth() + 1
+				,keepDay = keepDate.getDate()
+				,createDate = new Date()
+				
+			if(this.keepAccountId){
+				this._db.collection('AccountsRecord')
+				.doc(this.keepAccountId)
+				.update({
+					data:{
 						keepMoney,
 						remark,
 						categoryId,
-						categoryType,
-						keepWeek,
-						keepDate: new Date(`${keepDate} 00:00:00`),
-						keepYear: Number(dateArr[0]),
-						keepMonth: Number(dateArr[1]),
-						keepDay: Number(dateArr[2]),
-						createDate: new Date()
+						categoryType
 					}
-				})
-				.then(res => {
-					if (res.errMsg == 'collection.add:ok') {
-						uni.showToast({
-							title: '添加成功',
-							icon: 'success'
-						});
-						this.handleClose();
+				}).then(res=>{
+					if (res.errMsg == 'document.update:ok') {
+						uni.switchTab({
+							url:'./detail'
+						})
 					}
+				}).catch(err=>{
+					uni.showModal({
+						title:'程序异常',
+						content:err
+					})
 				})
-				.catch(console.error);
+			}else{
+				this._db
+					.collection('AccountsRecord')
+					.add({
+						data: {
+							keepMoney,
+							remark,
+							categoryId,
+							categoryType,
+							keepWeek,
+							keepDate,
+							keepYear,
+							keepMonth,
+							keepDay,
+							createDate
+						}
+					})
+					.then(res => {
+						if (res.errMsg == 'collection.add:ok') {						
+							uni.switchTab({
+								url:'./detail'
+							})
+						}
+					})
+					.catch(err=>{
+						uni.showModal({
+							title:'程序异常',
+							content:err
+						})
+					});
+			}
 		},
 		/**
 		 * 选择账单日期
 		 * */
 		handleKeepDateChange(e) {
-			const date = e.detail.value;
-			const dateArr = date.split('-');
-			this.keepDate = date;
-			this.showKeepDate = `${dateArr[0]}年${dateArr[1]}月${dateArr[2]}日`;
+			this.keepDate = e.detail.value;
 		},
 		setKeepDate() {
 			const nowDate = new Date();
@@ -385,7 +432,6 @@ export default {
 				day = '0' + day;
 			}
 			this.keepDate = `${year}-${month}-${day}`;
-			this.showKeepDate = `${year}年${month}月${day}日`;
 		},
 		_sumMoney(moneyStr, ufunc, code = '') {
 			const splitArr = moneyStr.split(ufunc);
@@ -439,7 +485,8 @@ export default {
 	height: 100rpx;
 	border: 1rpx solid #eee;
 	margin-left: 15rpx;
-	margin-top: 60rpx;
+	position: relative;
+	top: 30rpx;
 	content: '';
 	border: 1px solid #dcdcdc;
 	transform-origin: 0 0;
@@ -464,8 +511,14 @@ export default {
 	border-radius: 30rpx;
 	border-top: 2rpx solid #eee;
 	box-shadow: 10rpx 3rpx 5rpx #eee;
-	padding-top: 20rpx;
-
+	.keyboarhover{
+		background: #f5f5f5 !important;
+	}
+	.moneyshow{
+		max-width:600rpx;
+		word-wrap: break-word;
+		word-break: normal;
+	}
 	.money-col {
 		display: flex;
 		font-size: 50rpx;
@@ -487,32 +540,35 @@ export default {
 			margin-right: 20rpx;
 		}
 	}
-
-	.keepdate-picker {
-		background: #eaeaea;
-		height: 70rpx;
-		line-height: 70rpx;
-		border-radius: 25rpx;
+	.keepdate-picker{
 		font-size: 32rpx;
-
-		.uni-input {
-			position: relative;
-			padding: 0 40rpx 0 20rpx;
-
-			&:before {
-				content: '';
-				display: block;
-				width: 0;
-				height: 0;
-				border-width: 10rpx;
-				border-style: solid;
-				border-color: #c8c8c8 transparent transparent transparent;
-				position: absolute;
-				top: 50%;
-				right: 18rpx;
-			}
-		}
+		font-weight: 400;
 	}
+	// .keepdate-picker {
+	// 	background: #eaeaea;
+	// 	height: 70rpx;
+	// 	line-height: 70rpx;
+	// 	border-radius: 25rpx;
+	// 	font-size: 32rpx;
+
+	// 	.uni-input {
+	// 		position: relative;
+	// 		padding: 0 40rpx 0 20rpx;
+
+	// 		&:before {
+	// 			content: '';
+	// 			display: block;
+	// 			width: 0;
+	// 			height: 0;
+	// 			border-width: 10rpx;
+	// 			border-style: solid;
+	// 			border-color: #c8c8c8 transparent transparent transparent;
+	// 			position: absolute;
+	// 			top: 50%;
+	// 			right: 18rpx;
+	// 		}
+	// 	}
+	// }
 
 	.close {
 		font-size: 80rpx;
@@ -586,11 +642,16 @@ export default {
 					margin-left: 0;
 				}
 
-				&.submit-btn {
+				&.s-zo {
 					width: 184rpx;
-					height: 204rpx;
-					line-height: 204rpx;
+					height: 102rpx;
+					line-height: 102rpx;					
+				}
+				&.submit-btn{
 					font-size: 48rpx;
+					font-family: '宋体';
+					font-weight: 400;
+					background: #FED845;
 				}
 			}
 		}
@@ -612,7 +673,7 @@ export default {
 
 	.category-scroll {
 		box-sizing: border-box;
-		padding-top: 64rpx;
+		padding-top: 75rpx;
 		.tabs-container {
 			padding: 20rpx 30rpx;
 			display: flex;
@@ -635,6 +696,9 @@ export default {
 					justify-content: center;
 					align-items: center;
 					background: #f5f5f5;
+					.iconfont{
+						color: #525252;
+					}
 				}
 
 				&.category-active {

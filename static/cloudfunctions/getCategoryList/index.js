@@ -1,7 +1,6 @@
 const cloud = require('wx-server-sdk')
-const config = require('@/public/config.js')
 cloud.init({
-	env:config.cloud_env,
+	env:'develop-tm3ye',
 	traceUser: true
 })
 const db = cloud.database()
@@ -10,8 +9,8 @@ exports.main = async(event,context)=>{
 	try{
 		return await db.collection('Category').where({
 			type:event.type,
-			_openid:event.openid
-		}).get()
+			_openid:event._openid
+		}).orderBy('sortnumber', 'asc').get()
 	}catch(e){
 		console.error(e)
 	}  

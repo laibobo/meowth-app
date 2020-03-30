@@ -49,13 +49,12 @@ export default {
 	},
 	methods: {
 		getCategoryList() {
-			const type = Number(this.currentCategoryType);
 			wx.cloud
 				.callFunction({
 					name: 'getCategoryList',
 					data: {
-						type,
-						openid:uni.getStorageSync('user.openid')
+						type:Number(this.currentCategoryType),
+						_openid:uni.getStorageSync('user.openid')
 					}
 				})
 				.then(({ result }) => {
@@ -129,7 +128,7 @@ export default {
 	.category-scroll {
 		background: #fff;
 		box-sizing: border-box;
-		padding: 80rpx 0 100rpx;
+		padding: 75rpx 0 100rpx;
 		.category-item {
 			padding: 20rpx 0;
 			height: 100rpx;
@@ -149,6 +148,7 @@ export default {
 				margin-right: 20rpx;
 				.icon {
 					font-size: 35rpx;
+					color: #FED845;
 				}
 			}
 			.delete-btn{
@@ -160,6 +160,10 @@ export default {
 			}
 		}
 	}
+}
+.tabs-col{
+	position: fixed;
+	z-index: 10;
 }
 </style>
 <style>

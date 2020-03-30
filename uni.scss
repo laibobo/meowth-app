@@ -76,15 +76,16 @@ $uni-color-paragraph: #3f536e; // 文章段落颜色
 $uni-font-size-paragraph: 30upx;
 
 /*主题 相关*/
-$uni-theme-bg-color: #e62b30;
+$uni-theme-bg-color: #FFDB45;
 $uni-theme-active-color: #66f9cf;
 $uni-theme-font-color: #fff;
-$uni-theme-icon-color: #f5b134;
+$uni-theme-icon-color: #FFDB45;
 $uni-theme-active-icon-color: #fff;
-$uni-theme-active-icon-bgcolor: #f5b134;
-$uni-theme-tab-font-color: #fff;
-$uni-theme-active-tab-font-color: #f0f06e;
+$uni-theme-active-icon-bgcolor: #FED845;
+$uni-theme-tab-font-color: #3C3A29;
+$uni-theme-active-tab-font-color: #3C3A29;
 
+$uni-btn-hover-color:#F1F1F1;
 view.v-button {
 	background: #fff;
 	width: 750rpx;
@@ -100,4 +101,21 @@ view.v-button {
 	border-top: 2rpx solid #eee;
 	background: $uni-theme-bg-color;
 	color: #fff;
+}
+.right-btn{
+	display: flex;
+	color: #C9C9C9;
+	font-size: 24rpx;
+	align-items: center;
+	>text{
+		margin-top: -5rpx;
+	}
+}
+.ybtn{
+	background-color: #FFDA44;
+	border-radius: 10rpx;
+	font-size: 24rpx;
+	&::after{
+		border: none;
+	}
 }

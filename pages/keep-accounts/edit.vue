@@ -22,7 +22,7 @@
 				<text>{{remark}}</text>
 			</view>
 		</view>
-		<view class="icon-col"><view class="icon iconfont" v-html="categoryIcon"></view></view>
+		<view class="icon-col"><view class="icon iconfont" :style="getIconColor" v-html="categoryIcon"></view></view>
 	</view>
 </template>
 <script>
@@ -30,7 +30,6 @@ const app = getApp()
 export default {
 	data() {
 		return {
-			_db:null,
 			keepAccountId:'',
 			categoryType:'',
 			keepMoney:'',
@@ -41,49 +40,40 @@ export default {
 		};
 	},
 	onLoad(options){
-		this._db = app.globalData.wxDB;
 		this.keepAccountId = options.keepAccountId
 	},
 	onShow(){
-		this.getKeepAccountInfo()
-	},
-	methods:{
-		getCategoryInfo(categoryId){
-			this._db.collection('Category')
-				.doc(categoryId)
-				.get()
-				.then(result=>{
-					if(result.errMsg === 'document.get:ok'){
-						this.categoryName = result.data.name
-						this.categoryIcon = result.data.icon
-					}
-				})
-		},
-		getKeepAccountInfo(){
-			this._db.collection('AccountsRecord')
-			.doc(this.keepAccountId)
-			.get()
-			.then(result=>{
-				console.log('result:',result)
-				if(result.errMsg === 'document.get:ok'){
-					const data = result.data
-					this.getCategoryInfo(data.categoryId)
-					this.categoryType = data.categoryType === 0?'支出':'收入'
-					this.keepMoney = data.keepMoney
-					this.keepDate = `${data.keepYear}年${data.keepMonth}月${data.keepDay}日`
-					this.remark = data.remark
-				}else{
-					uni.showModal({
-						title:'提示',
-						content:result.errMsg
-					})
-				}
-			}).catch(err=>{
+		wx.cloud.callFunction({
+			name:'getKeepAccountInfo',
+			data:{
+				keepAccountId:this.keepAccountId
+			}
+		}).then(res=>{
+			if(res.errMsg === 'cloud.callFunction:ok' &&  res.result.list.length > 0){
+				const data = res.result.list[0]
+				this.categoryType = data.categoryType === 0?'支出':'收入'
+				this.keepMoney = data.keepMoney
+				this.keepDate = `${data.keepYear}年${data.keepMonth}月${data.keepDay}日`
+				this.remark = data.remark
+				this.categoryName = data.categorys[0].name
+				this.categoryIcon = data.categorys[0].icon
+			}else{
 				uni.showModal({
 					title:'提示',
-					content:'获取数据失败！程序异常'
+					content:result.errMsg
 				})
+			}
+		}).catch(err=>{
+			console.error(err)
+			uni.showModal({
+				title:'程序异常',
+				content:'获取数据失败！'
 			})
+		})
+	},
+	computed:{
+		getIconColor(){
+			return `color:#${this.categoryType === '收入'?'fb5e33':'30ac84'} !important;`
 		}
 	}
 };
@@ -131,7 +121,7 @@ export default {
 		margin: 150rpx auto;
 		.iconfont {
 			font-size: 200rpx;
-			color: $uni-theme-active-color;
+			color: red;
 		}
 	}
 	.btn-col {

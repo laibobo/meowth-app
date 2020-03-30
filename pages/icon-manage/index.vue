@@ -308,7 +308,7 @@ export default {
 	border-radius: 40rpx;
 }
 @mixin app-bg-theme {
-	background: red !important;
+	background: #FFD654 !important;
 	.iconfont {
 		color: #fff !important;
 	}
@@ -361,7 +361,7 @@ page {
 		height: 50rpx;
 		line-height: 50rpx;
 		text-align: center;
-		background: green;
+		background: #56BD27;
 		font-size: 24rpx;
 		border: none;
 		color: #fff;

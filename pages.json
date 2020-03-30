@@ -1,9 +1,7 @@
 {
-	"pages": [
-		{
+	"pages": [{
 			"path": "pages/index/index",
-			"style": {
-			}
+			"style": {}
 		},
 		{
 			"path": "pages/keep-accounts/index",
@@ -14,76 +12,57 @@
 			}
 		},
 		{
-			"path": "pages/keep-accounts/edit",
-			"style": {
-				"navigationBarTitleText": ""
-			}
+			"path": "pages/keep-accounts/edit"
 		},
 		{
-			"path": "pages/my/account",
-			"style": {
-				"navigationBarTitleText": "我的账户"
-			}
+			"path": "pages/my/account"
 		},
 		{
-			"path": "pages/my/index",
-			"style": {
-				"navigationBarTitleText": ""
-			}
+			"path": "pages/my/index"
 		},
 		{
-			"path": "pages/keep-accounts/detail",
-			"style": {
-				"navigationBarTitleText": "明细"
-			}
+			"path": "pages/keep-accounts/detail"
 		},
 		{
-			"path": "pages/icon-manage/index",
-			"style": {
-				"navigationBarTitleText": ""
-			}
+			"path": "pages/icon-manage/index"
 		},
 		{
-			"path": "pages/category-config/index",
-			"style": {
-				"navigationBarTitleText": "类别设置"
-			}
+			"path": "pages/category-config/index"
+		}, {
+			"path": "pages/invoice/index"
+		}, {
+			"path": "pages/invoice/ae"
+		}, {
+			"path": "pages/eportforms/yearbill"
+		}, {
+			"path": "pages/budget/index"
 		}
-        ,{
-            "path" : "pages/invoice/index",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/invoice/ae",
-            "style" : {}
-        }
-    ],
+	],
 	"globalStyle": {
-		"navigationBarTextStyle": "#fff",
-		"navigationBarTitleText": "喵喵",
-		"navigationBarBackgroundColor": "#E62B30",
-		"backgroundColor": "#E62B30",
-		"mp-alipay" : {
-		    "titleBarColor" : "#FFFFFF"
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "喵喵记账",
+		"navigationBarBackgroundColor": "#FFDB45",
+		"backgroundColor": "#FFDB45",
+		"mp-alipay": {
+			"titleBarColor": "#3D2F22"
 		}
 	},
 	"tabBar": {
-		"color": "#fff",
-        "selectedColor": "#F0F06E",
-		"backgroundColor": "#E62B30",
-		"list": [
-			{
+		"color": "#767676",
+		"selectedColor": "#443415",
+		"backgroundColor": "#FFFFFF",
+		"list": [{
 				"pagePath": "pages/keep-accounts/detail",
 				"iconPath": "static/image/tabBar/detail.png",
 				"selectedIconPath": "static/image/tabBar/detail-act.png",
-				"text": "明细" 
+				"text": "明细"
 			},
-			{
-				"pagePath": "pages/keep-accounts/index",
-				"iconPath": "static/image/tabBar/keepAccounts.png",
-				"selectedIconPath": "static/image/tabBar/keepAccounts-act.png",
-				"text": "记账" 
-			},
+			// {
+			// 	"pagePath": "pages/keep-accounts/index",
+			// 	"iconPath": "static/image/tabBar/keepAccounts.png",
+			// 	"selectedIconPath": "static/image/tabBar/keepAccounts-act.png",
+			// 	"text": "记账"
+			// },
 			{
 				"pagePath": "pages/my/index",
 				"iconPath": "static/image/tabBar/myAccount.png",

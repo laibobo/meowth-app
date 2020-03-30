@@ -1,11 +1,13 @@
 <template>
 	<view>
 		<!-- #ifdef MP-WEIXIN -->
-		<view class="loading" v-if="loading"><image :src="require('@/static/image/loading.gif')"></image></view>
 		<view v-if="!isAuthSetting">
 			<image :src="require('@/static/image/welcome.png')" class="welcome"></image>
-			<button class="bottom" open-type="getUserInfo" withCredentials="true" lang="zh_CN" @getuserinfo="getUserInfo">开启记账之旅</button>
-			<view class="fishpond"><image :src="require('@/static/image/01.jpg')" class="y1"></image></view>
+			<view class="foot">
+				<button class="bottom" open-type="getUserInfo" withCredentials="true" lang="zh_CN" @getuserinfo="getUserInfo">开启记账之旅</button>
+				<view class="fishpond"><image :src="require('@/static/image/01.jpg')" class="y1"></image></view>
+			</view>
+			<text class="miao"></text>
 		</view>
 		<!-- #endif-->
 	</view>
@@ -16,7 +18,6 @@ const app = getApp();
 export default {
 	data() {
 		return {
-			loading: true,
 			isAuthSetting: true,
 			userOpenId: ''
 		};
@@ -39,7 +40,6 @@ export default {
 		wx.getSetting({
 			success: function(res) {
 				setTimeout(_ => {
-					_self.loading = false;
 					_self.isAuthSetting = res.authSetting['scope.userInfo'] !== undefined;
 					if (_self.isAuthSetting) {
 						_self.optUserInfo();
@@ -75,6 +75,41 @@ export default {
 					let userInfo = uni.getStorageSync('user.info') || {};
 					if (userRes.data.length === 0) {
 						this.addedUserInfo(userInfo);
+						const categorysList = [
+							{"type":0,"icon":"\u0026#xe662;","name":"餐饮","sortnumber":0},
+							{"type":0,"icon":"\u0026#xe8e1;","name":"购物","sortnumber":1},
+							{"type":0,"icon":"\u0026#xe626;","name":"交通","sortnumber":2},
+							{"type":1,"icon":"\u0026#xe677;","name":"电影","sortnumber":3},
+							{"type":0,"icon":"\u0026#xe644;","name":"娱乐","sortnumber":4},
+							{"type":0,"icon":"\u0026#xe66c;","name":"蔬菜","sortnumber":5},
+							{"type":0,"icon":"\u0026#xe63c;","name":"水果","sortnumber":6},
+							{"type":0,"icon":"\u0026#xe6ac;","name":"零食","sortnumber":7},
+							{"type":0,"icon":"\u0026#xe666;","name":"服饰","sortnumber":8},
+							{"type":0,"icon":"\u0026#xe632;","name":"通讯","sortnumber":9},
+							{"icon":"\u0026#xe7ff;","name":"住房","type":0,"sortnumber":10},
+							{"name":"美容","type":0,"icon":"\u0026#xe6de;","sortnumber":11},
+							{"name":"日用","type":0,"icon":"\u0026#xe659;","sortnumber":12},
+							{"type":0,"icon":"\u0026#xe60b;","name":"学习","sortnumber":13},
+							{"type":0,"icon":"\u0026#xe6cd;","name":"宠物","sortnumber":14},
+							{"type":0,"icon":"\u0026#xe67e;","name":"游戏","sortnumber":15},
+							{"type":0,"icon":"\u0026#xe64d;","name":"医疗","sortnumber":16},
+							{"name":"社交","type":0,"icon":"\u0026#xe645;","sortnumber":17},
+							{"type":0,"icon":"\u0026#xe6c1;","name":"旅行","sortnumber":18},
+							{"type":0,"icon":"\u0026#xe679;","name":"居家","sortnumber":19},
+							{"type":0,"icon":"\u0026#xe653;","name":"公益","sortnumber":20},
+							{"type":0,"icon":"\u0026#xe691;","name":"孩子","sortnumber":21},
+							{"type":0,"icon":"\u0026#xe82d;","name":"亲友","sortnumber":22},
+							{"name":"办公","type":0,"icon":"\u0026#xe652;","sortnumber":23},
+							{"icon":"\u0026#xe620;","name":"其他","type":0,"sortnumber":24},
+							{"type":1,"icon":"\u0026#xe65d;","name":"兼职","sortnumber":0},
+							{"name":"礼金","type":1,"icon":"\u0026#xe651;","sortnumber":1},
+							{"type":1,"icon":"\u0026#xe625;","name":"理财","sortnumber":2},
+							{"type":1,"icon":"\u0026#xe615;","name":"工资","sortnumber":3},
+							{"icon":"\u0026#xe620;","name":"其他","type":1,"sortnumber":4}]
+						for(let i=0;i<categorysList.length;i++){
+							this.addDefaultCategorys(categorysList[i])
+						}
+						this.toSkip()
 					} else {
 						this.updateUserInfo(userInfo, userRes);
 					}
@@ -126,7 +161,7 @@ export default {
 			data.province = userInfo.province;
 			data.city = userInfo.city;
 			//data.gender = userInfo.gender
-
+			console.log('data:',data)
 			this.db
 				.collection('User')
 				.doc(resData._id)
@@ -166,6 +201,13 @@ export default {
 			wx.switchTab({
 				url: '../my/index'
 			});
+		},
+		addDefaultCategorys(data){
+			this.db.collection('Category').add({
+				data
+			}).then(res => {
+			  console.log(res)
+			})
 		}
 	}
 };
@@ -207,33 +249,54 @@ export default {
 		top: 10rpx;
 	}
 }
-
-.loading {
-	display: flex;
-	justify-content: center;
-
-	image {
-		width: 400rpx;
-		height: 300rpx;
-		margin-top: 200rpx;
-	}
-}
-
 .fishpond {
-	margin-top: 100rpx;
-
+	position: fixed;
+	top: 850rpx;
 	image {
 		position: relative;
 		width: 200rpx;
 		height: 100rpx;
 		transform: rotateY(120deg);
-		animation: mymove 30s infinite linear;
+		animation: mymove 30s infinite linear;		
 	}
 }
+.miao{
+	position: fixed;
+	width: 200rpx;
+	height: 100rpx;
+	border-radius: 50% / 50%;
+	top: 220rpx;
+	right: 50rpx;
+	border: 4rpx solid #f5f5f5;
+	text-align: center;
+	line-height: 100rpx;
 
+	&::after{
+		display: block;
+		content: '喵~';
+		font-size: 28rpx;
+		color: #ccc;		
+	}
+	&::before{
+		display: block;
+		content: '';
+		width: 50rpx;
+		height: 10rpx;
+		border: 4rpx solid #f5f5f5;
+		border-radius: 50% / 50%;
+		position: absolute;
+		bottom: -50rpx;
+		left: 20rpx;
+	}
+	
+}
 .welcome {
-	width: 750rpx;
-	height: 800rpx;
+	width: 380rpx;
+	height: 250rpx;
+	position: fixed;
+	left: 50%;
+	top: 350rpx;
+	margin-left: -190rpx;
 }
 
 .bottom {
@@ -241,11 +304,14 @@ export default {
 	font-size: 35rpx;
 	color: #fff;
 	background: $uni-theme-bg-color;
-	position: relative;
 	width: 270rpx;
 	z-index: 99;
 	height: 80rpx;
 	line-height: 80rpx;
+	position: fixed;
+	top: 650rpx;
+	left: 50%;
+	margin-left: -135rpx;
 }
 </style>
 <style>
