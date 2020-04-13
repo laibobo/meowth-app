@@ -18,6 +18,9 @@ export default {
 		};
 	},
 	onShow() {
+		uni.showLoading({
+			title:'数据加载中...'
+		})
 		this.getInvoiceList();
 	},
 	methods: {
@@ -33,6 +36,7 @@ export default {
 					if (res.errMsg == 'collection.get:ok') {
 						this.rows = res.data;
 					}
+					uni.hideLoading()
 				})
 				.catch(console.error);
 		},

@@ -23,7 +23,8 @@ export default {
 			isRefreshData: false,
 			dataList: [],
 			items: ['支出', '收入'],
-			currentCategoryType: 0
+			currentCategoryType: 0,
+			isLoading:true
 		};
 	},
 	onLoad(options) {
@@ -49,6 +50,9 @@ export default {
 	},
 	methods: {
 		getCategoryList() {
+			uni.showLoading({
+				title:'正在加载中...'
+			})
 			wx.cloud
 				.callFunction({
 					name: 'getCategoryList',
@@ -59,6 +63,7 @@ export default {
 				})
 				.then(({ result }) => {
 					this.dataList = result.data;
+					uni.hideLoading()
 				})
 				.catch(console.error);
 		},

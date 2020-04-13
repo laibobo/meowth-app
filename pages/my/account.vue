@@ -67,7 +67,10 @@
 					success: res => {
 						_self.photoUrl = res.tempFilePath;
 					},
-					fail: console.error
+					fail: err=>{
+						console.error(err)
+						uni.hideLoading()
+					}
 				});
 			}
 			this.db
@@ -77,9 +80,11 @@
 				})
 				.get()
 				.then(res => {
-					const data = res.data[0];
-					this.userTableId = data._id;
-					this.sex = data.gender;
+					if(res.data){
+						const data = res.data[0];
+						this.userTableId = data._id;
+						this.sex = data.gender;
+					}
 				})
 				.catch(err => {
 					console.error('获取用户信息异常:', err);

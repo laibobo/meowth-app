@@ -1,11 +1,10 @@
 <template>
 	<view>
 		<!-- #ifdef MP-WEIXIN -->
-		<view v-if="!isAuthSetting">
-			<image :src="require('@/static/image/welcome.png')" class="welcome"></image>
+		<view>
+			<image :src="require('@/static/image/welcome.jpg')" class="welcome"></image>
 			<view class="foot">
-				<button class="bottom" open-type="getUserInfo" withCredentials="true" lang="zh_CN" @getuserinfo="getUserInfo">开启记账之旅</button>
-				<view class="fishpond"><image :src="require('@/static/image/01.jpg')" class="y1"></image></view>
+				<button class="bottom" open-type="getUserInfo" withCredentials="true" lang="zh_CN" @getuserinfo="getUserInfo">授权登录</button>				
 			</view>
 			<text class="miao"></text>
 		</view>
@@ -18,8 +17,7 @@ const app = getApp();
 export default {
 	data() {
 		return {
-			isAuthSetting: true,
-			userOpenId: ''
+			isAuthSetting: false
 		};
 	},
 	onLoad() {
@@ -27,29 +25,22 @@ export default {
 			env: 'develop-tm3ye'
 		});
 		this.db = app.globalData.wxDB;
-		wx.cloud
-			.callFunction({
-				name: 'login'
-			})
-			.then(res => {
-				uni.setStorageSync('user.openid', res.result.openid);
-				this.userOpenId = res.result.openid;
-			});
 		const _self = this;
 		//获取用户是否授权
 		wx.getSetting({
 			success: function(res) {
-				setTimeout(_ => {
-					_self.isAuthSetting = res.authSetting['scope.userInfo'] !== undefined;
-					if (_self.isAuthSetting) {
-						_self.optUserInfo();
-					}
-				}, 1500);
+				_self.isAuthSetting = res.authSetting['scope.userInfo'] === undefined;
+				if (!_self.isAuthSetting) {
+					_self.optUserInfo();
+				}
 			},
 			fail: function(err) {
 				console.error('查询是否授权失败！', err);
 			}
 		});
+	},
+	onShow(){
+		 wx.hideHomeButton()
 	},
 	methods: {
 		/**
@@ -61,6 +52,7 @@ export default {
 				success: function(res) {
 					uni.setStorageSync('user.info', res.userInfo);
 					_self.optUserInfo();
+					uni.setStorageSync('isAuthSetting',true)
 				}
 			});
 		},
@@ -68,7 +60,7 @@ export default {
 			this.db
 				.collection('User')
 				.where({
-					_openid: this.userOpenId
+					_openid: uni.getStorageSync('user.openid')
 				})
 				.get()
 				.then(userRes => {
@@ -109,10 +101,10 @@ export default {
 						for(let i=0;i<categorysList.length;i++){
 							this.addDefaultCategorys(categorysList[i])
 						}
-						this.toSkip()
-					} else {
-						this.updateUserInfo(userInfo, userRes);
 					}
+					uni.switchTab({
+					    url: '/pages/my/index'
+					})
 				});
 		},
 		/**
@@ -144,64 +136,6 @@ export default {
 					console.error('添加用户信息失败！', err);
 				});
 		},
-		/**
-		 * 更新用户信息
-		 * */
-		updateUserInfo(userInfo, userRes) {
-			const resData = userRes.data[0],
-				data = {};
-			//判断用户是否上传头像、更改昵称，如没有则获取微信数据设置
-			if (!resData.isCustomPhoto) {
-				data.avatarUrl = userInfo.avatarUrl;
-			}
-			if (!resData.isCustomNickName) {
-				data.nickName = userInfo.nickName;
-			}
-			data.weChat = userInfo.NickName;
-			data.province = userInfo.province;
-			data.city = userInfo.city;
-			//data.gender = userInfo.gender
-			console.log('data:',data)
-			this.db
-				.collection('User')
-				.doc(resData._id)
-				.update({
-					data
-				})
-				.then(updateRes => {
-					console.log('更新用户信息成功！', updateRes);
-					this.getNewUserInfo();
-				})
-				.catch(err => {
-					console.error('更新用户信息成功:', err);
-				});
-		},
-		/**
-		 * 获取用户信息（数据库数据）
-		 * */
-		getNewUserInfo() {
-			this.db
-				.collection('User')
-				.where({
-					_openid: this.userOpenId
-				})
-				.get()
-				.then(res => {
-					console.log('getNewUserInfo：', res.data);
-					if (res.data.length > 0) {
-						uni.setStorageSync('user.info', res.data[0]);
-					}
-					this.toSkip();
-				})
-				.catch(err => {
-					console.error('获取用户信息异常:', err);
-				});
-		},
-		toSkip() {
-			wx.switchTab({
-				url: '../my/index'
-			});
-		},
 		addDefaultCategorys(data){
 			this.db.collection('Category').add({
 				data
@@ -213,53 +147,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>	
-@keyframes mymove {
-	0% {
-		left: 5rpx;
-	}
-
-	8% {
-		left: 50rpx;
-		top: 10rpx;
-	}
-
-	15% {
-		left: 100rpx;
-		top: 30rpx;
-	}
-
-	35% {
-		left: 180rpx;
-		top: 45rpx;
-	}
-
-	50% {
-		left: 300rpx;
-		top: 60rpx;
-	}
-
-	80% {
-		left: 500rpx;
-		top: 5rpx;
-	}
-
-	99% {
-		left: 750rpx;
-		top: 10rpx;
-	}
-}
-.fishpond {
-	position: fixed;
-	top: 850rpx;
-	image {
-		position: relative;
-		width: 200rpx;
-		height: 100rpx;
-		transform: rotateY(120deg);
-		animation: mymove 30s infinite linear;		
-	}
-}
+<style lang="scss" scoped>
 .miao{
 	position: fixed;
 	width: 200rpx;
@@ -313,6 +201,12 @@ export default {
 	left: 50%;
 	margin-left: -135rpx;
 }
+button{
+	&::after{
+		border: none !important;
+	}
+}
+
 </style>
 <style>
 	page{

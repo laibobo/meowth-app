@@ -92,6 +92,9 @@
 				this.getYearBillList()
 			},
 			getNowMonthKeepInfo(){
+				uni.showLoading({
+					title:'数据加载中...'
+				})
 				const db = app.globalData.wxDB;
 				const $ = db.command.aggregate;
 				this.yearBill.income = '0.00'
@@ -108,10 +111,19 @@
 					.end()
 					.then(res=>{
 						if(res.errMsg === 'collection.aggregate:ok' && res.list.length > 0){
-							this.yearBill.income = res.list[0]['keepMoney'].toFixed(2)
-							this.yearBill.expenditure = res.list[1]['keepMoney'].toFixed(2)
+							const filterExpenditure = res.list.filter(o=>o._id === 0)
+							const filterIncome = res.list.filter(o=>o._id === 1)
+							if(filterExpenditure.length > 0){
+								this.yearBill.expenditure = filterExpenditure[0]['keepMoney'].toFixed(2);
+							}
+							if(filterIncome.length > 0){
+								this.yearBill.income = filterIncome[0]['keepMoney'].toFixed(2);							
+							}
 							this.yearBill.surplus = (this.yearBill.income - this.yearBill.expenditure).toFixed(2)
 						}
+						uni.hideLoading()
+					}).catch(_=>{
+						uni.hideLoading()
 					})
 			},
 			getYearBillList(){

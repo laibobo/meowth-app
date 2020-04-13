@@ -47,12 +47,10 @@
 				        </view>
 				    </uni-swipe-action-item>
 				</uni-swipe-action>
-				
 			</view>
-			<loading v-if="isLoading" class="s-b"></loading>
-			<view class="s-b" v-else-if="!isLoading && Object.keys(keepLogs).length == 0">
+			<view class="s-b" v-if="!isLoading && Object.keys(keepLogs).length == 0">
 				<image :src="require('@/static/image/nodata.png')" mode="aspectFit"></image>
-				<view>无记账记录~</view>
+				<view>快去创建你的第一笔账吧~ </view>
 			</view>
 		</scroll-view>
 	</view>
@@ -113,6 +111,9 @@ export default {
 	},
 	methods: {
 		deleteKeepAccount(id){
+			uni.showLoading({
+				title:'删除中...'
+			})
 			this._db.collection('AccountsRecord')
 			.doc(id)
 			.remove()
@@ -120,9 +121,11 @@ export default {
 				if(result.errMsg === 'document.remove:ok'){
 					uni.showToast({
 						icon:'success',
-						title:'删除成功!'
+						title:'删除成功'
 					})
-					this.getNowYearMonthAccountLog()
+					setTimeout(_=>{
+						this.getNowYearMonthAccountLog()	
+					},1000)					
 				}else{
 					uni.showModal({
 						title:'提示',
@@ -139,6 +142,9 @@ export default {
 			})
 		},
 		getNowYearMonthAccountLog() {
+			uni.showLoading({
+				title:'数据加载中...'
+			})
 			this.keepLogs = []
 			this.isLoading = true
 			wx.cloud.callFunction({
@@ -154,11 +160,13 @@ export default {
 				this.keepLogs = this._dataGroup(list);
 				this.incomeSum = this.getYearMoneySum(1, list);
 				this.expenditureSum = this.getYearMoneySum(0, list);
+				uni.hideLoading()
 			}).catch(err=>{
 				uni.showModal({
 					title:'系统异常',
 					content:err
 				})
+				uni.hideLoading()
 			})
 		},
 		getYearMoneySum(type, list = []) {

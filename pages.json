@@ -1,7 +1,10 @@
 {
-	"pages": [{
-			"path": "pages/index/index",
-			"style": {}
+	"pages": [
+		{
+			"path": "pages/my/index"
+		},
+		{
+			"path": "pages/index/index"
 		},
 		{
 			"path": "pages/keep-accounts/index",
@@ -16,9 +19,6 @@
 		},
 		{
 			"path": "pages/my/account"
-		},
-		{
-			"path": "pages/my/index"
 		},
 		{
 			"path": "pages/keep-accounts/detail"

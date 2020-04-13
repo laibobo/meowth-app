@@ -55,14 +55,19 @@
 					<button class="ybtn">+ 设置预算</button>	
 				</view>
 			</view>
-			<view class="info" v-if="isLoadingBudget"><budget chartElementId="sumbudget" :monthBudgetMoney="monthBudgetMoney" :monthExpendMoney="monthExpendMoney"></budget></view>
+			<view class="info"><budget chartElementId="sumbudget" :monthBudgetMoney="monthBudgetMoney" :monthExpendMoney="monthExpendMoney"></budget></view>
 		</view>
 		<view class="tool">
 			<view class="t-item" data-url="../invoice/index" @click="navigateTo">
 				<view class="icon-col"><view class="icon iconfont">&#xe71a;</view></view>
 				<text>发票助手</text>
 			</view>
-		</view>
+			<button class="t-item share-btn" plain="true" open-type="share">
+				<view class="icon-col"><view class="icon iconfont">&#xe742;</view></view>
+				<text>推荐给好友</text>
+			</button>
+		</view>		
+		
 	</view>
 </template>
 
@@ -89,29 +94,56 @@ export default {
 			month: 0,
 			monthBudgetMoney: 0,
 			monthExpendMoney: 0,
-			db: app.globalData.wxDB,
-			openid: uni.getStorageSync('user.openid'),
+			db: null,
+			openid: '',
 			isLoadingBudget:false,
 			monthBudgetId:''
 		};
 	},
+	onLoad() {
+		const _self = this
+		app.globalData.wxDB = wx.cloud.database({
+			env: 'develop-tm3ye'
+		});
+		this.db = app.globalData.wxDB
+		wx.cloud
+		.callFunction({
+			name: 'login'
+		})
+		.then(res => {
+			uni.setStorageSync('user.openid', res.result.openid);
+			_self.userOpenId = res.result.openid
+		});
+		wx.getSetting({
+			success: function(res) {
+				const isAuthSetting = res.authSetting['scope.userInfo'] !== undefined && res.authSetting['scope.userInfo'] !== false;				
+				uni.setStorageSync('isAuthSetting',isAuthSetting)
+				if(isAuthSetting){
+					_self.updateUserInfo()
+				}
+			},
+			fail: function(err) {
+				console.error('查询是否授权失败！', err);
+			}
+		});
+	},
 	onShow() {
 		this.isLoadingBudget = false
 		const _self = this,userInfo = uni.getStorageSync('user.info') || {};
-		this.nickName = userInfo.nickName;
+		this.nickName = userInfo.nickName || '您好！请先登录';
 		if (userInfo.isCustomPhoto) {
 			wx.cloud.downloadFile({
 				fileID: userInfo.avatarUrl,
 				success: res => {
-					_self.photoUrl = res.tempFilePath;
+					_self.photoUrl = res.tempFilePath
 				},
 				fail: console.error
 			});
 		} else {
-			this.photoUrl = userInfo.avatarUrl;
+			this.photoUrl = userInfo.avatarUrl || require('@/static/image/photo.jpg');
 		}
 		this.getKeepAccountsInfo();
-		this.getNowMonthKeepInfo();
+		this.getNowMonthKeepInfo();			
 	},
 	computed: {
 		getMonth() {
@@ -123,14 +155,22 @@ export default {
 		}
 	},
 	methods: {
-		navigateTo(e) {
-			let url = e.currentTarget.dataset.url;
-			if(url === '../budget/index'){
-				url = `${url}?monthBudgetMoney=${this.monthBudgetMoney}&monthExpendMoney=${this.monthExpendMoney}&monthBudgetId=${this.monthBudgetId}`
+		onShareAppMessage(){
+			return {
+				title:'喵喵快速记账~',
+				imageUrl:'/static/image/welcome.jpg'
 			}
-			uni.navigateTo({
-				url
-			});
+		},
+		navigateTo(e) {
+			if(this.$authorize()){
+				let url = e.currentTarget.dataset.url;
+				if(url === '../budget/index'){
+					url = `${url}?monthBudgetMoney=${this.monthBudgetMoney}&monthExpendMoney=${this.monthExpendMoney}&monthBudgetId=${this.monthBudgetId}`
+				}
+				uni.navigateTo({
+					url
+				});	
+			}
 		},
 		//当月总预算
 		getCurrentMonthBudget() {
@@ -193,9 +233,15 @@ export default {
 				.then(res => {
 					let expenditure = 0
 					if (res.errMsg === 'cloud.callFunction:ok' && res.result.list.length > 0) {
-						expenditure = res.result.list[1]['keepMoney'].toFixed(2);
-						this.monthBill.income = res.result.list[0]['keepMoney'].toFixed(2);
-						this.monthBill.expenditure = expenditure;
+						const filterExpenditure = res.result.list.filter(o=>o._id === 0)
+						const filterIncome = res.result.list.filter(o=>o._id === 1)
+						if(filterExpenditure.length > 0){
+							expenditure = filterExpenditure[0]['keepMoney'].toFixed(2);
+						}
+						if(filterIncome.length > 0){
+							this.monthBill.income = filterIncome[0]['keepMoney'].toFixed(2);							
+						}
+						this.monthBill.expenditure = expenditure
 						this.monthBill.surplus = (this.monthBill.income - this.monthBill.expenditure).toFixed(2);	
 					}
 					this.getCurrentMonthBudget().then(result => {
@@ -207,7 +253,74 @@ export default {
 						this.isLoadingBudget = true
 					})
 				});
-		}
+		},
+		addDefaultCategorys(data){
+			this.db.collection('Category').add({
+				data
+			}).then(res => {
+			  console.log(res)
+			})
+		},
+		/**
+		 * 更新用户信息
+		 * */
+		updateUserInfo() {
+			this.db
+				.collection('User')
+				.where({
+					_openid: this.userOpenId
+				})
+				.get()
+				.then(userRes => {
+					let userInfo = uni.getStorageSync('user.info') || {};
+					if (userRes.data.length > 0) {
+						const resData = userRes.data[0],data = {};
+						//判断用户是否上传头像、更改昵称，如没有则获取微信数据设置
+						if (!resData.isCustomPhoto) {
+							data.avatarUrl = userInfo.avatarUrl;
+						}
+						if (!resData.isCustomNickName) {
+							data.nickName = userInfo.nickName;
+						}
+						data.weChat = userInfo.NickName;
+						data.province = userInfo.province;
+						data.city = userInfo.city;
+						data.gender = userInfo.gender
+						this.db
+						.collection('User')
+						.doc(resData._id)
+						.update({
+							data
+						})
+						.then(updateRes => {
+							console.log('更新用户信息成功！', updateRes);
+							this.getNewUserInfo();
+						})
+						.catch(err => {
+							console.error('更新用户信息成功:', err);
+						});
+					}
+				});
+		},
+		/**
+		 * 获取用户信息（数据库数据）
+		 * */
+		getNewUserInfo() {
+			this.db
+				.collection('User')
+				.where({
+					_openid: this.userOpenId
+				})
+				.get()
+				.then(res => {
+					if (res.data.length > 0) {
+						uni.setStorageSync('user.info', res.data[0]);
+					}
+				})
+				.catch(err => {
+					console.error('获取用户信息异常:', err);
+				});
+		},
 	}
 };
 </script>
@@ -244,6 +357,8 @@ export default {
 	padding: 20rpx 40rpx 50rpx;
 	font-size: 32rpx;
 	@include title-style;
+	height: 165px;
+	box-sizing: border-box;
 	.info {
 		height: 200rpx;
 	}
@@ -292,11 +407,14 @@ export default {
 }
 .tool {
 	@include panel-style;
-	padding: 40rpx;
+	padding: 40rpx 5rpx;
+	display: flex;
+	flex-wrap: wrap;
 	.t-item {
-		width: 100rpx;
+		width: 150rpx;
 		height: auto;
 		text-align: center;
+		margin: 0 5rpx;
 		.icon-col {
 			background: #f8f8f8;
 			width: 100rpx;
@@ -305,6 +423,7 @@ export default {
 			display: flex;
 			align-items: center;
 			justify-content: center;
+			margin: 0 auto;
 			.iconfont {
 				color: #000;
 			}
@@ -312,6 +431,7 @@ export default {
 		text {
 			font-size: 24rpx;
 			color: #333;
+			white-space:nowrap;
 		}
 	}
 }
@@ -352,5 +472,10 @@ export default {
 			}
 		}
 	}
+}
+.share-btn{
+	line-height: 35rpx;
+	border: none;
+	padding: 0;
 }
 </style>

@@ -65,6 +65,9 @@ export default {
 				content:'确认删除该发票信息？',
 				success:function(result){
 					if(result.confirm){
+						uni.showLoading({
+							title:'删除中...'
+						})
 						_self.deleteInvoice()
 					}
 				}
@@ -74,9 +77,15 @@ export default {
 			app.globalData.wxDB.collection('InvoiceManage').doc(this.form._id).remove({
 				success:function(res){
 					if(res.errMsg === 'document.remove:ok'){
-						uni.navigateBack({
-							delta: 1
+						uni.showToast({
+							title:'删除成功',
+							icon:'success'
 						})
+						setTimeout(_=>{
+							uni.navigateBack({
+								delta: 1
+							})
+						},1000)
 					}
 				}
 			})
@@ -99,6 +108,9 @@ export default {
 				});
 				return false;
 			}
+			uni.hideLoading({
+				title:'保存中...'
+			})
 			if(this.isEdit){
 				app.globalData.wxDB.collection('InvoiceManage')
 					.doc(this.form._id)
@@ -112,9 +124,7 @@ export default {
 							tfn:data.tfn
 						}
 					}).then(result=>{
-						uni.navigateBack({
-							delta: 1
-						})
+						this._opts()	
 					}).catch(err=>{
 						uni.showModal({
 							title:'错误提示',
@@ -129,12 +139,21 @@ export default {
 						data: data
 					})
 					.then(res => {
-						uni.navigateBack({
-							delta: 1
-						})
+						this._opts()					
 					})
 					.catch(console.error);
 			}
+		},
+		_opts(){
+			uni.showToast({
+				title:'保存成功',
+				icon:'success'
+			})
+			setTimeout(_=>{
+				uni.navigateBack({
+					delta: 1
+				})	
+			},1000)	
 		}
 	}
 };

@@ -1,7 +1,7 @@
 <template>
 	<view class="budget-col">
-		<view class="overall-budget" v-if="isShow" @click="openEdit">
-			<view class="title">03月总预算
+		<view class="overall-budget" v-if="isShow && !isBudgetDialog" @click="openEdit">
+			<view class="title">{{month}}月总预算
 				<view>编辑</view>
 			</view>
 			<view class="info">

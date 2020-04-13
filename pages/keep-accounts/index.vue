@@ -8,8 +8,7 @@
 					<view class="icon-col"><view class="icon iconfont" v-html="item.icon"></view></view>
 					<text class="explain">{{ item.name }}</text>
 				</view>				
-				<loading v-if="isLoading" class="loading"></loading>
-				<view v-else class="category" @click="handleDeploy">
+				<view v-if="!isLoading" class="category" @click="handleDeploy">
 					<view class="icon-col"><view class="icon iconfont">&#xe6df;</view></view>
 					<text class="explain">设置</text>
 				</view>
@@ -46,7 +45,7 @@
 				<view class="m-keyboard-tool">
 					<view class="s-zo" hover-class="keyboarhover">
 						<picker class="keepdate-picker" mode="date" :value="keepDate" @change="handleKeepDateChange" :disabled="keepAccountId !== ''">
-							<view class="uni-input">{{ getShowKeepDate }}</view>
+							<view class="uni-input" style="font-weight: 600;">{{ getShowKeepDate }}</view>
 						</picker>
 					</view>
 					<view @click="handleUfuncCode('+')" hover-class="keyboarhover">+</view>
@@ -129,7 +128,7 @@ export default {
 					content:err
 				})
 			})
-		}else{
+		}else{			
 			this.getCategoryList();
 		}	
 	},
@@ -156,6 +155,9 @@ export default {
 			const type = this.currentCategoryType;
 			this.dataList = []
 			this.isLoading = true
+			uni.showLoading({
+				title:'数据加载中...'
+			})
 			wx.cloud
 				.callFunction({
 					name: 'getCategoryList',
@@ -168,8 +170,10 @@ export default {
 					this.dataList = result.data;
 					this.isLoading = false
 					this.calculateScrollHeight();
+					uni.hideLoading()
 				})
 				.catch(err=>{
+					uni.hideLoading()
 					console.error(err)
 				});
 		},
@@ -544,31 +548,6 @@ export default {
 		font-size: 32rpx;
 		font-weight: 400;
 	}
-	// .keepdate-picker {
-	// 	background: #eaeaea;
-	// 	height: 70rpx;
-	// 	line-height: 70rpx;
-	// 	border-radius: 25rpx;
-	// 	font-size: 32rpx;
-
-	// 	.uni-input {
-	// 		position: relative;
-	// 		padding: 0 40rpx 0 20rpx;
-
-	// 		&:before {
-	// 			content: '';
-	// 			display: block;
-	// 			width: 0;
-	// 			height: 0;
-	// 			border-width: 10rpx;
-	// 			border-style: solid;
-	// 			border-color: #c8c8c8 transparent transparent transparent;
-	// 			position: absolute;
-	// 			top: 50%;
-	// 			right: 18rpx;
-	// 		}
-	// 	}
-	// }
 
 	.close {
 		font-size: 80rpx;

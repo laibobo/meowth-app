@@ -43,12 +43,16 @@ export default {
 		this.keepAccountId = options.keepAccountId
 	},
 	onShow(){
+		uni.showLoading({
+			title:'数据加载中...'
+		})
 		wx.cloud.callFunction({
 			name:'getKeepAccountInfo',
 			data:{
 				keepAccountId:this.keepAccountId
 			}
 		}).then(res=>{
+			uni.hideLoading()
 			if(res.errMsg === 'cloud.callFunction:ok' &&  res.result.list.length > 0){
 				const data = res.result.list[0]
 				this.categoryType = data.categoryType === 0?'支出':'收入'

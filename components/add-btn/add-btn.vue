@@ -11,10 +11,11 @@
 		},
 		methods:{
 			onClick(){
-				console.log('onClick')
-				uni.navigateTo({
-					url:'../../pages/keep-accounts/index'
-				})
+				if(this.$authorize()){
+					uni.navigateTo({
+						url:'../../pages/keep-accounts/index'
+					})
+				}				
 			}
 		}
 	}
