@@ -14,15 +14,15 @@
 			<view class="info">
 				<view>
 					<label>收入</label>
-					<view class="money">{{ incomeSum }}</view>
+					<view class="money">{{ incomeSum | formatMoney }}</view>
 				</view>
 				<view>
 					<label>支出</label>
-					<view class="money">{{ expenditureSum }}</view>
+					<view class="money">{{ expenditureSum |formatMoney }}</view>
 				</view>
 				<view>
 					<label>结余</label>
-					<view class="money">{{ incomeSum - expenditureSum }}</view>
+					<view class="money">{{ incomeSum - expenditureSum | formatMoney }}</view>
 				</view>
 			</view>
 		</view>
@@ -31,8 +31,8 @@
 				<view class="summary">
 					<text class="date">{{ item[0].keepMonth }}月{{ item[0].keepDay }}日 {{ item[0].keepWeek }}</text>
 					<view class="expenses">
-						<text class="income">收入 {{ getYearMoneySum(1, item) }}</text>
-						<text class="expend">支出 {{ getYearMoneySum(0, item) }}</text>
+						<text class="income">收入 {{ getYearMoneySum(1, item) | formatMoney }}</text>
+						<text class="expend">支出 {{ getYearMoneySum(0, item) | formatMoney}}</text>
 					</view>
 				</view>
 				<uni-swipe-action>
@@ -42,8 +42,8 @@
 				        		<view class="icon-col"><view class="icon iconfont" v-html="childItem.categorys[0].icon"></view></view>
 				        		<text class="explain">{{ childItem.remark }}</text>
 				        	</view>
-				        	<text class="money income" v-if="childItem.categoryType === 1">+{{ childItem.keepMoney }}</text>
-				        	<text class="money expend" v-else>-{{ childItem.keepMoney }}</text>
+				        	<text class="money income" v-if="childItem.categoryType === 1">+{{ childItem.keepMoney | formatMoney }}</text>
+				        	<text class="money expend" v-else>-{{ childItem.keepMoney | formatMoney }}</text>
 				        </view>
 				    </uni-swipe-action-item>
 				</uni-swipe-action>

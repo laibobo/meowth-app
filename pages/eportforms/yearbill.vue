@@ -12,15 +12,15 @@
 			<view class="content">
 				<view class="surplus">
 					<label>结余</label>
-					<text>{{yearBill.surplus}}</text>
+					<text>{{yearBill.surplus |formatMoney }}</text>
 				</view>
 				<view class="income">
 					<label>收入</label>
-					<text>{{yearBill.income}}</text>
+					<text>{{yearBill.income |formatMoney }}</text>
 				</view>
 				<view class="expenditure">
 					<label>支出</label>
-					<text>{{yearBill.expenditure}}</text>
+					<text>{{yearBill.expenditure |formatMoney }}</text>
 				</view>
 			</view>
 		</view>
@@ -34,9 +34,9 @@
 			<scroll-view class="table-body-scroll" scroll-y="true" :style="getScrollHeight">
 				<view class="item" v-for="(item,index) in yearBillList" :key="index">
 					<text>{{item.month}}月</text>
-					<text>{{item.income}}</text>
-					<text>{{item.expenditure}}</text>
-					<text>{{item.surplus}}</text>
+					<text>{{item.income |formatMoney }}</text>
+					<text>{{item.expenditure |formatMoney }}</text>
+					<text>{{item.surplus |formatMoney }}</text>
 				</view>
 			</scroll-view>
 		</view>

@@ -11,7 +11,7 @@
 			</view>
 			<view>
 				<label>金额</label>
-				<text>{{keepMoney}}</text>
+				<text>{{keepMoney | formatMoney}}</text>
 			</view>
 			<view>
 				<label>日期</label>

@@ -6,7 +6,7 @@ import { isAuthorize } from '@/public/index.js'
 Vue.config.productionTip = false
 Vue.component('loading',Loading)
 App.mpType = 'app'
-
+Vue.filter('formatMoney',function(value){	return Math.floor(value * 100) / 100})
 Vue.prototype.$authorize = isAuthorize
 const app = new Vue({
     ...App

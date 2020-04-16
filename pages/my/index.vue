@@ -31,15 +31,15 @@
 				</view>
 				<view>
 					<label>收入</label>
-					<text>{{ monthBill.income }}</text>
+					<text>{{ monthBill.income | formatMoney }}</text>
 				</view>
 				<view>
 					<label>支出</label>
-					<text>{{ monthBill.expenditure }}</text>
+					<text>{{ monthBill.expenditure | formatMoney }}</text>
 				</view>
 				<view>
 					<label>结余</label>
-					<text>{{ monthBill.surplus }}</text>
+					<text>{{ monthBill.surplus | formatMoney }}</text>
 				</view>
 			</view>
 		</view>
@@ -55,7 +55,25 @@
 					<button class="ybtn">+ 设置预算</button>	
 				</view>
 			</view>
-			<view class="info"><budget chartElementId="sumbudget" :monthBudgetMoney="monthBudgetMoney" :monthExpendMoney="monthExpendMoney"></budget></view>
+			<view class="info">
+				<view class="chart">
+					<ring-chart :monthExpendMoney="monthExpendMoney" :monthBudgetMoney="monthBudgetMoney" v-if="isLoadingBudget" />
+				</view>
+				<view class="budgetinfo">
+					<view class="major">
+						<label>剩余预算：</label>
+						<text>{{monthBudgetMoney-monthExpendMoney | formatMoney }}</text>
+					</view>
+					<view>
+						<label>本月预算：</label>
+						<text>{{monthBudgetMoney | formatMoney }}</text>
+					</view>
+					<view>
+						<label>本月支出：</label>
+						<text>{{monthExpendMoney | formatMoney }}</text>
+					</view>
+				</view>
+			</view>
 		</view>
 		<view class="tool">
 			<view class="t-item" data-url="../invoice/index" @click="navigateTo">
@@ -66,8 +84,7 @@
 				<view class="icon-col"><view class="icon iconfont">&#xe742;</view></view>
 				<text>推荐给好友</text>
 			</button>
-		</view>		
-		
+		</view>
 	</view>
 </template>
 
@@ -75,10 +92,12 @@
 const app = getApp();
 import addBtn from '@/components/add-btn/add-btn.vue';
 import Budget from '@/components/budget/budget.vue';
+import RingChart from '@/components/ring-chart/ring-chart.vue';
 export default {
 	components: {
 		addBtn,
-		Budget
+		Budget,
+		RingChart
 	},
 	data() {
 		return {
@@ -112,38 +131,32 @@ export default {
 		})
 		.then(res => {
 			uni.setStorageSync('user.openid', res.result.openid);
-			_self.userOpenId = res.result.openid
-		});
-		wx.getSetting({
-			success: function(res) {
-				const isAuthSetting = res.authSetting['scope.userInfo'] !== undefined && res.authSetting['scope.userInfo'] !== false;				
-				uni.setStorageSync('isAuthSetting',isAuthSetting)
-				if(isAuthSetting){
-					_self.updateUserInfo()
+			wx.getSetting({
+				success: function(res) {
+					const isAuthSetting = res.authSetting['scope.userInfo'] !== undefined && res.authSetting['scope.userInfo'] !== false;				
+					uni.setStorageSync('isAuthSetting',isAuthSetting)
+					if(isAuthSetting){
+						wx.getUserInfo({
+							success: function(res) {
+								uni.setStorageSync('user.info', res.userInfo)
+								_self.updateUserInfo()
+							}
+						});
+					}
+				},
+				fail: function(err) {
+					console.error('查询是否授权失败！', err);
 				}
-			},
-			fail: function(err) {
-				console.error('查询是否授权失败！', err);
-			}
+			});
 		});
 	},
 	onShow() {
 		this.isLoadingBudget = false
-		const _self = this,userInfo = uni.getStorageSync('user.info') || {};
+		const userInfo = uni.getStorageSync('user.info') || {};
 		this.nickName = userInfo.nickName || '您好！请先登录';
-		if (userInfo.isCustomPhoto) {
-			wx.cloud.downloadFile({
-				fileID: userInfo.avatarUrl,
-				success: res => {
-					_self.photoUrl = res.tempFilePath
-				},
-				fail: console.error
-			});
-		} else {
-			this.photoUrl = userInfo.avatarUrl || require('@/static/image/photo.jpg');
-		}
+		this.photoUrl = userInfo.avatarUrl || require('@/static/image/photo.png');
 		this.getKeepAccountsInfo();
-		this.getNowMonthKeepInfo();			
+		this.getNowMonthKeepInfo();
 	},
 	computed: {
 		getMonth() {
@@ -152,6 +165,9 @@ export default {
 				month = `0${this.month}`;
 			}
 			return month;
+		},
+		getOpenid(){
+			return uni.getStorageSync('user.openid')
 		}
 	},
 	methods: {
@@ -179,7 +195,7 @@ export default {
 			return this.db
 				.collection('Budget')
 				.where({
-					_openid: this.openid,
+					_openid: uni.getStorageSync('user.openid'),
 					year: date.getFullYear(),
 					month: date.getMonth() + 1
 				})
@@ -192,7 +208,7 @@ export default {
 				.collection('AccountsRecord')
 				.aggregate()
 				.match({
-					_openid: this.openid
+					_openid: uni.getStorageSync('user.openid')
 				});
 			//获取记账总天数
 			_od.group({
@@ -225,7 +241,7 @@ export default {
 				.callFunction({
 					name: 'getMonthBill',
 					data: {
-						openid: this.openid,
+						openid: uni.getStorageSync('user.openid'),
 						keepYear: date.getFullYear(),
 						keepMonth: this.month
 					}
@@ -268,7 +284,7 @@ export default {
 			this.db
 				.collection('User')
 				.where({
-					_openid: this.userOpenId
+					_openid: uni.getStorageSync('user.openid')
 				})
 				.get()
 				.then(userRes => {
@@ -276,9 +292,7 @@ export default {
 					if (userRes.data.length > 0) {
 						const resData = userRes.data[0],data = {};
 						//判断用户是否上传头像、更改昵称，如没有则获取微信数据设置
-						if (!resData.isCustomPhoto) {
-							data.avatarUrl = userInfo.avatarUrl;
-						}
+						data.avatarUrl = userInfo.avatarUrl;
 						if (!resData.isCustomNickName) {
 							data.nickName = userInfo.nickName;
 						}
@@ -309,7 +323,7 @@ export default {
 			this.db
 				.collection('User')
 				.where({
-					_openid: this.userOpenId
+					_openid: uni.getStorageSync('user.openid')
 				})
 				.get()
 				.then(res => {
@@ -361,6 +375,31 @@ export default {
 	box-sizing: border-box;
 	.info {
 		height: 200rpx;
+		display: flex;
+		justify-content: space-between;
+		.chart{
+			width: 200rpx;
+			margin-top: -20rpx;
+			margin-left: -40rpx;
+		}
+		.budgetinfo{
+			color: #656565;
+			font-size: 28rpx;
+			margin-top: 45rpx;
+			width: 350rpx;
+			>view{
+				display: flex;
+				justify-content: space-between;
+				line-height: 50rpx;
+				&.major{
+					color: #242424;
+					font-size: 30rpx;
+					border-bottom: 1rpx solid #EDEDED;
+					padding-bottom: 5rpx;
+					margin-bottom: 5rpx;
+				}
+			}		
+		}
 	}
 }
 .month-bill {

@@ -2,12 +2,11 @@
 	<view>
 		<!-- 个人信息 -->
 		<view class="info-list">
-			<view @click="handleEditPhoto">
+			<view>
 				<label>头像</label>
 				<view class="header v_s">
 					<image :src="photoUrl" :fade-show="false" mode="aspectFit"></image>
 				</view>
-				<view class="icon iconfont" v-html="rightIcon"></view>
 			</view>
 			<view @click="openUpdateNiceName">
 				<label>昵称</label>
@@ -61,18 +60,18 @@
 			this.photoUrl = userInfo.avatarUrl;
 			this.nickName = userInfo.nickName;
 			this.userInfo = userInfo;
-			if (userInfo.isCustomPhoto) {
-				wx.cloud.downloadFile({
-					fileID: userInfo.avatarUrl,
-					success: res => {
-						_self.photoUrl = res.tempFilePath;
-					},
-					fail: err=>{
-						console.error(err)
-						uni.hideLoading()
-					}
-				});
-			}
+			// if (userInfo.isCustomPhoto) {
+			// 	wx.cloud.downloadFile({
+			// 		fileID: userInfo.avatarUrl,
+			// 		success: res => {
+			// 			_self.photoUrl = res.tempFilePath;
+			// 		},
+			// 		fail: err=>{
+			// 			console.error(err)
+			// 			uni.hideLoading()
+			// 		}
+			// 	});
+			// }
 			this.db
 				.collection('User')
 				.where({
