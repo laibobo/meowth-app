@@ -14,6 +14,7 @@
 
 <script>
 const app = getApp();
+const categorysData = require('@/public/data.json')
 export default {
 	data() {
 		return {
@@ -67,38 +68,8 @@ export default {
 					let userInfo = uni.getStorageSync('user.info') || {};
 					if (userRes.data.length === 0) {
 						this.addedUserInfo(userInfo);
-						const categorysList = [
-							{"type":0,"icon":"\u0026#xe662;","name":"餐饮","sortnumber":0},
-							{"type":0,"icon":"\u0026#xe8e1;","name":"购物","sortnumber":1},
-							{"type":0,"icon":"\u0026#xe626;","name":"交通","sortnumber":2},
-							{"type":1,"icon":"\u0026#xe677;","name":"电影","sortnumber":3},
-							{"type":0,"icon":"\u0026#xe644;","name":"娱乐","sortnumber":4},
-							{"type":0,"icon":"\u0026#xe66c;","name":"蔬菜","sortnumber":5},
-							{"type":0,"icon":"\u0026#xe63c;","name":"水果","sortnumber":6},
-							{"type":0,"icon":"\u0026#xe6ac;","name":"零食","sortnumber":7},
-							{"type":0,"icon":"\u0026#xe666;","name":"服饰","sortnumber":8},
-							{"type":0,"icon":"\u0026#xe632;","name":"通讯","sortnumber":9},
-							{"icon":"\u0026#xe7ff;","name":"住房","type":0,"sortnumber":10},
-							{"name":"美容","type":0,"icon":"\u0026#xe6de;","sortnumber":11},
-							{"name":"日用","type":0,"icon":"\u0026#xe659;","sortnumber":12},
-							{"type":0,"icon":"\u0026#xe60b;","name":"学习","sortnumber":13},
-							{"type":0,"icon":"\u0026#xe6cd;","name":"宠物","sortnumber":14},
-							{"type":0,"icon":"\u0026#xe67e;","name":"游戏","sortnumber":15},
-							{"type":0,"icon":"\u0026#xe64d;","name":"医疗","sortnumber":16},
-							{"name":"社交","type":0,"icon":"\u0026#xe645;","sortnumber":17},
-							{"type":0,"icon":"\u0026#xe6c1;","name":"旅行","sortnumber":18},
-							{"type":0,"icon":"\u0026#xe679;","name":"居家","sortnumber":19},
-							{"type":0,"icon":"\u0026#xe653;","name":"公益","sortnumber":20},
-							{"type":0,"icon":"\u0026#xe691;","name":"孩子","sortnumber":21},
-							{"type":0,"icon":"\u0026#xe82d;","name":"亲友","sortnumber":22},
-							{"name":"办公","type":0,"icon":"\u0026#xe652;","sortnumber":23},
-							{"icon":"\u0026#xe620;","name":"其他","type":0,"sortnumber":24},
-							{"type":1,"icon":"\u0026#xe65d;","name":"兼职","sortnumber":0},
-							{"name":"礼金","type":1,"icon":"\u0026#xe651;","sortnumber":1},
-							{"type":1,"icon":"\u0026#xe625;","name":"理财","sortnumber":2},
-							{"type":1,"icon":"\u0026#xe615;","name":"工资","sortnumber":3},
-							{"icon":"\u0026#xe620;","name":"其他","type":1,"sortnumber":4}]
-						for(let i=0;i<categorysList.length;i++){
+						const categorysList = categorysData.defaultCategorysList
+						for(let i=0,leng=categorysList.length;i<leng;i++){
 							this.addDefaultCategorys(categorysList[i])
 						}
 					}
