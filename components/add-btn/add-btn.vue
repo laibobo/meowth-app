@@ -53,7 +53,6 @@
 			background: #FFA500 !important;
 		}
 	}
-	
 </style>
 <style>
 	

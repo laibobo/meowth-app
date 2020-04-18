@@ -1,9 +1,9 @@
 <template>
 	<view class="category-col">
 		<tabs class="tabs-col" :current="currentCategoryType" :values="items" @clickItem="handleTabsItem"></tabs>
-		<loading v-if="isLoading && dataList.length === 0"></loading>
+		<loading v-if="isLoading && getCurrentCategoryTypeList.length === 0"></loading>
 		<scroll-view class="category-scroll" scroll-y="true" :style="getScrollHeight" v-else>
-			<view class="category-item" v-for="(categorys, index) in dataList" :key="index" :data-id="categorys._id" @click="handleDeleteCategory">
+			<view class="category-item" v-for="(categorys, index) in dataList" :key="index" :data-id="categorys._id" @click="handleDeleteCategory(categorys,index)">
 				<view class="icon-col delete-btn"><view class="icon iconfont">&#xe6ed;</view></view>
 				<view class="icon-col"><view class="icon iconfont" v-html="categorys.icon"></view></view>
 				{{ categorys.name }}
@@ -22,10 +22,13 @@ export default {
 	data() {
 		return {
 			isRefreshData: false,
-			dataList: [],
+			expenditureList: [],
+			incomeList:[],
+			dataList:[],
 			items: ['支出', '收入'],
 			currentCategoryType: 0,
-			isLoading:true
+			isLoading:true,
+			typeArr:['expenditureList','incomeList']
 		};
 	},
 	onLoad(options) {
@@ -47,10 +50,15 @@ export default {
 	computed: {
 		getScrollHeight() {
 			return `height:${this.scrollHeight}px;`;
+		},
+		getCurrentCategoryTypeList(){
+			const type = this.typeArr[this.currentCategoryType]
+			return this[type]
 		}
 	},
 	methods: {
 		getCategoryList() {
+			this.isLoading = true
 			wx.cloud
 				.callFunction({
 					name: 'getCategoryList',
@@ -61,7 +69,9 @@ export default {
 				})
 				.then(({ result }) => {
 					setTimeout(_=>{
-						this.dataList = result.data;
+						const type =this.typeArr[this.currentCategoryType] 
+						this[type] = result.data;
+						this.dataList = this[type]
 						this.isLoading = false
 					},800)
 				})
@@ -79,20 +89,21 @@ export default {
 					.doc(categoryId)
 					.remove()
 					.then(res=>{
-						if(res.errMsg.indexOf('ok') > -1){
-							this.getCategoryList()
-						}
+						console.info('删除类别成功')
 					})
 			})
 		},
-		handleDeleteCategory(e){
+		handleDeleteCategory(categorys,index){
 			const _self = this
 			uni.showModal({
 				title: '警告',
 				content: '删除类别会同时删除该类别下的所有记账',
 				success: function(res) {
 					if (res.confirm) {
-						_self.deleteCategoryCorrelationData(e.currentTarget.dataset.id);
+						const type =_self.typeArr[_self.currentCategoryType]
+						_self[type].splice(index,1)
+						_self.dataList = _self[type]
+						_self.deleteCategoryCorrelationData(categorys._id);
 					}
 				}
 			});
@@ -100,7 +111,12 @@ export default {
 		handleTabsItem(index) {
 			if (this.currentCategoryType !== index) {
 				this.currentCategoryType = index;
-				this.getCategoryList();
+				const type =this.typeArr[index],typeList = this[type]
+				if(typeList.length >0){
+					this.dataList = typeList
+				}else{
+					this.getCategoryList()
+				}	
 			}
 		},
 		handleAddCategory() {
@@ -129,6 +145,7 @@ export default {
 		border-top: 2rpx solid #eee;
 		background: $uni-theme-bg-color;
 		color: #fff;
+		box-shadow: 1px 2px 5px #3d3d3d;
 	}
 	.category-scroll {
 		background: #fff;

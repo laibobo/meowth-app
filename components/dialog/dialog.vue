@@ -103,7 +103,7 @@
 				padding: 0 40rpx 30rpx;				
 				button{
 					display: block;
-					width: 120rpx;
+					width: 300rpx;
 					height: 60rpx;
 					line-height: 60rpx;
 					margin: 0 10rpx;

@@ -83,6 +83,9 @@ export default {
 			money: '',
 			remark: '',
 			currentCategoryType: 0,
+			typeArr:['expenditureList','incomeList'],
+			expenditureList: [],
+			incomeList:[],
 			dataList: [],
 			activeCategoryId: '',
 			activeCategoryName: '',
@@ -166,7 +169,9 @@ export default {
 				})
 				.then(({ result }) => {
 					setTimeout(_=>{
-						this.dataList = result.data;
+						const type =this.typeArr[this.currentCategoryType] 
+						this[type] = result.data;
+						this.dataList = this[type]
 						this.isLoading = false	
 						this.calculateScrollHeight();
 					},800)
@@ -181,7 +186,13 @@ export default {
 		handleTabsItem(index) {
 			if (this.currentCategoryType !== index) {
 				this.currentCategoryType = index;
-				this.getCategoryList();
+				const type =this.typeArr[index],typeList = this[type]
+				if(typeList.length >0){
+					this.dataList = typeList
+					this.calculateScrollHeight()
+				}else{
+					this.getCategoryList()
+				}
 			}
 		},
 		/**

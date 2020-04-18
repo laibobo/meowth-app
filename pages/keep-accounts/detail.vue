@@ -126,7 +126,7 @@ export default {
 					})
 					setTimeout(_=>{
 						this.getNowYearMonthAccountLog()	
-					},1000)					
+					},1000)	
 				}else{
 					uni.showModal({
 						title:'提示',
