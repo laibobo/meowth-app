@@ -72,9 +72,10 @@ export default {
 		text-align: center;
 		border-bottom: 8rpx solid transparent;
 		box-sizing: border-box;
-		color: $uni-theme-tab-font-color;
+		color: #3d3d3d;
 		&.active {
 			border-color: $uni-theme-active-tab-font-color;
+			color: #000;
 		}
 	}
 }

@@ -12,6 +12,7 @@
 					<view class="icon-col"><view class="icon iconfont">&#xe6df;</view></view>
 					<text class="explain">设置</text>
 				</view>
+				<loading v-if="isLoading && dataList.length === 0"></loading>
 			</view>
 		</scroll-view>
 		<!-- 记账面板 -->
@@ -155,9 +156,6 @@ export default {
 			const type = this.currentCategoryType;
 			this.dataList = []
 			this.isLoading = true
-			uni.showLoading({
-				title:'数据加载中...'
-			})
 			wx.cloud
 				.callFunction({
 					name: 'getCategoryList',
@@ -167,13 +165,13 @@ export default {
 					}
 				})
 				.then(({ result }) => {
-					this.dataList = result.data;
-					this.isLoading = false
-					this.calculateScrollHeight();
-					uni.hideLoading()
+					setTimeout(_=>{
+						this.dataList = result.data;
+						this.isLoading = false	
+						this.calculateScrollHeight();
+					},800)
 				})
 				.catch(err=>{
-					uni.hideLoading()
 					console.error(err)
 				});
 		},

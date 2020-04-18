@@ -1,7 +1,8 @@
 <template>
 	<view class="category-col">
 		<tabs class="tabs-col" :current="currentCategoryType" :values="items" @clickItem="handleTabsItem"></tabs>
-		<scroll-view class="category-scroll" scroll-y="true" :style="getScrollHeight">
+		<loading v-if="isLoading && dataList.length === 0"></loading>
+		<scroll-view class="category-scroll" scroll-y="true" :style="getScrollHeight" v-else>
 			<view class="category-item" v-for="(categorys, index) in dataList" :key="index" :data-id="categorys._id" @click="handleDeleteCategory">
 				<view class="icon-col delete-btn"><view class="icon iconfont">&#xe6ed;</view></view>
 				<view class="icon-col"><view class="icon iconfont" v-html="categorys.icon"></view></view>
@@ -50,9 +51,6 @@ export default {
 	},
 	methods: {
 		getCategoryList() {
-			uni.showLoading({
-				title:'正在加载中...'
-			})
 			wx.cloud
 				.callFunction({
 					name: 'getCategoryList',
@@ -62,8 +60,10 @@ export default {
 					}
 				})
 				.then(({ result }) => {
-					this.dataList = result.data;
-					uni.hideLoading()
+					setTimeout(_=>{
+						this.dataList = result.data;
+						this.isLoading = false
+					},800)
 				})
 				.catch(console.error);
 		},

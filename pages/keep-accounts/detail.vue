@@ -48,6 +48,7 @@
 				    </uni-swipe-action-item>
 				</uni-swipe-action>
 			</view>
+			<loading v-if="isLoading && Object.keys(keepLogs).length == 0"></loading>
 			<view class="s-b" v-if="!isLoading && Object.keys(keepLogs).length == 0">
 				<image :src="require('@/static/image/nodata.png')" mode="aspectFit"></image>
 				<view>快去创建你的第一笔账吧~ </view>
@@ -141,10 +142,7 @@ export default {
 				})
 			})
 		},
-		getNowYearMonthAccountLog() {
-			uni.showLoading({
-				title:'数据加载中...'
-			})
+		getNowYearMonthAccountLog() {			
 			this.keepLogs = []
 			this.isLoading = true
 			wx.cloud.callFunction({
@@ -155,18 +153,19 @@ export default {
 					keepMonth: Number(this.month)
 				}
 			}).then(res=>{
-				this.isLoading = false
 				const list = res.result.list
-				this.keepLogs = this._dataGroup(list);
 				this.incomeSum = this.getYearMoneySum(1, list);
 				this.expenditureSum = this.getYearMoneySum(0, list);
-				uni.hideLoading()
+				setTimeout(_=>{
+					this.keepLogs = this._dataGroup(list);
+					this.isLoading = false	
+				},800)				
 			}).catch(err=>{
+				this.isLoading = false
 				uni.showModal({
 					title:'系统异常',
 					content:err
 				})
-				uni.hideLoading()
 			})
 		},
 		getYearMoneySum(type, list = []) {
