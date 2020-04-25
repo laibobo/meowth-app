@@ -8,7 +8,7 @@
 			<view class="info"><budget :monthBudgetMoney="monthBudgetMoney" :monthExpendMoney="monthExpendMoney"></budget></view>
 		</view>
 		<bobo-dialog class="budget-dialog" :visible.sync="isBudgetDialog" :title="overallBudgetTitle" @affirm="affirm" @cancel="cancel">
-			<input type="text" v-model="budgetMoney" maxlength="10" placeholder="请输入预算金额" placeholder-style="letter-spacing: 2rpx;font-size:24rpx;color:#D5D5D5;" />
+			<input type="digit" v-model="budgetMoney" maxlength="10" placeholder="请输入预算金额" placeholder-style="letter-spacing: 2rpx;font-size:24rpx;color:#D5D5D5;" />
 		</bobo-dialog>
 		<bobo-dialog class="bm-dialog" :visible.sync="editDialog" type="bottom">
 			<view slot="btns">
@@ -34,14 +34,14 @@ export default {
 			year: date.getFullYear(),
 			month: date.getMonth() + 1,
 			isBudgetDialog: false,
+			isShow: false,
+			editDialog: false,
 			budgetMoney: null,
 			overallBudgetTitle: '',
 			DB: null,
 			monthBudgetMoney: 0,
 			monthExpendMoney: 0,
-			isShow: false,
-			monthBudgetId: '',
-			editDialog: false
+			monthBudgetId: ''
 		};
 	},
 	onLoad(option) {
