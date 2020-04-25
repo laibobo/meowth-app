@@ -22,7 +22,7 @@
 				</view>
 				<view>
 					<label>结余</label>
-					<view class="money">{{ incomeSum - expenditureSum | formatMoney }}</view>
+					<view class="money">{{ surplusSum | formatMoney }}</view>
 				</view>
 			</view>
 		</view>
@@ -75,10 +75,11 @@ export default {
 			year: '',
 			month: '',
 			keepLogs: [],
+			surplusSum:0,
 			incomeSum: 0,
 			expenditureSum: 0,
 			scrollHeight: 0,
-			isLoading:true
+			isLoading:false
 		};
 	},
 	onLoad() {
@@ -95,6 +96,7 @@ export default {
 	},
 	onShow() {
 		this.getNowYearMonthAccountLog();
+		this.getNowMonthKeepInfo()
 		const that = this;
 		getElement('.header').then(e => {
 			uni.getSystemInfo({
@@ -110,6 +112,37 @@ export default {
 		}
 	},
 	methods: {
+		//当前月账单
+		getNowMonthKeepInfo() {
+			const $ = this._db.command.aggregate
+			this._db.collection('AccountsRecord').aggregate().match({
+				_openid:uni.getStorageSync('user.openid'),
+				keepYear:Number(this.year) ,
+				keepMonth:Number(this.month)
+			}).group({
+				_id: '$categoryType',
+				 total: $.sum('$keepMoney')
+			}).end().then(({list,errMsg})=>{
+				if(errMsg.includes('ok') && list.length > 0){
+					let expenditure = 0,income = 0
+					for(let i=0;i<list.length;i++){
+						if(list[i]['_id'] === 0){
+							expenditure = list[i]['total']
+						}else{
+							income = list[i]['total']
+						}
+					}
+					this.expenditureSum = expenditure
+					this.incomeSum = income
+					this.surplusSum = income - expenditure
+				}else{
+					this.expenditureSum = 0
+					this.incomeSum = 0
+					this.surplusSum = 0
+				}	
+			})
+		},
+		//删除记账记录
 		deleteKeepAccount(id){
 			uni.showLoading({
 				title:'删除中...'
@@ -123,9 +156,18 @@ export default {
 						icon:'success',
 						title:'删除成功'
 					})
-					setTimeout(_=>{
-						this.getNowYearMonthAccountLog()	
-					},1000)	
+					const keepLogs = this.keepLogs
+					for(let key in keepLogs){
+						const index = keepLogs[key].findIndex(o=>o._id === id)
+						if(index > -1){
+							this.keepLogs[key].splice(index,1)
+							if(keepLogs[key].length === 0){
+								delete keepLogs[key]
+							}
+							break
+						}
+					}
+					this.getNowMonthKeepInfo()
 				}else{
 					uni.showModal({
 						title:'提示',
@@ -154,10 +196,7 @@ export default {
 					keepMonth: Number(this.month)
 				}
 			}).then(res=>{
-				const list = res.result.list
-				this.incomeSum = this.getYearMoneySum(1, list);
-				this.expenditureSum = this.getYearMoneySum(0, list);
-				this.keepLogs = this._dataGroup(list);
+				this.keepLogs = this._dataGroup(res.result.list);				
 				uni.hideLoading()				
 			}).catch(err=>{
 				uni.hideLoading()

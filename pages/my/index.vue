@@ -155,7 +155,6 @@ export default {
 		});
 	},
 	onShow() {
-		this.isLoadingBudget = false
 		this.isShow = false
 		const userInfo = uni.getStorageSync('user.info') || {};
 		this.nickName = userInfo.nickName || '您好！请先登录';
@@ -198,6 +197,7 @@ export default {
 		},
 		//当月总预算
 		getCurrentMonthBudget(expenditure) {
+			this.isLoadingBudget = false
 			this.db.collection('Budget').where({
 				_openid:uni.getStorageSync('user.openid'),
 				year:this.year,
@@ -265,7 +265,9 @@ export default {
 					this.monthBill.income = income
 					this.monthBill.surplus = income - expenditure					
 					this.getCurrentMonthBudget(expenditure)
-				}	
+				}else{
+					this.getCurrentMonthBudget(0)
+				}
 			})
 		},
 		//更新用户信息
