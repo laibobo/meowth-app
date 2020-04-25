@@ -152,9 +152,7 @@ export default {
 		}
 	},
 	methods: {
-		/**
-		 * 获取类目数据
-		 * */
+		//获取类目数据
 		getCategoryList() {
 			const type = this.currentCategoryType;
 			this.dataList = []
@@ -180,9 +178,7 @@ export default {
 					console.error(err)
 				});
 		},
-		/**
-		 * 点击tabs项
-		 * */
+		//点击tabs项
 		handleTabsItem(index) {
 			if (this.currentCategoryType !== index) {
 				this.currentCategoryType = index;
@@ -195,18 +191,14 @@ export default {
 				}
 			}
 		},
-		/**
-		 * 设置类目  跳转类目管理页面
-		 * */
+		//设置类目  跳转类目管理页面
 		handleDeploy() {
 			const categoryType = this.currentCategoryType;
 			uni.navigateTo({
 				url: '../category-config/index?categoryType=' + categoryType
 			});
 		},
-		/**
-		 * 点击类目
-		 * */
+		//点击类目
 		handleKeep(e) {
 			const data = e.currentTarget
 			this.activeCategoryId = data.dataset.id;
@@ -339,9 +331,7 @@ export default {
 			}
 			this.money = moneyStr + code;
 		},
-		/**
-		 * =按钮操作 金额合计
-		 * */
+		//=按钮操作 金额合计
 		handleMoneySum() {
 			const ufuncArr = this.ufuncArr;
 			const moneyStr = this.money.toString();
@@ -354,9 +344,7 @@ export default {
 			}
 			this.isMoneySum = false;
 		},
-		/**
-		 * 自定义键盘-完成操作
-		 * */
+		//自定义键盘-完成操作
 		handleKeyboardSubmit() {
 			const money = this.money.toString().replace(/[\.+x÷-]$/, '');
 			if (money === '' || Number(money) === 0) {
@@ -413,7 +401,7 @@ export default {
 						}
 					})
 					.then(res => {
-						if (res.errMsg == 'collection.add:ok') {						
+						if (res.errMsg.includes('ok')) {
 							uni.switchTab({
 								url:'./detail'
 							})
@@ -427,9 +415,7 @@ export default {
 					});
 			}
 		},
-		/**
-		 * 选择账单日期
-		 * */
+		//选择账单日期
 		handleKeepDateChange(e) {
 			this.keepDate = e.detail.value;
 		},

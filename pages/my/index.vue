@@ -43,16 +43,18 @@
 				</view>
 			</view>
 		</view>
-		<!-- 预算 -->
+		<!-- 总预算 -->
 		<view class="budget-col" hover-class="hoverstatus" data-url="../budget/index" @click="navigateTo">
 			<view class="title">
 				{{ getMonth }}月总预算
-				<view v-if="monthBudgetMoney > 0" class="right-btn">
-					<text>查看全部</text>
-					<view class="icon iconfont">&#xe6ec;</view>
-				</view>
-				<view v-else>
-					<button class="ybtn">+ 设置预算</button>	
+				<view v-if="isShow">
+					<view v-if="monthBudgetMoney > 0" class="right-btn">
+						<text>查看全部</text>
+						<view class="icon iconfont">&#xe6ec;</view>
+					</view>
+					<view v-else>
+						<button class="ybtn">+ 设置预算</button>	
+					</view>
 				</view>
 			</view>
 			<view class="info">
@@ -62,7 +64,7 @@
 				<view class="budgetinfo">
 					<view class="major">
 						<label>剩余预算：</label>
-						<text>{{monthBudgetMoney-monthExpendMoney | formatMoney }}</text>
+						<text>{{getMonthSurplusBudget | formatMoney }}</text>
 					</view>
 					<view>
 						<label>本月预算：</label>
@@ -70,7 +72,7 @@
 					</view>
 					<view>
 						<label>本月支出：</label>
-						<text>{{monthExpendMoney | formatMoney }}</text>
+						<text>{{getMonthExpendMoney | formatMoney }}</text>
 					</view>
 				</view>
 			</view>
@@ -100,6 +102,7 @@ export default {
 		RingChart
 	},
 	data() {
+		const date = new Date()
 		return {
 			photoUrl: '',
 			nickName: '',
@@ -110,13 +113,14 @@ export default {
 				expenditure: '0.00',
 				surplus: '0.00'
 			},
-			month: 0,
 			monthBudgetMoney: 0,
 			monthExpendMoney: 0,
 			db: null,
 			openid: '',
-			isLoadingBudget:false,
-			monthBudgetId:''
+			isLoadingBudget:true,
+			year:date.getFullYear(),
+			month:date.getMonth() + 1,
+			isShow:false
 		};
 	},
 	onLoad() {
@@ -152,36 +156,40 @@ export default {
 	},
 	onShow() {
 		this.isLoadingBudget = false
+		this.isShow = false
 		const userInfo = uni.getStorageSync('user.info') || {};
 		this.nickName = userInfo.nickName || '您好！请先登录';
 		this.photoUrl = userInfo.avatarUrl || require('@/static/image/photo.png');
+		this.monthBudgetMoney = 0
+		this.monthExpendMoney = 0
 		this.getKeepAccountsInfo();
 		this.getNowMonthKeepInfo();
 	},
 	computed: {
 		getMonth() {
-			let month = this.month;
-			if (this.month < 10) {
-				month = `0${this.month}`;
-			}
-			return month;
+			return this.month < 10?`0${this.month}`:this.month;
 		},
-		getOpenid(){
-			return uni.getStorageSync('user.openid')
+		getMonthSurplusBudget(){
+			return this.monthBudgetMoney<=0?0: this.monthBudgetMoney - this.monthExpendMoney
+		},
+		getMonthExpendMoney(){
+			return this.monthBudgetMoney<=0?0: this.monthExpendMoney
 		}
 	},
 	methods: {
+		//分享好友
 		onShareAppMessage(){
 			return {
 				title:'喵喵快速记账~',
 				imageUrl:'/static/image/welcome.jpg'
 			}
 		},
+		//跳转页面
 		navigateTo(e) {
 			if(this.$authorize()){
 				let url = e.currentTarget.dataset.url;
 				if(url === '../budget/index'){
-					url = `${url}?monthBudgetMoney=${this.monthBudgetMoney}&monthExpendMoney=${this.monthExpendMoney}&monthBudgetId=${this.monthBudgetId}`
+					url = `${url}?monthBudgetMoney=${this.monthBudgetMoney}&monthExpendMoney=${this.monthExpendMoney}`
 				}
 				uni.navigateTo({
 					url
@@ -189,97 +197,78 @@ export default {
 			}
 		},
 		//当月总预算
-		getCurrentMonthBudget() {
-			const date = new Date();
-			const $ = this.db.command.aggregate;
-			return this.db
-				.collection('Budget')
-				.where({
-					_openid: uni.getStorageSync('user.openid'),
-					year: date.getFullYear(),
-					month: date.getMonth() + 1
-				})
-				.get();
+		getCurrentMonthBudget(expenditure) {
+			this.db.collection('Budget').where({
+				_openid:uni.getStorageSync('user.openid'),
+				year:this.year,
+				month:this.month,
+				type:0
+			}).get().then(({data,errMsg})=>{
+				if(errMsg.includes('ok') && data.length > 0){
+					this.monthBudgetMoney = data[0]['money']
+				}
+				this.monthExpendMoney = expenditure
+				this.isLoadingBudget = true
+				this.isShow = true
+			})
 		},
 		//记账统计
 		getKeepAccountsInfo() {
 			const $ = this.db.command.aggregate;
-			const _od = this.db
-				.collection('AccountsRecord')
-				.aggregate()
+			const _od = this.db.collection('AccountsRecord').aggregate()
 				.match({
 					_openid: uni.getStorageSync('user.openid')
-				});
+				})
 			//获取记账总天数
 			_od.group({
 				_id: '$keepDate'
 			})
-				.count('sumDay')
-				.end()
-				.then(res => {
-					if (res.list.length > 0) {
-						this.sumDay = res.list[0]['sumDay'];
-					}
-				});
+			.count('sumDay')
+			.end()
+			.then(res => {
+				if (res.list.length > 0) {
+					this.sumDay = res.list[0]['sumDay'];
+				}
+			});
 			//获取记账总笔数
 			_od.group({
 				_id: '$createDate'
-			})
-				.count('sumLog')
-				.end()
-				.then(res => {
-					if (res.list.length > 0) {
-						this.sumLog = res.list[0]['sumLog'];
-					}
-				});
+			}).count('sumLog')
+			.end()
+			.then(res => {
+				if (res.list.length > 0) {
+					this.sumLog = res.list[0]['sumLog'];
+				}
+			});
 		},
 		//当前月账单
 		getNowMonthKeepInfo() {
-			const date = new Date();
-			this.month = date.getMonth() + 1;
-			wx.cloud
-				.callFunction({
-					name: 'getMonthBill',
-					data: {
-						openid: uni.getStorageSync('user.openid'),
-						keepYear: date.getFullYear(),
-						keepMonth: this.month
+			const $ = this.db.command.aggregate
+			this.db.collection('AccountsRecord').aggregate().match({
+				_openid:uni.getStorageSync('user.openid'),
+				keepYear:this.year,
+				keepMonth:this.month
+			}).group({
+				_id: '$categoryType',
+				 total: $.sum('$keepMoney')
+			}).end().then(({list,errMsg})=>{
+				if(errMsg.includes('ok') && list.length > 0){
+					let expenditure = 0,income = 0
+					for(let i=0;i<list.length;i++){
+						if(list[i]['_id'] === 0){
+							expenditure = list[i]['total']
+						}else{
+							income = list[i]['total']
+						}
 					}
-				})
-				.then(res => {
-					let expenditure = 0
-					if (res.errMsg === 'cloud.callFunction:ok' && res.result.list.length > 0) {
-						const filterExpenditure = res.result.list.filter(o=>o._id === 0)
-						const filterIncome = res.result.list.filter(o=>o._id === 1)
-						if(filterExpenditure.length > 0){
-							expenditure = filterExpenditure[0]['keepMoney'].toFixed(2);
-						}
-						if(filterIncome.length > 0){
-							this.monthBill.income = filterIncome[0]['keepMoney'].toFixed(2);							
-						}
-						this.monthBill.expenditure = expenditure
-						this.monthBill.surplus = (this.monthBill.income - this.monthBill.expenditure).toFixed(2);	
-					}
-					this.getCurrentMonthBudget().then(result => {
-						if (result.errMsg === 'collection.get:ok' && result.data.length > 0) {
-							this.monthBudgetMoney = Number(result.data[0]['money'])
-							this.monthBudgetId = result.data[0]['_id']
-							this.monthExpendMoney = expenditure
-						}
-						this.isLoadingBudget = true
-					})
-				});
-		},
-		addDefaultCategorys(data){
-			this.db.collection('Category').add({
-				data
-			}).then(res => {
-			  console.log(res)
+					this.monthBill.expenditure = expenditure
+					this.monthBill.income = income
+					this.monthBill.surplus = income - expenditure					
+					this.getCurrentMonthBudget(expenditure)
+				}	
 			})
 		},
-		/**
-		 * 更新用户信息
-		 * */
+		//更新用户信息
 		updateUserInfo() {
 			this.db
 				.collection('User')
@@ -316,9 +305,7 @@ export default {
 					}
 				});
 		},
-		/**
-		 * 获取用户信息（数据库数据）
-		 * */
+		//获取用户信息（数据库数据）
 		getNewUserInfo() {
 			this.db
 				.collection('User')

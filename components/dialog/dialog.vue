@@ -2,7 +2,7 @@
 	<view 
 		:style="{backgroundColor:visible?`rgba(0,0,0,${opacity})`:'rgba(0,0,0,0)'}" 
 		:class="['modal',{ show: visible }]">
-		<view class="dialog__wrapper">
+		<view class="dialog__wrapper" v-if="type === 'centre'">
 			<view class="header">
 				<text>{{title}}</text>
 			</view>
@@ -14,6 +14,12 @@
 				<button @click.stop="onAffirm">{{affirmBtnTxt}}</button>
 			</view>
 		</view>
+		<view class="dialog__wrapper tm" v-if="type === 'bottom'">			
+			<view class="btns-col">
+				<slot name="btns"></slot>
+				<button class="cancel-btn" @click.stop="onCancel">取消</button>
+			</view>
+		</view>
 	</view>
 </template>
 
@@ -21,6 +27,13 @@
 	export default{
 		name:'Dialog',
 		props:{
+			/**
+			 * type: 类型  centre、bottom
+			 * */
+			type:{
+				type:String,
+				default:'centre'
+			},
 			visible:{
 				type:Boolean,
 				default:false
@@ -88,6 +101,24 @@
 			background-color: #fff;
 			border-radius: 6rpx;
 			box-sizing: border-box;
+			&.tm{
+				position: fixed;
+				bottom: 0;
+				left: 0;
+				width: 750rpx;
+				background-color: #f1f1f1;
+				button{
+					border-radius: 0;
+					&::after{
+						border: none;
+						border-radius: 0;
+					}
+					&.cancel-btn{
+						margin-top: 10rpx;
+						color: #C8C7CC;
+					}
+				}
+			}
 			.header{
 				height: 100rpx;
 				display: flex;
@@ -103,16 +134,20 @@
 				padding: 0 40rpx 30rpx;				
 				button{
 					display: block;
-					width: 300rpx;
-					height: 60rpx;
-					line-height: 60rpx;
 					margin: 0 10rpx;
-					font-size: 24rpx;
+					font-size: 28rpx;
 					padding: 0;
-					font-weight: 600;
 					letter-spacing: 2rpx;
+					background-color: #fff;
+					border: none;
+					color: #8f8f8f;
+					margin-left: 20px;
+					&::after{
+						border: none;
+					}
 					&:last-child{
-						background-color: #ffd74c;
+						color: #FFDB45;
+						font-weight: bold;
 					}
 				}
 			}
