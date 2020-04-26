@@ -1,7 +1,10 @@
 <template>
 	<view class="loading">
-		<image :src="require('@/static/image/loading.gif')"></image>
-	</view>
+		<view class="image-col">
+			<image :src="require('@/static/image/loading_cat.gif')"></image>
+		</view> 
+		<view>Data loading..</view>
+	</view>	
 </template>
 
 <script>
@@ -20,11 +23,16 @@
 	position: relative;
 	width: 750rpx;
 	height: 600rpx;
-	display: flex;
-	justify-content: center;
-	image{
-		width: 750rpx;
-		height: 600rpx;
+	>view{
+		display: flex;
+		justify-content: center;
 	}
+	.image-col{
+		image{
+			width: 480rpx;
+			height: 480rpx;
+		}
+	}
+	
 }
 </style>

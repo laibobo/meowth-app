@@ -61,7 +61,7 @@
 				<view class="chart">
 					<ring-chart :monthExpendMoney="monthExpendMoney" :monthBudgetMoney="monthBudgetMoney" v-if="isLoadingBudget" />
 				</view>
-				<view class="budgetinfo">
+				<view class="budgetinfo">					
 					<view class="major">
 						<label>剩余预算：</label>
 						<text>{{getMonthSurplusBudget | formatMoney }}</text>
@@ -86,6 +86,7 @@
 				<view class="icon-col"><view class="icon iconfont">&#xe742;</view></view>
 				<text>推荐给好友</text>
 			</button>
+			<image class="cartoon-img" :src="require('@/static/image/an.gif')" />
 		</view>
 	</view>
 </template>
@@ -180,7 +181,7 @@ export default {
 		onShareAppMessage(){
 			return {
 				title:'喵喵快速记账~',
-				imageUrl:'/static/image/welcome.jpg'
+				imageUrl: '/static/image/welcome.jpg'
 			}
 		},
 		//跳转页面
@@ -346,6 +347,12 @@ export default {
 		}
 	}
 }
+.cartoon-img{
+	width: 240rpx;
+	height: 100px;
+	position: absolute;
+	right: 10rpx;
+}
 .hoverstatus {
 	background: #f5f5f5 !important;
 }
@@ -376,6 +383,7 @@ export default {
 			font-size: 28rpx;
 			margin-top: 45rpx;
 			width: 350rpx;
+			position: relative;
 			>view{
 				display: flex;
 				justify-content: space-between;
@@ -438,6 +446,7 @@ export default {
 	padding: 40rpx 5rpx;
 	display: flex;
 	flex-wrap: wrap;
+	position: relative;
 	.t-item {
 		width: 150rpx;
 		height: auto;

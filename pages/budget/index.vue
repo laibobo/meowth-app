@@ -183,6 +183,7 @@ export default {
 		border-radius: 0;
 		border: none;
 		border-top: 1rpx solid rgba(0, 0, 0, 0.2);
+		font-size: 28rpx;
 		&:first-child {
 			border-top: none;
 		}

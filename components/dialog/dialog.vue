@@ -116,6 +116,7 @@
 					&.cancel-btn{
 						margin-top: 10rpx;
 						color: #C8C7CC;
+						font-size: 28rpx;
 					}
 				}
 			}

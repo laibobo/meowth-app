@@ -30,29 +30,19 @@
 			</view>
 			<view class="m-keyboard">
 				<view class="m-keyboard-code">
-					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="1">1</view>
-					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="2">2</view>
-					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="3">3</view>
-					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="4">4</view>
-					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="5">5</view>
-					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="6">6</view>
-					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="7">7</view>
-					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="8">8</view>
-					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="9">9</view>
-					<view @click="handleKeyCode" hover-class="keyboarhover" data-code=".">.</view>
-					<view @click="handleKeyCode" hover-class="keyboarhover" data-code="0">0</view>
+					<view v-for="(item,index) in keyboardCodeArr" @click="handleKeyCode" hover-class="paw" :data-code="item" :key="index">{{item}}</view>
 					<view @click="handleDeleteKeyCode" hover-class="keyboarhover"><view class="icon iconfont" style="color: red;">&#xe6eb;</view></view>
 				</view>
 				<view class="m-keyboard-tool">
-					<view class="s-zo" hover-class="keyboarhover">
+					<view class="s-zo" hover-class="paw1">
 						<picker class="keepdate-picker" mode="date" :value="keepDate" @change="handleKeepDateChange" :disabled="keepAccountId !== ''">
 							<view class="uni-input" style="font-weight: 600;">{{ getShowKeepDate }}</view>
 						</picker>
 					</view>
-					<view @click="handleUfuncCode('+')" hover-class="keyboarhover">+</view>
-					<view @click="handleUfuncCode('-')" hover-class="keyboarhover">-</view>
-					<view @click="handleUfuncCode('x')" hover-class="keyboarhover">x</view>
-					<view @click="handleUfuncCode('÷')" hover-class="keyboarhover">÷</view>					
+					<view @click="handleUfuncCode('+')" hover-class="paw1">+</view>
+					<view @click="handleUfuncCode('-')" hover-class="paw1">-</view>
+					<view @click="handleUfuncCode('x')" hover-class="paw1">x</view>
+					<view @click="handleUfuncCode('÷')" hover-class="paw1">÷</view>					
 					<view class="submit-btn s-zo" v-if="!isMoneySum" @click="handleKeyboardSubmit">完成</view>
 					<view class="submit-btn s-zo" v-else @click="handleMoneySum">=</view>
 				</view>
@@ -75,6 +65,7 @@ export default {
 	},
 	data() {
 		return {
+			keyboardCodeArr: [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0],
 			isLoading:true,
 			tabValues: ['支出', '收入'],
 			windowHeight: 0,
@@ -170,9 +161,9 @@ export default {
 						const type =this.typeArr[this.currentCategoryType] 
 						this[type] = result.data;
 						this.dataList = this[type]
-						this.isLoading = false	
 						this.calculateScrollHeight();
-					},800)
+						this.isLoading = false	
+					},3000)
 				})
 				.catch(err=>{
 					console.error(err)
@@ -512,6 +503,12 @@ export default {
 	box-shadow: 10rpx 3rpx 5rpx #eee;
 	.keyboarhover{
 		background: #f5f5f5 !important;
+	}
+	.paw{
+		background: url(../../static/image/paw.png) no-repeat center center !important;
+	}
+	.paw1{
+		background: url(../../static/image/paw1.png) no-repeat center center !important;
 	}
 	.moneyshow{
 		max-width:600rpx;

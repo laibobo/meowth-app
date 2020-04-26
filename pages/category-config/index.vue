@@ -73,7 +73,7 @@ export default {
 						this[type] = result.data;
 						this.dataList = this[type]
 						this.isLoading = false
-					},800)
+					},3000)
 				})
 				.catch(console.error);
 		},

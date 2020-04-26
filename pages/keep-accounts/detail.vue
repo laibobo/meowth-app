@@ -188,6 +188,7 @@ export default {
 			uni.showLoading({
 				title:'数据加载中...'
 			})
+			this.isLoading = true
 			wx.cloud.callFunction({
 				name:'getKeepAccountList',
 				data:{
@@ -198,8 +199,10 @@ export default {
 			}).then(res=>{
 				this.keepLogs = this._dataGroup(res.result.list);				
 				uni.hideLoading()				
+				this.isLoading = false
 			}).catch(err=>{
 				uni.hideLoading()
+				this.isLoading = false
 				uni.showModal({
 					title:'系统异常',
 					content:err
