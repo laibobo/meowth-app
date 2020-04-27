@@ -119,3 +119,21 @@ view.v-button {
 		border: none;
 	}
 }
+.bottom-btn{
+	background: #fff;
+	width: 750rpx;
+	height: 100rpx;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: fixed;
+	left: 0;
+	bottom: 0;
+	z-index: 10;
+	font-size: 32rpx;
+	border-top: 2rpx solid #eee;
+	background: $uni-theme-bg-color;
+	color: #3d3d3d;
+	box-shadow: 1px 2px 5px #3d3d3d;
+	
+}

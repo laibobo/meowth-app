@@ -24,7 +24,7 @@
 					<view @click="handleDeleteKeyCode"><view class="icon iconfont">&#xe6eb;</view></view>
 				</view>
 				<view class="m-keyboard-tool">
-					<view @click="handleUfuncCode(item)" v-for="item in ufuncArr" :key="item">{{ item }}</view>
+					<view v-for="(ufunc, idx) in ufuncArr" :key="idx" @click="handleUfuncCode(ufunc)" >{{ ufunc }}</view>
 					<view class="submit-btn" v-if="!isMoneySum" @click="handleComplete">完成</view>
 					<view class="submit-btn" v-else @click="handleMoneySum">=</view>
 				</view>

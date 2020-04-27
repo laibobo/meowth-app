@@ -3,16 +3,33 @@
 		<tabs class="tabs-col" :values="tabValues" :current="currentCategoryType" @clickItem="handleTabsItem"></tabs>
 		<!-- 类别列表 -->
 		<scroll-view class="category-scroll" :scroll-top="scrollTop" scroll-y="true" :style="getScrollHeight">
-			<view class="tabs-container">
-				<view v-for="(item, index) in dataList" :key="index" :class="['category', { 'category-active': item._id === activeCategoryId }]" :data-id="item._id" :data-name="item.name"  @click="handleKeep">
-					<view class="icon-col"><view class="icon iconfont" v-html="item.icon"></view></view>
-					<text class="explain">{{ item.name }}</text>
-				</view>				
-				<view v-if="!isLoading" class="category" @click="handleDeploy">
-					<view class="icon-col"><view class="icon iconfont">&#xe6df;</view></view>
-					<text class="explain">设置</text>
+			<!-- 支出 -->
+			<view class="expend-category-col" v-if="currentCategoryType === 0">
+				<loading v-if="expendCategoryLoading" />
+				<view v-else class="tabs-container">
+					<view v-for="(item, index) in expendCategoryList" :key="index" :class="['category', { 'category-active': item._id === activeCategoryId }]" :data-id="item._id" :data-name="item.name"  @click="handleKeep">
+						<view class="icon-col"><view class="icon iconfont" v-html="item.icon"></view></view>
+						<text class="explain">{{ item.name }}</text>
+					</view>				
+					<view class="category" @click="handleDeploy">
+						<view class="icon-col"><view class="icon iconfont">&#xe6df;</view></view>
+						<text class="explain">设置</text>
+					</view>
 				</view>
-				<loading v-if="isLoading && dataList.length === 0"></loading>
+			</view>
+			<!-- 收入 -->
+			<view class="income-category-col" v-else>
+				<loading v-if="incomeCategoryLoading" />
+				<view v-else class="tabs-container">
+					<view v-for="(item, index) in incomeCategoryList" :key="index" :class="['category', { 'category-active': item._id === activeCategoryId }]" :data-id="item._id" :data-name="item.name"  @click="handleKeep">
+						<view class="icon-col"><view class="icon iconfont" v-html="item.icon"></view></view>
+						<text class="explain">{{ item.name }}</text>
+					</view>				
+					<view class="category" @click="handleDeploy">
+						<view class="icon-col"><view class="icon iconfont">&#xe6df;</view></view>
+						<text class="explain">设置</text>
+					</view>
+				</view>
 			</view>
 		</scroll-view>
 		<!-- 记账面板 -->
@@ -39,10 +56,7 @@
 							<view class="uni-input" style="font-weight: 600;">{{ getShowKeepDate }}</view>
 						</picker>
 					</view>
-					<view @click="handleUfuncCode('+')" hover-class="paw1">+</view>
-					<view @click="handleUfuncCode('-')" hover-class="paw1">-</view>
-					<view @click="handleUfuncCode('x')" hover-class="paw1">x</view>
-					<view @click="handleUfuncCode('÷')" hover-class="paw1">÷</view>					
+					<view v-for="(item,index) in ufuncArr" @click="handleUfuncCode(item)" :key="index" hover-class="paw1">{{item}}</view>				
 					<view class="submit-btn s-zo" v-if="!isMoneySum" @click="handleKeyboardSubmit">完成</view>
 					<view class="submit-btn s-zo" v-else @click="handleMoneySum">=</view>
 				</view>
@@ -65,8 +79,8 @@ export default {
 	},
 	data() {
 		return {
+			ufuncArr: ['÷', 'x', '+', '-'],
 			keyboardCodeArr: [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0],
-			isLoading:true,
 			tabValues: ['支出', '收入'],
 			windowHeight: 0,
 			scrollHeight: 0,
@@ -75,9 +89,10 @@ export default {
 			remark: '',
 			currentCategoryType: 0,
 			typeArr:['expenditureList','incomeList'],
-			expenditureList: [],
-			incomeList:[],
-			dataList: [],
+			expendCategoryList:[],
+			incomeCategoryList:[],
+			expendCategoryLoading:[],
+			incomeCategoryLoading:[],
 			activeCategoryId: '',
 			activeCategoryName: '',
 			isMoneySum: false,
@@ -94,7 +109,6 @@ export default {
 		this._db = app.globalData.wxDB;
 		if(Object.keys(option).length > 0){
 			this.keepAccountId = option.keepAccountId
-			
 		}
 	},
 	onShow() {
@@ -109,12 +123,16 @@ export default {
 		if(this.keepAccountId){
 			this._db.collection('AccountsRecord').doc(this.keepAccountId).get().then(({data})=>{
 				this.currentCategoryType = data.categoryType
+				if(data.categoryType === 0){
+					this.getExpendCategoryList()
+				}else{
+					this.getIncomeCategoryList()
+				}
 				this.keepDate = data.keepDate
 				this.money = data.keepMoney
 				this.remark = data.remark
 				this.activeCategoryId = data.categoryId
 				this.activeCategoryName = '';
-				this.getCategoryList()
 				this.isOpenRemarkPanel = false;
 				this.isOpenKeyboard = true;
 			}).catch(err=>{
@@ -124,7 +142,7 @@ export default {
 				})
 			})
 		}else{			
-			this.getCategoryList();
+			this.getExpendCategoryList();
 		}	
 	},
 	computed: {
@@ -143,44 +161,52 @@ export default {
 		}
 	},
 	methods: {
+		//获取支出类目数据
+		getExpendCategoryList() {
+			this.expendCategoryLoading= true
+			this.getCategoryList().then(({ result }) => {
+				this.expendCategoryList = result.data;
+				this.calculateScrollHeight();
+				setTimeout(_=>{
+					this.expendCategoryLoading = false
+				},3000)
+			})
+			.catch(console.error);
+		},
+		//获取收入类目数据
+		getIncomeCategoryList() {
+			this.incomeCategoryLoading = true
+			this.getCategoryList().then(({ result }) => {
+				this.incomeCategoryList = result.data;
+				this.calculateScrollHeight();
+				setTimeout(_=>{
+					this.incomeCategoryLoading = false
+				},3000)
+			})
+			.catch(console.error);
+		},
 		//获取类目数据
 		getCategoryList() {
 			const type = this.currentCategoryType;
-			this.dataList = []
-			this.isLoading = true
-			wx.cloud
-				.callFunction({
-					name: 'getCategoryList',
-					data: {
-						type,
-						_openid:uni.getStorageSync('user.openid')
-					}
-				})
-				.then(({ result }) => {
-					setTimeout(_=>{
-						const type =this.typeArr[this.currentCategoryType] 
-						this[type] = result.data;
-						this.dataList = this[type]
-						this.calculateScrollHeight();
-						this.isLoading = false	
-					},3000)
-				})
-				.catch(err=>{
-					console.error(err)
-				});
+		 	return wx.cloud.callFunction({
+				name: 'getCategoryList',
+				data: {
+					type,
+					_openid:uni.getStorageSync('user.openid')
+				}
+			})
 		},
 		//点击tabs项
 		handleTabsItem(index) {
 			if (this.currentCategoryType !== index) {
 				this.currentCategoryType = index;
-				const type =this.typeArr[index],typeList = this[type]
-				if(typeList.length >0){
-					this.dataList = typeList
-					this.calculateScrollHeight()
-				}else{
-					this.getCategoryList()
+				if(index === 0 && this.expendCategoryList.length === 0){
+					this.getExpendCategoryList()
+				}else if(index === 1 && this.incomeCategoryList.length === 0){
+					this.getIncomeCategoryList()
 				}
 			}
+			this.calculateScrollHeight()
 		},
 		//设置类目  跳转类目管理页面
 		handleDeploy() {

@@ -1,15 +1,29 @@
 <template>
 	<view class="category-col">
 		<tabs class="tabs-col" :current="currentCategoryType" :values="items" @clickItem="handleTabsItem"></tabs>
-		<loading v-if="isLoading && getCurrentCategoryTypeList.length === 0"></loading>
-		<scroll-view class="category-scroll" scroll-y="true" :style="getScrollHeight" v-else>
-			<view class="category-item" v-for="(categorys, index) in dataList" :key="index" :data-id="categorys._id" @click="handleDeleteCategory(categorys,index)">
-				<view class="icon-col delete-btn"><view class="icon iconfont">&#xe6ed;</view></view>
-				<view class="icon-col"><view class="icon iconfont" v-html="categorys.icon"></view></view>
-				{{ categorys.name }}
+		<scroll-view class="category-scroll" scroll-y="true" :style="getScrollHeight">
+			<view class="expend-category-col" v-if="currentCategoryType === 0">
+				<loading v-if="expendCategoryLoading" />
+				<view v-else>
+					<view class="category-item" v-for="(categorys, index) in expendCategoryList" :key="index" :data-id="categorys._id" @click="handleDeleteCategory(categorys,index)">
+						<view class="icon-col delete-btn"><view class="icon iconfont">&#xe6ed;</view></view>
+						<view class="icon-col"><view class="icon iconfont" v-html="categorys.icon"></view></view>
+						{{ categorys.name }}
+					</view>
+				</view>
+			</view>
+			<view class="income-category-col" v-else>
+				<loading v-if="incomeCategoryLoading" />
+				<view v-else>
+					<view class="category-item" v-for="(categorys, index) in incomeCategoryList" :key="index" :data-id="categorys._id" @click="handleDeleteCategory(categorys,index)">
+						<view class="icon-col delete-btn"><view class="icon iconfont">&#xe6ed;</view></view>
+						<view class="icon-col"><view class="icon iconfont" v-html="categorys.icon"></view></view>
+						{{ categorys.name }}
+					</view>
+				</view>				
 			</view>
 		</scroll-view>
-		<view class="add-category-btn" @click="handleAddCategory">+添加类别</view>
+		<view class="bottom-btn" @click="handleAddCategory">+添加类别</view>
 	</view>
 </template>
 
@@ -21,28 +35,25 @@ export default {
 	components: { Tabs },
 	data() {
 		return {
-			isRefreshData: false,
-			expenditureList: [],
-			incomeList:[],
-			dataList:[],
+			expendCategoryList: [],
+			incomeCategoryList:[],
+			expendCategoryLoading:true,
+			incomeCategoryLoading:true,
 			items: ['支出', '收入'],
-			currentCategoryType: 0,
-			isLoading:true,
-			typeArr:['expenditureList','incomeList']
+			currentCategoryType: 0
 		};
 	},
 	onLoad(options) {
-		const that = this;
 		this._db = app.globalData.wxDB;
 		this.currentCategoryType = options.categoryType || 0;
 	},
 	onShow() {
-		this.getCategoryList();
-		const that = this;
+		this.getExpendCategoryList();
+		const _self = this;
 		getElement('.tabs-col').then(e => {
 			uni.getSystemInfo({
 				success: function(res) {
-					that.scrollHeight = res.windowHeight - e.height;
+					_self.scrollHeight = res.windowHeight - e.height;
 				}
 			});
 		});
@@ -50,32 +61,38 @@ export default {
 	computed: {
 		getScrollHeight() {
 			return `height:${this.scrollHeight}px;`;
-		},
-		getCurrentCategoryTypeList(){
-			const type = this.typeArr[this.currentCategoryType]
-			return this[type]
 		}
 	},
 	methods: {
-		getCategoryList() {
-			this.isLoading = true
-			wx.cloud
-				.callFunction({
-					name: 'getCategoryList',
-					data: {
-						type:Number(this.currentCategoryType),
-						_openid:uni.getStorageSync('user.openid')
-					}
-				})
-				.then(({ result }) => {
-					setTimeout(_=>{
-						const type =this.typeArr[this.currentCategoryType] 
-						this[type] = result.data;
-						this.dataList = this[type]
-						this.isLoading = false
-					},3000)
-				})
-				.catch(console.error);
+		getCategoryList(){
+			const type = Number(this.currentCategoryType)
+		    return	wx.cloud.callFunction({
+				name: 'getCategoryList',
+				data: {
+					type,
+					_openid:uni.getStorageSync('user.openid')
+				}
+			})
+		},
+		getIncomeCategoryList() {
+			this.incomeCategoryLoading = true
+			this.getCategoryList().then(({ result }) => {
+				this.incomeCategoryList = result.data;
+				setTimeout(_=>{
+					this.incomeCategoryLoading = false
+				},3000)
+			})
+			.catch(console.error);
+		},
+		getExpendCategoryList() {
+			this.expendCategoryLoading= true
+			this.getCategoryList().then(({ result }) => {
+				this.expendCategoryList = result.data;
+				setTimeout(_=>{
+					this.expendCategoryLoading = false
+				},3000)
+			})
+			.catch(console.error);
 		},
 		deleteCategoryCorrelationData(categoryId){
 			wx.cloud.callFunction({
@@ -100,9 +117,8 @@ export default {
 				content: '删除类别会同时删除该类别下的所有记账',
 				success: function(res) {
 					if (res.confirm) {
-						const type =_self.typeArr[_self.currentCategoryType]
-						_self[type].splice(index,1)
-						_self.dataList = _self[type]
+						const typeArr = ['expend','income']
+						_self[`${typeArr[_self.currentCategoryType]}CategoryList`].splice(index,1)
 						_self.deleteCategoryCorrelationData(categorys._id);
 					}
 				}
@@ -111,12 +127,11 @@ export default {
 		handleTabsItem(index) {
 			if (this.currentCategoryType !== index) {
 				this.currentCategoryType = index;
-				const type =this.typeArr[index],typeList = this[type]
-				if(typeList.length >0){
-					this.dataList = typeList
-				}else{
-					this.getCategoryList()
-				}	
+				if(index === 0 && this.expendCategoryList.length === 0){
+					this.getExpendCategoryList()
+				}else if(index === 1 && this.incomeCategoryList.length === 0){
+					this.getIncomeCategoryList()
+				}
 			}
 		},
 		handleAddCategory() {
@@ -130,23 +145,6 @@ export default {
 
 <style lang="scss" scoped>
 .category-col {
-	.add-category-btn {
-		background: #fff;
-		width: 750rpx;
-		height: 100rpx;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		position: fixed;
-		left: 0;
-		bottom: 0;
-		z-index: 10;
-		font-size: 32rpx;
-		border-top: 2rpx solid #eee;
-		background: $uni-theme-bg-color;
-		color: #fff;
-		box-shadow: 1px 2px 5px #3d3d3d;
-	}
 	.category-scroll {
 		background: #fff;
 		box-sizing: border-box;
