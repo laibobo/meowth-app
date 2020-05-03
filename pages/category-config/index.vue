@@ -37,8 +37,8 @@ export default {
 		return {
 			expendCategoryList: [],
 			incomeCategoryList:[],
-			expendCategoryLoading:true,
-			incomeCategoryLoading:true,
+			expendCategoryLoading:false,
+			incomeCategoryLoading:false,
 			items: ['支出', '收入'],
 			currentCategoryType: 0
 		};
@@ -48,7 +48,13 @@ export default {
 		this.currentCategoryType = options.categoryType || 0;
 	},
 	onShow() {
-		this.getExpendCategoryList();
+		const type = Number(this.currentCategoryType)
+		if(type === 0){
+			this.getExpendCategoryList();
+		}else{
+			this.getIncomeCategoryList();
+		}
+		
 		const _self = this;
 		getElement('.tabs-col').then(e => {
 			uni.getSystemInfo({
@@ -75,26 +81,40 @@ export default {
 			})
 		},
 		getIncomeCategoryList() {
+			const incomeList = this.$store.getters.categoryIncomeList
+			if(incomeList.length > 0){
+				this.incomeCategoryList = incomeList
+				return
+			}
+			
 			this.incomeCategoryLoading = true
 			this.getCategoryList().then(({ result }) => {
 				this.incomeCategoryList = result.data;
+				this.$store.commit('SET_CATEGORYINCOMELIST', result.data)
 				setTimeout(_=>{
 					this.incomeCategoryLoading = false
-				},3000)
+				},1000)
 			})
 			.catch(console.error);
 		},
 		getExpendCategoryList() {
+			const expendList = this.$store.getters.categoryExpendList
+			if(expendList.length > 0){
+				this.expendCategoryList = expendList
+				return
+			}
 			this.expendCategoryLoading= true
 			this.getCategoryList().then(({ result }) => {
 				this.expendCategoryList = result.data;
+				this.$store.commit('SET_CATEGORYEXPENDLIST',result.data)
 				setTimeout(_=>{
 					this.expendCategoryLoading = false
-				},3000)
+				},1000)
 			})
 			.catch(console.error);
 		},
-		deleteCategoryCorrelationData(categoryId){
+		deleteCategoryCorrelationData(categoryId,type,index){
+			const _self = this
 			wx.cloud.callFunction({
 				name:'deleteKeepAccounts',
 				data:{
@@ -106,7 +126,14 @@ export default {
 					.doc(categoryId)
 					.remove()
 					.then(res=>{
-						console.info('删除类别成功')
+						let typeCode1 = 'INCOME',typeCode2 = 'Income'
+						if(type === 0){
+							typeCode1 = 'EXPEND'
+							typeCode2 = 'Expend'
+						}
+						const list = this.$store.getters[`category${typeCode2}List`]
+						list.splice(index,1)
+						_self.$store.commit(`SET_CATEGORY${typeCode1}LIST`,list)
 					})
 			})
 		},
@@ -119,7 +146,7 @@ export default {
 					if (res.confirm) {
 						const typeArr = ['expend','income']
 						_self[`${typeArr[_self.currentCategoryType]}CategoryList`].splice(index,1)
-						_self.deleteCategoryCorrelationData(categorys._id);
+						_self.deleteCategoryCorrelationData(categorys._id,Number(_self.currentCategoryType),index);
 					}
 				}
 			});

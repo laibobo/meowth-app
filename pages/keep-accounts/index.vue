@@ -91,8 +91,8 @@ export default {
 			typeArr:['expenditureList','incomeList'],
 			expendCategoryList:[],
 			incomeCategoryList:[],
-			expendCategoryLoading:[],
-			incomeCategoryLoading:[],
+			expendCategoryLoading:false,
+			incomeCategoryLoading:false,
 			activeCategoryId: '',
 			activeCategoryName: '',
 			isMoneySum: false,
@@ -141,7 +141,7 @@ export default {
 					content:err
 				})
 			})
-		}else{			
+		}else{
 			this.getExpendCategoryList();
 		}	
 	},
@@ -163,25 +163,39 @@ export default {
 	methods: {
 		//获取支出类目数据
 		getExpendCategoryList() {
+			const expendList = this.$store.getters.categoryExpendList
+			if(expendList.length > 0){
+				this.expendCategoryList = expendList;
+				return
+			}
+			
 			this.expendCategoryLoading= true
 			this.getCategoryList().then(({ result }) => {
 				this.expendCategoryList = result.data;
+				this.$store.commit('SET_CATEGORYEXPENDLIST',result.data)
 				this.calculateScrollHeight();
 				setTimeout(_=>{
 					this.expendCategoryLoading = false
-				},3000)
+				},1000)
 			})
 			.catch(console.error);
 		},
 		//获取收入类目数据
 		getIncomeCategoryList() {
+			const incomeList = this.$store.getters.categoryIncomeList
+			if(incomeList.length > 0){
+				this.incomeCategoryList = incomeList
+				return
+			}
+			
 			this.incomeCategoryLoading = true
 			this.getCategoryList().then(({ result }) => {
 				this.incomeCategoryList = result.data;
+				this.$store.commit('SET_CATEGORYINCOMELIST',result.data)
 				this.calculateScrollHeight();
 				setTimeout(_=>{
 					this.incomeCategoryLoading = false
-				},3000)
+				},1000)
 			})
 			.catch(console.error);
 		},
