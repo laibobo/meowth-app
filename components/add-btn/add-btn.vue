@@ -50,7 +50,7 @@
 			display: none !important;
 		}
 		&.hoverstatus{
-			background: url(../../static/image/paw.png) no-repeat center center !important;
+			//background: url(../../static/image/paw.png) no-repeat center center !important;
 		}
 	}
 </style>

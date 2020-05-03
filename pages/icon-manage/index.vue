@@ -79,9 +79,7 @@ export default {
 				});
 				return;
 			}
-			const type = Number(this.categoryType);
-			const icon = this.activeValue;
-			const name = this.categoryName;
+			const type = Number(this.categoryType),icon = this.activeValue,name = this.categoryName
 			this._db
 				.collection('Category')
 				.add({
@@ -92,6 +90,18 @@ export default {
 					}
 				})
 				.then(res => {
+					let typeCode1 = 'INCOME',typeCode2 = 'Income'
+					if(type === 0){
+						typeCode1 = 'EXPEND'
+						typeCode2 = 'Expend'
+					}
+					let list = this.$store.getters[`category${typeCode2}List`]
+					list.push({
+						type,
+						icon,
+						name	
+					})
+					this.$store.commit(`SET_CATEGORY${typeCode1}LIST`,list)
 					uni.navigateBack({
 						delta: 1
 					});
