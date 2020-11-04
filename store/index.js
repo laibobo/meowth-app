@@ -5,7 +5,9 @@ Vue.use(Vuex)
 
 const getters = {
 	categoryExpendList:state=>state.category.categoryExpendList,
-	categoryIncomeList:state=>state.category.categoryIncomeList
+	categoryIncomeList:state=>state.category.categoryIncomeList,
+	monthBudgetMoney:state => state.budget.monthBudgetMoney,
+	monthExpendMoney:state => state.budget.monthExpendMoney
 }
 
 // https://webpack.js.org/guides/dependency-management/#requirecontext

@@ -93,6 +93,7 @@ export default {
 			 this.DB.collection('Budget').doc(this.monthBudgetId).remove().then(result=>{
 				 if(result.errMsg.includes('ok')){
 					this.cancel()
+					this.$store.commit('SET_MONTHBUDGEMONEY',0)
 				 }else{
 					 uni.showModal({
 					 	title:'警告',
@@ -128,6 +129,8 @@ export default {
 			_od.then(result => {
 				if (result.errMsg.includes('ok')) {
 					this.monthBudgetMoney = data.money
+					
+					this.$store.commit('SET_MONTHBUDGEMONEY',data.money)
 					this.isShow = true
 				}
 			}).catch(err => {
