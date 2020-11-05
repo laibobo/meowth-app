@@ -58,7 +58,6 @@
 				
 			this.surplusBudgetMoney = surplusBudgetMoney > 0? surplusBudgetMoney : 0
 			
-			console.log('monthExpendMoney:',this.monthExpendMoney)
 			if(monthBudgetMoney <= 0){
 				this.subtitle.name = '0%'
 				this.subtitle.color = '#A0A0A0'

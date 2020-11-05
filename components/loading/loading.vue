@@ -2,8 +2,7 @@
 	<view class="loading">
 		<view class="image-col">
 			<image :src="require('@/static/image/loading_cat.gif')"></image>
-		</view> 
-		<view>Data loading..</view>
+		</view>
 	</view>	
 </template>
 

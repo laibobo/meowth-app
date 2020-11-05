@@ -50,7 +50,9 @@
 			</view>
 			<view class="s-b" v-if="!isLoading && Object.keys(keepLogs).length == 0">
 				<image :src="require('@/static/image/nodata.png')" mode="aspectFit"></image>
-				<view>快去创建你的第一笔账吧~ </view>
+				<view class="msg">
+					<view>看啥，快去创建你的第一笔账吧~ </view>
+				</view>
 			</view>
 		</scroll-view>
 	</view>
@@ -440,13 +442,39 @@ export default {
 	
 	.s-b{
 		position: relative;
-		top: 150rpx;
-		text-align: center;
+		top: 250rpx;
+		width: 300rpx;
+		margin-left: 20rpx;
 		>image{
 			display: block;
-			height: 200rpx;
-			width: 180rpx;
-			margin: 0 auto;
+			width: 100%;
+			height: 300rpx;
+		}
+		.msg{
+			width: 250rpx;
+			height: 130rpx;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			position: absolute;
+			border: 2rpx solid #eee;
+			border-radius: 20% 50%;
+			top:-120rpx;
+			right: -150rpx;
+			font-size: 24rpx;
+			padding: 10rpx;
+			box-sizing: border-box;
+			&::after{
+				display: block;
+				content: '';
+				width: 40rpx;
+				height: 30rpx;
+				border: 1px solid #eee;
+				border-radius: 50% 40%;
+				position: absolute;
+				bottom: -30rpx;
+				left: -10rpx;
+			}
 		}
 	}
 }
