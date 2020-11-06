@@ -1,20 +1,20 @@
 <template>
 	<view class="budget">
 		<view class="chart">
-			<ring-chart :monthExpendMoney="monthExpendMoney" :monthBudgetMoney="monthBudgetMoney" />
+			<ring-chart :chartElementId="chartElementId" />
 		</view>
 		<view class="budgetinfo">
 			<view class="major">
 				<label>剩余预算：</label>
-				<text>{{surplusBudgetMoney | formatMoney }}</text>
+				<text>{{getSurplusBudgetMoney | formatMoney }}</text>
 			</view>
 			<view>
 				<label>本月预算：</label>
-				<text>{{monthBudgetMoney | formatMoney }}</text>
+				<text>{{getMonthBudgetMoney | formatMoney }}</text>
 			</view>
 			<view>
 				<label>本月支出：</label>
-				<text>{{monthExpendMoney | formatMoney }}</text>
+				<text>{{getMonthExpendMoney | formatMoney }}</text>
 			</view>
 		</view>
 	</view>
@@ -24,16 +24,6 @@
 	import RingChart from '@/components/ring-chart/ring-chart.vue'
 	export default {
 		props:{
-			//本月预算
-			monthBudgetMoney:{
-				type:Number,
-				required:true
-			},
-			//本月支出
-			monthExpendMoney:{
-				type:Number,
-				required:true
-			},
 			//图表id
 			chartElementId:{
 				type:String,
@@ -45,15 +35,9 @@
 		},
 		data() {
 			return {
-				surplusBudgetMoney:0
 			}
 		},
 		created(){
-			const monthBudgetMoney = this.monthBudgetMoney,
-				monthExpendMoney = this.monthExpendMoney,
-				surplusBudgetMoney = monthBudgetMoney - monthExpendMoney
-				
-			this.surplusBudgetMoney = surplusBudgetMoney > 0? surplusBudgetMoney : 0
 		}
 	}
 </script>

@@ -1,6 +1,6 @@
 <template>
 	<view>
-		<canvas :canvas-id="chartElementId" :id="chartElementId" class="charts" />
+		<canvas :canvas-id="chartElementId" :id="chartElementId" class="charts"></canvas>
 	</view>
 </template>
 
@@ -8,17 +8,6 @@
 	import uCharts from '@/components/u-charts/u-charts.js';
 	export default {
 		props:{
-			//本月预算
-			monthBudgetMoney:{
-				type:Number,
-				required:true
-			},
-			//本月支出
-			monthExpendMoney:{
-				type:Number,
-				required:true
-			},
-			//图表id
 			chartElementId:{
 				type:String,
 				default:'canvasRing_001'
@@ -45,25 +34,30 @@
 				}
 			};
 		},
-		created(){
-			
-		},
 		mounted(){
-			this.cWidth=uni.upx2px(290)
-			this.cHeight=uni.upx2px(290)
-			this.showRing(this.chartElementId)
+			this.cWidth = uni.upx2px(290)
+			this.cHeight = uni.upx2px(290)
+			this.showRing()
+		},
+		watch:{
+			getLodingChartPageCode(newValue,oldValue){
+				this.showRing()
+			}
+		},
+		computed:{
+			getLodingChartPageCode(){
+				return this.$store.getters.currentLoadingChartPageCode
+			}
 		},
 		methods:{
-			showRing(canvasId){
+			showRing(){
 				this.subtitle.fontSize = 15 * this.pixelRatio
 				
-				const monthBudgetMoney = this.monthBudgetMoney,
-					monthExpendMoney = this.monthExpendMoney,
+				const monthBudgetMoney = this.getMonthBudgetMoney,
+					monthExpendMoney = this.getMonthExpendMoney,
 					isOverspend = monthExpendMoney > monthBudgetMoney,
-					surplusBudgetMoney = monthBudgetMoney - monthExpendMoney
+					canvasId = this.chartElementId
 					
-				this.surplusBudgetMoney = surplusBudgetMoney > 0? surplusBudgetMoney : 0
-				
 				if(monthBudgetMoney <= 0){
 					this.subtitle.name = '0%'
 					this.subtitle.color = '#A0A0A0'
@@ -79,16 +73,16 @@
 					this.subtitle.name = `${100 - Math.ceil(monthExpendMoney / monthBudgetMoney * 100)}%`				
 					this.Ring.series=[{
 						"name": "支出",
-						"data": this.monthExpendMoney,
+						"data": monthExpendMoney,
 						"color":'#F2F2F2'
 					  },{
 						 "name":"剩余",
-						 "data":this.surplusBudgetMoney,
+						 "data":this.getSurplusBudgetMoney,
 						 "color":'#FEC240'
 					  }]
 				}
-				const chartData = this.Ring
-				const title = this.title,subtitle = this.subtitle,colors = this.colors
+				const chartData = this.Ring, title = this.title, subtitle = this.subtitle, colors = this.colors
+				
 				new uCharts({
 					$this:this,
 					canvasId,

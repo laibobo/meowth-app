@@ -1,13 +1,15 @@
 <template>
 	<view class="budget-col">
-		<view class="overall-budget" v-if="isShow && !isBudgetDialog" @click="openEdit">
+		<view class="overall-budget" v-if="!isShowBudgetDialog" @click="openEdit">
 			<view class="title">
 				{{ getMonth }}月总预算
 				<view>编辑</view>
 			</view>
-			<view class="info"><budget :monthBudgetMoney="monthBudgetMoney" :monthExpendMoney="monthExpendMoney"></budget></view>
+			<view class="info">
+				<budget />
+			</view>
 		</view>
-		<bobo-dialog class="budget-dialog" :visible.sync="isBudgetDialog" :title="overallBudgetTitle" @affirm="affirm" @cancel="cancel">
+		<bobo-dialog class="budget-dialog" :visible.sync="isShowBudgetDialog" :title="overallBudgetTitle" @affirm="affirm" @cancel="cancel">
 			<input type="digit" v-model="budgetMoney" maxlength="10" placeholder="请输入预算金额" placeholder-style="letter-spacing: 2rpx;font-size:24rpx;color:#D5D5D5;" />
 		</bobo-dialog>
 		<bobo-dialog class="bm-dialog" :visible.sync="editDialog" type="bottom">
@@ -33,28 +35,20 @@ export default {
 		return {
 			year: date.getFullYear(),
 			month: date.getMonth() + 1,
-			isBudgetDialog: false,
-			isShow: false,
+			isShowBudgetDialog: false,
 			editDialog: false,
 			budgetMoney: null,
 			overallBudgetTitle: '',
 			DB: null,
-			monthBudgetMoney: 0,
-			monthExpendMoney: 0,
-			monthBudgetId: ''
+			monthBudgetId: '',
+			database_Budget:null
 		};
 	},
-	onLoad(option) {
-		if (option) {
-			this.monthBudgetMoney = Number(option.monthBudgetMoney);
-			this.monthExpendMoney = Number(option.monthExpendMoney);
-		}
-		this.isShow = true;
-		this.DB = app.globalData.wxDB;			
-		this.overallBudgetTitle = `${this.month}月份总预算`;
-		if (this.monthBudgetMoney <= 0) {
-			this.isBudgetDialog = true;
-		}
+	onLoad() {
+		this.DB = app.globalData.wxDB
+		this.database_Budget = this.$conf.database.Budget
+		this.overallBudgetTitle = `${this.month}月份总预算`
+		this.isShowBudgetDialog = this.getMonthBudgetMoney <= 0
 	},
 	computed: {
 		getMonth() {
@@ -71,8 +65,8 @@ export default {
 			this.editDialog = true;
 		},
 		getMonthBudgetId(){
-			this.DB.collection('Budget').where({
-				_openid:uni.getStorageSync('user.openid'),
+			this.DB.collection(this.database_Budget).where({
+				_openid:uni.getStorageSync(this.$conf.storageKey.openid),
 				year:this.year,
 				month:this.month,
 				type:0
@@ -84,35 +78,34 @@ export default {
 		},		
 		//修改总预算
 		editSumBudget() {
+			this.budgetMoney = this.getMonthBudgetMoney
 			this.editDialog = false;
-			this.budgetMoney = this.monthBudgetMoney
-			this.isBudgetDialog = true
+			this.isShowBudgetDialog = true
 		},
 		//清除总预算
 		clearSumBudget(){
-			 this.DB.collection('Budget').doc(this.monthBudgetId).remove().then(result=>{
+			 this.DB.collection(this.database_Budget).doc(this.monthBudgetId).remove().then(result=>{
 				 if(result.errMsg.includes('ok')){
 					this.cancel()
 					this.$store.commit('SET_MONTHBUDGEMONEY',0)
 				 }else{
-					 uni.showModal({
-					 	title:'警告',
+					uni.showModal({
+						title:'警告',
 						content:result.errMsg
-					 })
+					})
 				 }
 			 })
 		},
 		affirm() {
-			this.isBudgetDialog = false
-			this.isShow = false
+			this.isShowBudgetDialog = false
 			if (this.budgetMoney === '' || this.budgetMoney <= 0) {
 				return;
 			}
-			let _od = this.DB.collection('Budget'),
+			let _od = this.DB.collection(this.database_Budget),
 				data = {
 					money: Number(this.budgetMoney)
 				};
-			if (this.monthBudgetMoney > 0) {
+			if (this.getMonthBudgetMoney > 0) {
 				_od = _od.doc(this.monthBudgetId).update({
 					data
 				});
@@ -128,10 +121,8 @@ export default {
 			//type 预算类型 0全部预算 1分类预算
 			_od.then(result => {
 				if (result.errMsg.includes('ok')) {
-					this.monthBudgetMoney = data.money
-					
 					this.$store.commit('SET_MONTHBUDGEMONEY',data.money)
-					this.isShow = true
+					this.loadingBudgetMonthChart()
 				}
 			}).catch(err => {
 				uni.showModal({

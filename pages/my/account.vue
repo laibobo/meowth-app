@@ -54,7 +54,7 @@
 			};
 		},
 		onLoad() {
-			const userInfo = uni.getStorageSync('user.info');
+			const userInfo = this.getUserInfo;
 			const _self = this;
 			this.db = app.globalData.wxDB;
 			this.photoUrl = userInfo.avatarUrl;
@@ -73,9 +73,9 @@
 			// 	});
 			// }
 			this.db
-				.collection('User')
+				.collection(this.$conf.database.User)
 				.where({
-					_openid: uni.getStorageSync('user.openid')
+					_openid: this.getOpenid
 				})
 				.get()
 				.then(res => {
@@ -86,7 +86,10 @@
 					}
 				})
 				.catch(err => {
-					console.error('获取用户信息异常:', err);
+					uni.showModal({
+						title:'警告',
+						content:'请确认网络是否正常~'
+					})
 				});
 		},
 		methods: {
@@ -121,13 +124,17 @@
 							cloudPath: `user/${Date.parse(new Date())}.png`,
 							filePath: res.tempFilePaths[0],
 							success: res => {
-								console.log('res.fileID:', res.fileID);
 								_self.updateUserInfo({
 									avatarUrl: res.fileID,
 									isCustomPhoto: true
 								});
 							},
-							fail: console.error
+							fail: _=>{
+								uni.showModal({
+									title:'警告',
+									content:'请确认网络是否正常~'
+								})
+							}
 						});
 					}
 				});
@@ -141,19 +148,21 @@
 			updateUserInfo(data) {
 				return new Promise((resolve,reject)=>{
 					this.db
-						.collection('User')
+						.collection(this.$conf.database.User)
 						.doc(this.userTableId)
 						.update({
 							data
 						})
 						.then(res => {
 							this.userInfo = Object.assign({}, this.userInfo, data);
-							uni.setStorageSync('user.info', this.userInfo);						
-							console.log('更新用户信息成功');
+							uni.setStorageSync('user.info', this.userInfo);
 							resolve('更新成功')
 						})
 						.catch(err => {
-							console.error('更新用户信息失败：', err);
+							uni.showModal({
+								title:'警告',
+								content:'请确认网络是否正常~'
+							})
 							reject('更新失败')
 						});
 					})

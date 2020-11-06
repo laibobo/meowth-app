@@ -4,7 +4,7 @@
 		<!-- 类别列表 -->
 		<scroll-view class="category-scroll" :scroll-top="scrollTop" scroll-y="true" :style="getScrollHeight">
 			<!-- 支出 -->
-			<view class="expend-category-col" v-if="currentCategoryType === 0">
+			<view class="expend-category-col" v-show="currentCategoryType === 0">
 				<loading v-if="expendCategoryLoading" />
 				<view v-else class="tabs-container">
 					<view v-for="(item, index) in expendCategoryList" :key="index" :class="['category', { 'category-active': item._id === activeCategoryId }]" :data-id="item._id" :data-name="item.name"  @click="handleKeep">
@@ -18,7 +18,7 @@
 				</view>
 			</view>
 			<!-- 收入 -->
-			<view class="income-category-col" v-else>
+			<view class="income-category-col" v-show="currentCategoryType !== 0">
 				<loading v-if="incomeCategoryLoading" />
 				<view v-else class="tabs-container">
 					<view v-for="(item, index) in incomeCategoryList" :key="index" :class="['category', { 'category-active': item._id === activeCategoryId }]" :data-id="item._id" :data-name="item.name"  @click="handleKeep">
@@ -33,7 +33,7 @@
 			</view>
 		</scroll-view>
 		<!-- 记账面板 -->
-		<view class="keep-panel" v-if="isOpenKeyboard">
+		<view class="keep-panel" v-show="isOpenKeyboard">
 			<view class="form">
 				<view class="money-col">
 					<text class="mark">￥</text>
@@ -44,6 +44,11 @@
 					<text class="s-r">{{ remark }}</text>
 					<text class="remark" @click="handleOpenRemarkPanel">{{ optRemarkBtnText }}</text>
 				</view>
+				<!-- <view class="r-p">
+					<image :src="keepImage" :fade-show="false" mode="aspectFit"></image>
+					<text class="remark" @click="handleKeepImage">添加图片</text>
+					<text>查看</text>
+				</view> -->
 			</view>
 			<view class="m-keyboard">
 				<view class="m-keyboard-code">
@@ -101,7 +106,9 @@ export default {
 			checkedUfunc: '',
 			ufuncArr: ['÷', 'x', '+', '-'],
 			scrollTop:0,
-			keepAccountId:''
+			keepAccountId:'',
+			keepImage:'',
+			keepImageFileId:''
 		};
 	},
 	onLoad(option) {
@@ -161,6 +168,28 @@ export default {
 		}
 	},
 	methods: {
+		handleKeepImage() {
+			const _self = this;
+			uni.chooseImage({
+				count: 1,
+				success(res) {
+					_self.keepImage = res.tempFilePaths[0];
+					wx.cloud.uploadFile({
+						cloudPath: `user/${Date.parse(new Date())}.png`,
+						filePath: res.tempFilePaths[0],
+						success: res => {
+							_self.keepImageFileId = res.fileID
+						},
+						fail: _=>{
+							uni.showModal({
+								title:'警告',
+								content:'请确认网络是否正常~'
+							})
+						}
+					});
+				}
+			});
+		},
 		//获取支出类目数据
 		getExpendCategoryList() {
 			const expendList = this.$store.getters.categoryExpendList
@@ -611,6 +640,10 @@ export default {
 			overflow: hidden;
 			white-space: nowrap;
 			text-overflow: ellipsis;
+		}
+		image{
+			width: 50rpx;
+			height: 50rpx;
 		}
 	}
 

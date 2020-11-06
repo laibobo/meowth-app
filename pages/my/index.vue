@@ -47,34 +47,18 @@
 		<view class="budget-col" hover-class="hoverstatus" data-url="../budget/index" @click="navigateTo">
 			<view class="title">
 				{{ getMonth }}月总预算
-				<view v-if="isShow">
-					<view v-if="monthBudgetMoney > 0" class="right-btn">
+				<view>
+					<view v-if="getIsMonthBudget" class="right-btn">
 						<text>查看全部</text>
 						<view class="icon iconfont">&#xe6ec;</view>
 					</view>
 					<view v-else>
-						<button class="ybtn">+ 设置预算</button>	
+						<button class="ybtn">+ 设置预算</button>
 					</view>
 				</view>
 			</view>
 			<view class="info">
-				<view class="chart">
-					<ring-chart :monthExpendMoney="monthExpendMoney" :monthBudgetMoney="monthBudgetMoney" v-if="isLoadingBudget" />
-				</view>
-				<view class="budgetinfo">					
-					<view class="major">
-						<label>剩余预算：</label>
-						<text>{{getMonthSurplusBudget | formatMoney }}</text>
-					</view>
-					<view>
-						<label>本月预算：</label>
-						<text>{{monthBudgetMoney | formatMoney }}</text>
-					</view>
-					<view>
-						<label>本月支出：</label>
-						<text>{{getMonthExpendMoney | formatMoney }}</text>
-					</view>
-				</view>
+				<budget chartElementId="my_chart" />
 			</view>
 		</view>
 		<view class="tool">
@@ -114,20 +98,15 @@ export default {
 				expenditure: '0.00',
 				surplus: '0.00'
 			},
-			monthBudgetMoney: 0,
-			monthExpendMoney: 0,
 			db: null,
-			openid: '',
-			isLoadingBudget:true,
 			year:date.getFullYear(),
-			month:date.getMonth() + 1,
-			isShow:false
+			month:date.getMonth() + 1
 		};
 	},
 	onLoad() {
 		const _self = this
 		app.globalData.wxDB = wx.cloud.database({
-			env: 'develop-tm3ye'
+			env: this.$conf.cloud_env
 		});
 		this.db = app.globalData.wxDB
 		wx.cloud
@@ -135,45 +114,39 @@ export default {
 			name: 'login'
 		})
 		.then(res => {
-			uni.setStorageSync('user.openid', res.result.openid);
+			uni.setStorageSync(_self.$conf.storageKey.openid, res.result.openid);
 			wx.getSetting({
 				success: function(res) {
 					const isAuthSetting = res.authSetting['scope.userInfo'] !== undefined && res.authSetting['scope.userInfo'] !== false;				
-					uni.setStorageSync('isAuthSetting',isAuthSetting)
+					uni.setStorageSync(_self.$conf.storageKey.isAuthSetting,isAuthSetting)
 					if(isAuthSetting){
 						wx.getUserInfo({
 							success: function(res) {
-								uni.setStorageSync('user.info', res.userInfo)
+								uni.setStorageSync(_self.$conf.storageKey.userInfo, res.userInfo)
 								_self.updateUserInfo()
 							}
 						});
 					}
 				},
 				fail: function(err) {
-					console.error('查询是否授权失败！', err);
+					uni.showModal({
+						title:'警告',
+						content:'请确认网络是否正常~'
+					})
 				}
 			});
 		});
 	},
 	onShow() {
-		this.isShow = false
-		const userInfo = uni.getStorageSync('user.info') || {};
+		const userInfo = this.getUserInfo;
 		this.nickName = userInfo.nickName || '您好！请先登录';
 		this.photoUrl = userInfo.avatarUrl || require('@/static/image/photo.png');
-		this.monthBudgetMoney = 0
-		this.monthExpendMoney = 0
-		this.getKeepAccountsInfo();
 		this.getNowMonthKeepInfo();
+		this.getKeepAccountsInfo();
 	},
 	computed: {
 		getMonth() {
 			return this.month < 10?`0${this.month}`:this.month;
-		},
-		getMonthSurplusBudget(){
-			return this.monthBudgetMoney<=0?0: this.monthBudgetMoney - this.monthExpendMoney
-		},
-		getMonthExpendMoney(){
-			return this.monthBudgetMoney<=0?0: this.monthExpendMoney
 		}
 	},
 	methods: {
@@ -181,16 +154,14 @@ export default {
 		onShareAppMessage(){
 			return {
 				title:'喵喵快速记账~',
-				imageUrl: '/static/image/welcome.jpg'
+				imageUrl: '/static/image/miao.png'
 			}
 		},
 		//跳转页面
 		navigateTo(e) {
 			if(this.$authorize()){
-				let url = e.currentTarget.dataset.url;
-				if(url === '../budget/index'){
-					url = `${url}?monthBudgetMoney=${this.monthBudgetMoney}&monthExpendMoney=${this.monthExpendMoney}`
-				}
+				const url = e.currentTarget.dataset.url
+				
 				uni.navigateTo({
 					url
 				});	
@@ -198,27 +169,25 @@ export default {
 		},
 		//当月总预算
 		getCurrentMonthBudget(expenditure) {
-			this.isLoadingBudget = false
-			this.db.collection('Budget').where({
-				_openid:uni.getStorageSync('user.openid'),
+			this.db.collection(this.$conf.database.Budget).where({
+				_openid: this.getOpenid,
 				year:this.year,
 				month:this.month,
 				type:0
 			}).get().then(({data,errMsg})=>{
 				if(errMsg.includes('ok') && data.length > 0){
-					this.monthBudgetMoney = data[0]['money']
+					this.$store.commit('SET_MONTHBUDGEMONEY',data[0]['money'])
 				}
-				this.monthExpendMoney = expenditure
-				this.isLoadingBudget = true
-				this.isShow = true
+				this.$store.commit('SET_MONTHEXPENDMONEY',expenditure)
+				this.loadingBudgetMonthChart()
 			})
 		},
 		//记账统计
 		getKeepAccountsInfo() {
 			const $ = this.db.command.aggregate;
-			const _od = this.db.collection('AccountsRecord').aggregate()
+			const _od = this.db.collection(this.$conf.database.AccountsRecord).aggregate()
 				.match({
-					_openid: uni.getStorageSync('user.openid')
+					_openid: this.getOpenid
 				})
 			//获取记账总天数
 			_od.group({
@@ -245,8 +214,8 @@ export default {
 		//当前月账单
 		getNowMonthKeepInfo() {
 			const $ = this.db.command.aggregate
-			this.db.collection('AccountsRecord').aggregate().match({
-				_openid:uni.getStorageSync('user.openid'),
+			this.db.collection(this.$conf.database.AccountsRecord).aggregate().match({
+				_openid:this.getOpenid,
 				keepYear:this.year,
 				keepMonth:this.month
 			}).group({
@@ -274,13 +243,13 @@ export default {
 		//更新用户信息
 		updateUserInfo() {
 			this.db
-				.collection('User')
+				.collection(this.$conf.database.User)
 				.where({
-					_openid: uni.getStorageSync('user.openid')
+					_openid: this.getOpenid
 				})
 				.get()
 				.then(userRes => {
-					let userInfo = uni.getStorageSync('user.info') || {};
+					let userInfo = this.getUserInfo
 					if (userRes.data.length > 0) {
 						const resData = userRes.data[0],data = {};
 						//判断用户是否上传头像、更改昵称，如没有则获取微信数据设置
@@ -293,17 +262,19 @@ export default {
 						data.city = userInfo.city;
 						data.gender = userInfo.gender
 						this.db
-						.collection('User')
+						.collection(this.$conf.database.User)
 						.doc(resData._id)
 						.update({
 							data
 						})
 						.then(updateRes => {
-							console.log('更新用户信息成功！', updateRes);
 							this.getNewUserInfo();
 						})
 						.catch(err => {
-							console.error('更新用户信息成功:', err);
+							uni.showModal({
+								title:'警告',
+								content:'请确认网络是否正常~'
+							})
 						});
 					}
 				});
@@ -311,18 +282,21 @@ export default {
 		//获取用户信息（数据库数据）
 		getNewUserInfo() {
 			this.db
-				.collection('User')
+				.collection(this.$conf.database.User)
 				.where({
-					_openid: uni.getStorageSync('user.openid')
+					_openid: this.getOpenid
 				})
 				.get()
 				.then(res => {
 					if (res.data.length > 0) {
-						uni.setStorageSync('user.info', res.data[0]);
+						uni.setStorageSync(this.$conf.storageKey.userInfo, res.data[0]);
 					}
 				})
 				.catch(err => {
-					console.error('获取用户信息异常:', err);
+					uni.showModal({
+						title:'警告',
+						content:'请确认网络是否正常~'
+					})
 				});
 		},
 	}
@@ -367,37 +341,8 @@ export default {
 	padding: 20rpx 40rpx 50rpx;
 	font-size: 32rpx;
 	@include title-style;
-	height: 165px;
+	height: 185px;
 	box-sizing: border-box;
-	.info {
-		height: 200rpx;
-		display: flex;
-		justify-content: space-between;
-		.chart{
-			width: 200rpx;
-			margin-top: -20rpx;
-			margin-left: -40rpx;
-		}
-		.budgetinfo{
-			color: #656565;
-			font-size: 28rpx;
-			margin-top: 45rpx;
-			width: 350rpx;
-			position: relative;
-			>view{
-				display: flex;
-				justify-content: space-between;
-				line-height: 50rpx;
-				&.major{
-					color: #242424;
-					font-size: 30rpx;
-					border-bottom: 1rpx solid #EDEDED;
-					padding-bottom: 5rpx;
-					margin-bottom: 5rpx;
-				}
-			}		
-		}
-	}
 }
 .month-bill {
 	@include panel-style;

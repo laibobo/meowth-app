@@ -7,7 +7,6 @@ export function getElement(elname){
 	})
 }
 export function isAuthorize(){
-	console.log('授权状态:',uni.getStorageSync('isAuthSetting'))
 	if(!uni.getStorageSync('isAuthSetting')){
 		uni.showModal({
 			title:'提示',

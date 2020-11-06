@@ -12,15 +12,15 @@
 			<view class="content">
 				<view class="surplus">
 					<label>结余</label>
-					<text>{{yearBill.surplus |formatMoney }}</text>
+					<text>{{yearBill.surplus | formatMoney }}</text>
 				</view>
 				<view class="income">
 					<label>收入</label>
-					<text>{{yearBill.income |formatMoney }}</text>
+					<text>{{yearBill.income | formatMoney }}</text>
 				</view>
 				<view class="expenditure">
 					<label>支出</label>
-					<text>{{yearBill.expenditure |formatMoney }}</text>
+					<text>{{yearBill.expenditure | formatMoney }}</text>
 				</view>
 			</view>
 		</view>
@@ -55,7 +55,8 @@
 					expenditure:'0.00',
 					surplus:'0.00'
 				},
-				scrollHeight:0
+				scrollHeight:0,
+				DB:null
 			}
 		},
 		onLoad(){
@@ -74,9 +75,10 @@
 						}).exec();
 				}
 			})
-			
+			this.DB = app.globalData.wxDB
 		},
 		onShow(){
+			
 			this.getYearBillList()
 			this.getNowMonthKeepInfo()
 		},
@@ -95,14 +97,13 @@
 				uni.showLoading({
 					title:'数据加载中...'
 				})
-				const db = app.globalData.wxDB;
-				const $ = db.command.aggregate;
+				const $ = this.DB.command.aggregate;
 				this.yearBill.income = '0.00'
 				this.yearBill.expenditure = '0.00'
 				this.yearBill.surplus = '0.00'
-				db.collection('AccountsRecord').aggregate()
+				this.DB.collection(this.$conf.database.AccountsRecord).aggregate()
 					.match({
-						_openid:uni.getStorageSync('user.openid'),
+						_openid:this.getOpenid,
 						keepYear: this.yearDate
 					}).group({
 						_id:'$categoryType',
@@ -127,12 +128,11 @@
 					})
 			},
 			getYearBillList(){
-				const db = app.globalData.wxDB;
-				const $ = db.command.aggregate;
-				db.collection('AccountsRecord')
+				const $ = this.DB.command.aggregate;
+				this.DB.collection(this.$conf.database.AccountsRecord)
 					.aggregate()
 					.match({
-						_openid: uni.getStorageSync('user.openid'),
+						_openid: this.getOpenid,
 						keepYear:this.yearDate
 					}).group({
 						_id: {

@@ -7,7 +7,8 @@ const getters = {
 	categoryExpendList:state=>state.category.categoryExpendList,
 	categoryIncomeList:state=>state.category.categoryIncomeList,
 	monthBudgetMoney:state => state.budget.monthBudgetMoney,
-	monthExpendMoney:state => state.budget.monthExpendMoney
+	monthExpendMoney:state => state.budget.monthExpendMoney,
+	currentLoadingChartPageCode: state => state.budget.currentLoadingChartPageCode
 }
 
 // https://webpack.js.org/guides/dependency-management/#requirecontext

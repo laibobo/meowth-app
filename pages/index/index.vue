@@ -4,7 +4,7 @@
 		<view>
 			<image :src="require('@/static/image/welcome.jpg')" class="welcome"></image>
 			<view class="foot">
-				<button class="bottom" open-type="getUserInfo" withCredentials="true" lang="zh_CN" @getuserinfo="getUserInfo">授权登录</button>				
+				<button class="bottom" open-type="getUserInfo" withCredentials="true" lang="zh_CN" @getuserinfo="getWxUserInfo">授权登录</button>				
 			</view>
 			<text class="miao"></text>
 		</view>
@@ -47,7 +47,7 @@ export default {
 		/**
 		 * 获取微信用户信息
 		 * */
-		getUserInfo() {
+		getWxUserInfo() {
 			const _self = this;
 			wx.getUserInfo({
 				success: function(res) {
