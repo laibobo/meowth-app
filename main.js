@@ -12,6 +12,7 @@ Vue.filter('formatMoney',function(value){	return value? Math.floor(value * 100)
 
 Vue.prototype.$authorize = isAuthorize
 Vue.prototype.$conf = config
+const getApp2 = getApp();
 Vue.mixin({
 	computed:{
 		getMonthBudgetMoney(){
@@ -37,6 +38,12 @@ Vue.mixin({
 	methods:{
 		loadingBudgetMonthChart(){
 			this.$store.commit('SET_LOADINGCHARTPAGECODE',Math.random())
+		},
+		showNetworkIsError(){
+			uni.showModal({
+				title:'警告',
+				content:'请确认网络是否正常~'
+			})
 		}
 	}
 })

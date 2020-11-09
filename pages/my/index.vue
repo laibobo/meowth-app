@@ -129,10 +129,8 @@ export default {
 					}
 				},
 				fail: function(err) {
-					uni.showModal({
-						title:'警告',
-						content:'请确认网络是否正常~'
-					})
+					_self.showNetworkIsError()
+					console.error(err)
 				}
 			});
 		});
@@ -271,10 +269,8 @@ export default {
 							this.getNewUserInfo();
 						})
 						.catch(err => {
-							uni.showModal({
-								title:'警告',
-								content:'请确认网络是否正常~'
-							})
+							this.showNetworkIsError()
+							console.error(err)
 						});
 					}
 				});
@@ -293,10 +289,8 @@ export default {
 					}
 				})
 				.catch(err => {
-					uni.showModal({
-						title:'警告',
-						content:'请确认网络是否正常~'
-					})
+					this.showNetworkIsError()
+					console.error(err)
 				});
 		},
 	}

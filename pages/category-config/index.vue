@@ -44,7 +44,7 @@ export default {
 		};
 	},
 	onLoad(options) {
-		this._db = app.globalData.wxDB;
+		this.DB = app.globalData.wxDB;
 		this.currentCategoryType = options.categoryType || 0;
 	},
 	onShow() {
@@ -76,7 +76,7 @@ export default {
 				name: 'getCategoryList',
 				data: {
 					type,
-					_openid:uni.getStorageSync('user.openid')
+					_openid:this.getOpenid
 				}
 			})
 		},
@@ -95,7 +95,10 @@ export default {
 					this.incomeCategoryLoading = false
 				},1000)
 			})
-			.catch(console.error);
+			.catch(err=>{
+				this.showNetworkIsError()
+				console.error(err)
+			});
 		},
 		getExpendCategoryList() {
 			const expendList = this.$store.getters.categoryExpendList
@@ -111,7 +114,10 @@ export default {
 					this.expendCategoryLoading = false
 				},1000)
 			})
-			.catch(console.error);
+			.catch(err=>{
+				this.showNetworkIsError()
+				console.error(err)
+			});
 		},
 		deleteCategoryCorrelationData(categoryId,type,index){
 			const _self = this
@@ -119,10 +125,10 @@ export default {
 				name:'deleteKeepAccounts',
 				data:{
 					categoryId,
-					openid:uni.getStorageSync('user.openid')
+					openid:this.getOpenid
 				}
 			}).then(({result})=>{
-				this._db.collection('Category')
+				this.DB.collection(this.$conf.database.Category)
 					.doc(categoryId)
 					.remove()
 					.then(res=>{

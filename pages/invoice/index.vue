@@ -27,9 +27,9 @@ export default {
 		getInvoiceList() {
 			this.rows = [];
 			app.globalData.wxDB
-				.collection('InvoiceManage')
+				.collection(this.$conf.database.InvoiceManage)
 				.where({
-					_openid: uni.getStorageSync('user.openid')
+					_openid: this.getOpenid
 				})
 				.get()
 				.then(res => {
@@ -38,7 +38,10 @@ export default {
 					}
 					uni.hideLoading()
 				})
-				.catch(console.error);
+				.catch(err=>{
+					this.showNetworkIsError()
+					console.error(err)
+				});
 		},
 		openAdd() {
 			uni.navigateTo({

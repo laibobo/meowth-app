@@ -49,7 +49,7 @@ export default {
 				that.scrollHeight = res.windowHeight;
 			}
 		});
-		this._db = app.globalData.wxDB;
+		this.DB = app.globalData.wxDB;
 	},
 	computed: {
 		getScrollHeight() {
@@ -80,8 +80,8 @@ export default {
 				return;
 			}
 			const type = Number(this.categoryType),icon = this.activeValue,name = this.categoryName
-			this._db
-				.collection('Category')
+			this.DB
+				.collection(this.$conf.database.Category)
 				.add({
 					data: {
 						type,

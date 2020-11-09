@@ -68,11 +68,8 @@ export default {
 				})
 			}
 		}).catch(err=>{
+			this.showNetworkIsError()
 			console.error(err)
-			uni.showModal({
-				title:'程序异常',
-				content:'获取数据失败！'
-			})
 		})
 	},
 	computed:{

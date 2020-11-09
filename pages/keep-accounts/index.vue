@@ -113,7 +113,7 @@ export default {
 	},
 	onLoad(option) {
 		this.setKeepDate();
-		this._db = app.globalData.wxDB;
+		this.DB = app.globalData.wxDB;
 		if(Object.keys(option).length > 0){
 			this.keepAccountId = option.keepAccountId
 		}
@@ -128,7 +128,7 @@ export default {
 			}
 		});
 		if(this.keepAccountId){
-			this._db.collection('AccountsRecord').doc(this.keepAccountId).get().then(({data})=>{
+			this.DB.collection(this.$conf.database.AccountsRecord).doc(this.keepAccountId).get().then(({data})=>{
 				this.currentCategoryType = data.categoryType
 				if(data.categoryType === 0){
 					this.getExpendCategoryList()
@@ -143,10 +143,8 @@ export default {
 				this.isOpenRemarkPanel = false;
 				this.isOpenKeyboard = true;
 			}).catch(err=>{
-				uni.showModal({
-					title:'系统异常',
-					content:err
-				})
+				this.showNetworkIsError()
+				console.error(err)
 			})
 		}else{
 			this.getExpendCategoryList();
@@ -180,11 +178,9 @@ export default {
 						success: res => {
 							_self.keepImageFileId = res.fileID
 						},
-						fail: _=>{
-							uni.showModal({
-								title:'警告',
-								content:'请确认网络是否正常~'
-							})
+						fail: err=>{
+							_self.showNetworkIsError()
+							console.error(err)
 						}
 					});
 				}
@@ -207,7 +203,10 @@ export default {
 					this.expendCategoryLoading = false
 				},1000)
 			})
-			.catch(console.error);
+			.catch(err=>{
+				this.showNetworkIsError()
+				console.error(err)
+			});
 		},
 		//获取收入类目数据
 		getIncomeCategoryList() {
@@ -226,7 +225,10 @@ export default {
 					this.incomeCategoryLoading = false
 				},1000)
 			})
-			.catch(console.error);
+			.catch(err=>{
+				this.showNetworkIsError()
+				console.error(err)
+			});
 		},
 		//获取类目数据
 		getCategoryList() {
@@ -235,7 +237,7 @@ export default {
 				name: 'getCategoryList',
 				data: {
 					type,
-					_openid:uni.getStorageSync('user.openid')
+					_openid:this.getOpenid
 				}
 			})
 		},
@@ -422,7 +424,7 @@ export default {
 				,createDate = new Date()
 				
 			if(this.keepAccountId){
-				this._db.collection('AccountsRecord')
+				this.DB.collection('AccountsRecord')
 				.doc(this.keepAccountId)
 				.update({
 					data:{
@@ -444,7 +446,7 @@ export default {
 					})
 				})
 			}else{
-				this._db
+				this.DB
 					.collection('AccountsRecord')
 					.add({
 						data: {

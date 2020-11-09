@@ -66,7 +66,7 @@ export default {
 		},
 		getMonthBudgetId(){
 			this.DB.collection(this.database_Budget).where({
-				_openid:uni.getStorageSync(this.$conf.storageKey.openid),
+				_openid:this.getOpenid,
 				year:this.year,
 				month:this.month,
 				type:0
@@ -125,10 +125,8 @@ export default {
 					this.loadingBudgetMonthChart()
 				}
 			}).catch(err => {
-				uni.showModal({
-					title: '警告',
-					content: '程序异常!请稍后再试'
-				});
+				this.showNetworkIsError()
+				console.error(err)
 			});
 		},
 		cancel() {

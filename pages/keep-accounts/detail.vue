@@ -81,7 +81,8 @@ export default {
 			incomeSum: 0,
 			expenditureSum: 0,
 			scrollHeight: 0,
-			isLoading:false
+			isLoading:false,
+			DB:null
 		};
 	},
 	onLoad() {
@@ -94,7 +95,7 @@ export default {
 		this.year = year;
 		this.month = month;
 		this.searchDate = `${year}-${month}`;
-		this._db = app.globalData.wxDB;
+		this.DB = app.globalData.wxDB;
 	},
 	onShow() {
 		this.getNowYearMonthAccountLog();
@@ -116,9 +117,9 @@ export default {
 	methods: {
 		//当前月账单
 		getNowMonthKeepInfo() {
-			const $ = this._db.command.aggregate
-			this._db.collection('AccountsRecord').aggregate().match({
-				_openid:uni.getStorageSync('user.openid'),
+			const $ = this.DB.command.aggregate
+			this.DB.collection(this.$conf.database.AccountsRecord).aggregate().match({
+				_openid:this.getOpenid,
 				keepYear:Number(this.year) ,
 				keepMonth:Number(this.month)
 			}).group({
@@ -149,7 +150,7 @@ export default {
 			uni.showLoading({
 				title:'删除中...'
 			})
-			this._db.collection('AccountsRecord')
+			this.DB.collection(this.$conf.database.AccountsRecord)
 			.doc(id)
 			.remove()
 			.then(result=>{
@@ -178,11 +179,8 @@ export default {
 				}
 				
 			}).catch(err=>{
+				this.showNetworkIsError()
 				console.error(err)
-				uni.showModal({
-					title:'提示',
-					content:'删除失败！程序异常'
-				})
 			})
 		},
 		getNowYearMonthAccountLog() {			
@@ -194,7 +192,7 @@ export default {
 			wx.cloud.callFunction({
 				name:'getKeepAccountList',
 				data:{
-					openid:uni.getStorageSync('user.openid'),
+					openid:this.getOpenid,
 					keepYear: Number(this.year),
 					keepMonth: Number(this.month)
 				}
@@ -205,10 +203,8 @@ export default {
 			}).catch(err=>{
 				uni.hideLoading()
 				this.isLoading = false
-				uni.showModal({
-					title:'系统异常',
-					content:err
-				})
+				this.showNetworkIsError()
+				console.error(err)
 			})
 		},
 		getYearMoneySum(type, list = []) {

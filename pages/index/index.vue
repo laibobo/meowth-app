@@ -23,7 +23,7 @@ export default {
 	},
 	onLoad() {
 		app.globalData.wxDB = wx.cloud.database({
-			env: 'develop-tm3ye'
+			env: this.$conf.cloud_env
 		});
 		this.db = app.globalData.wxDB;
 		const _self = this;
@@ -51,21 +51,21 @@ export default {
 			const _self = this;
 			wx.getUserInfo({
 				success: function(res) {
-					uni.setStorageSync('user.info', res.userInfo);
+					uni.setStorageSync(_self.$conf.storageKey.userInfo, res.userInfo);
 					_self.optUserInfo();
-					uni.setStorageSync('isAuthSetting',true)
+					uni.setStorageSync(_self.$conf.storageKey.isAuthSetting,true)
 				}
 			});
 		},
 		optUserInfo() {
 			this.db
-				.collection('User')
+				.collection(this.$conf.database.User)
 				.where({
-					_openid: uni.getStorageSync('user.openid')
+					_openid: this.$conf.storageKey.isAuthSetting
 				})
 				.get()
 				.then(userRes => {
-					let userInfo = uni.getStorageSync('user.info') || {};
+					let userInfo = this.$conf.storageKey.userInfo || {};
 					if (userRes.data.length === 0) {
 						this.addedUserInfo(userInfo);
 						const categorysList = categorysData.defaultCategorysList
@@ -84,7 +84,7 @@ export default {
 		addedUserInfo(userInfo) {
 			const nowdate = new Date();
 			this.db
-				.collection('User')
+				.collection(this.$conf.database.User)
 				.add({
 					data: {
 						nickName: userInfo.NickName,
@@ -104,11 +104,12 @@ export default {
 					console.log('添加用户信息成功！', addRes);
 				})
 				.catch(err => {
-					console.error('添加用户信息失败！', err);
+					this.showNetworkIsError()
+					console.error(err)
 				});
 		},
 		addDefaultCategorys(data){
-			this.db.collection('Category').add({
+			this.db.collection(this.$conf.database.Category).add({
 				data
 			}).then(res => {
 			  console.log(res)

@@ -48,7 +48,8 @@ export default {
 				bankAccount:'',
 				_id:''
 			},
-			isEdit:false
+			isEdit:false,
+			DB:null
 		};
 	},
 	onLoad(option){
@@ -56,6 +57,7 @@ export default {
 			this.form = JSON.parse(decodeURIComponent(option.item));
 			this.isEdit = true
 		}
+		this.DB = app.globalData.wxDB
 	},
 	methods: {
 		handleDel:function(){
@@ -74,7 +76,7 @@ export default {
 			})
 		},
 		deleteInvoice(){
-			app.globalData.wxDB.collection('InvoiceManage').doc(this.form._id).remove({
+			this.DB.collection(this.$conf.database.InvoiceManage).doc(this.form._id).remove({
 				success:function(res){
 					if(res.errMsg === 'document.remove:ok'){
 						uni.showToast({
@@ -111,9 +113,9 @@ export default {
 			uni.hideLoading({
 				title:'保存中...'
 			})
+			const db_invoiceManage = this.DB.collection(this.$conf.database.InvoiceManage)
 			if(this.isEdit){
-				app.globalData.wxDB.collection('InvoiceManage')
-					.doc(this.form._id)
+				db_invoiceManage.doc(this.form._id)
 					.update({
 						data:{
 							companyName:data.companyName,
@@ -126,22 +128,21 @@ export default {
 					}).then(result=>{
 						this._opts()	
 					}).catch(err=>{
-						uni.showModal({
-							title:'错误提示',
-							content:'编辑失败！程序异常'
-						})
+						this.showNetworkIsError()
 						console.error(err)
 					})
 			}else{
-				app.globalData.wxDB
-					.collection('InvoiceManage')
+				db_invoiceManage
 					.add({
 						data: data
 					})
 					.then(res => {
 						this._opts()					
 					})
-					.catch(console.error);
+					.catch(err=>{
+						this.showNetworkIsError()
+						console.error(err)
+					});
 			}
 		},
 		_opts(){

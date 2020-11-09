@@ -55,7 +55,6 @@
 		},
 		onLoad() {
 			const userInfo = this.getUserInfo;
-			const _self = this;
 			this.db = app.globalData.wxDB;
 			this.photoUrl = userInfo.avatarUrl;
 			this.nickName = userInfo.nickName;
@@ -86,10 +85,8 @@
 					}
 				})
 				.catch(err => {
-					uni.showModal({
-						title:'警告',
-						content:'请确认网络是否正常~'
-					})
+					this.showNetworkIsError()
+					console.error(err)
 				});
 		},
 		methods: {
@@ -129,11 +126,9 @@
 									isCustomPhoto: true
 								});
 							},
-							fail: _=>{
-								uni.showModal({
-									title:'警告',
-									content:'请确认网络是否正常~'
-								})
+							fail: err=>{
+								_self.showNetworkIsError()
+								console.error(err)
 							}
 						});
 					}
@@ -159,11 +154,9 @@
 							resolve('更新成功')
 						})
 						.catch(err => {
-							uni.showModal({
-								title:'警告',
-								content:'请确认网络是否正常~'
-							})
+							this.showNetworkIsError()
 							reject('更新失败')
+							console.error(err)
 						});
 					})
 			}
