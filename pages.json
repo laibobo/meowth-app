@@ -36,6 +36,12 @@
 			"path": "pages/eportforms/yearbill"
 		}, {
 			"path": "pages/budget/index"
+		}, {
+			"path": "pages/rests/feedback"
+		}, {
+			"path": "pages/rests/reward"
+		}, {
+			"path": "pages/rests/index"
 		}
 	],
 	"globalStyle": {

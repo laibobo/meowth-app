@@ -62,8 +62,8 @@
 						</picker>
 					</view>
 					<view v-for="(item,index) in ufuncArr" @click="handleUfuncCode(item)" :key="index" hover-class="paw1">{{item}}</view>				
-					<view class="submit-btn s-zo" v-if="!isMoneySum" @click="handleKeyboardSubmit">完成</view>
-					<view class="submit-btn s-zo" v-else @click="handleMoneySum">=</view>
+					<view class="submit-btn s-zo" v-show="!isMoneySum" @click="handleKeyboardSubmit">完成</view>
+					<view class="submit-btn s-zo" v-show="isMoneySum" @click="handleMoneySum">=</view>
 				</view>
 			</view>
 		</view>
@@ -108,7 +108,8 @@ export default {
 			scrollTop:0,
 			keepAccountId:'',
 			keepImage:'',
-			keepImageFileId:''
+			keepImageFileId:'',
+			timer:null
 		};
 	},
 	onLoad(option) {
@@ -325,6 +326,7 @@ export default {
 			}
 			const deleteCharIndex = moneyStr.length - 1;
 			this.money = moneyStr.substring(0, deleteCharIndex);
+			this.setCategoryContainerHeight()
 		},
 		handleKeyCode(e) {
 			const code = e.currentTarget.dataset.code;
@@ -371,6 +373,7 @@ export default {
 				}
 			}
 			this.money = tepMoney;
+			this.setCategoryContainerHeight()
 		},
 		handleUfuncCode(code) {
 			const moneyStr = this.money.toString();
@@ -514,6 +517,13 @@ export default {
 					break;
 			}
 			this.money = `${Math.floor(moneyCount * 100) / 100}${code}`;
+		},
+		setCategoryContainerHeight(){
+			if (this.timer) clearTimeout(this.timer)
+			      
+			this.timer = setTimeout(() => {
+			    this.calculateScrollHeight()
+			}, 1000)
 		}
 	}
 };

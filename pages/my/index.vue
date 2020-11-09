@@ -70,6 +70,18 @@
 				<view class="icon-col"><view class="icon iconfont">&#xe742;</view></view>
 				<text>推荐给好友</text>
 			</button>
+			<view class="t-item" data-url="../rests/reward" @click="navigateTo">
+				<view class="icon-col"><view class="icon iconfont">&#xe6e6;</view></view>
+				<text>打赏作者</text>
+			</view>
+			<view class="t-item" data-url="../rests/feedback" @click="navigateTo">
+				<view class="icon-col"><view class="icon iconfont">&#xe6e9;</view></view>
+				<text>建议或反馈</text>
+			</view>
+			<view class="t-item" data-url="../rests/index" @click="navigateTo">
+				<view class="icon-col"><view class="icon iconfont">&#xe6ea;</view></view>
+				<text>关于喵喵</text>
+			</view>
 			<image class="cartoon-img" :src="require('@/static/image/an.gif')" />
 		</view>
 	</view>
@@ -320,6 +332,7 @@ export default {
 	height: 100px;
 	position: absolute;
 	right: 10rpx;
+	bottom: 0;
 }
 .hoverstatus {
 	background: #f5f5f5 !important;
