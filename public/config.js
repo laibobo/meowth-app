@@ -5,7 +5,8 @@ export default {
 		Budget:'Budget',
 		Category:'Category',
 		InvoiceManage:'InvoiceManage',
-		User:'User'
+		User:'User',
+		FeedBack: 'FeedBack'
 	},
 	storageKey:{
 		openid: 'user.openid',

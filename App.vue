@@ -19,12 +19,12 @@ export default {
 /*每个页面公共css */
 @font-face {
   font-family: 'iconfont';  /* project id 1479363 */
-  src: url('//at.alicdn.com/t/font_1479363_y24k6xjxuo9.eot');
-  src: url('//at.alicdn.com/t/font_1479363_y24k6xjxuo9.eot?#iefix') format('embedded-opentype'),
-  url('//at.alicdn.com/t/font_1479363_y24k6xjxuo9.woff2') format('woff2'),
-  url('//at.alicdn.com/t/font_1479363_y24k6xjxuo9.woff') format('woff'),
-  url('//at.alicdn.com/t/font_1479363_y24k6xjxuo9.ttf') format('truetype'),
-  url('//at.alicdn.com/t/font_1479363_y24k6xjxuo9.svg#iconfont') format('svg');
+  src: url('//at.alicdn.com/t/font_1479363_du2bay2wgn4.eot');
+  src: url('//at.alicdn.com/t/font_1479363_du2bay2wgn4.eot?#iefix') format('embedded-opentype'),
+  url('//at.alicdn.com/t/font_1479363_du2bay2wgn4.woff2') format('woff2'),
+  url('//at.alicdn.com/t/font_1479363_du2bay2wgn4.woff') format('woff'),
+  url('//at.alicdn.com/t/font_1479363_du2bay2wgn4.ttf') format('truetype'),
+  url('//at.alicdn.com/t/font_1479363_du2bay2wgn4.svg#iconfont') format('svg');
 }
 .iconfont {
 	font-family: 'iconfont' !important;

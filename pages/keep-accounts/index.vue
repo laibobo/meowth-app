@@ -41,14 +41,11 @@
 					<text class="m-focus"></text>
 				</view>
 				<view class="r-p">
+					<image v-show="keepImage!==''" :src="keepImage" :fade-show="false" mode="aspectFit"></image>
+					<text class="icon-btn icon iconfont" @click="handleKeepImage">&#xe6f3;</text><text class="split"></text>
 					<text class="s-r">{{ remark }}</text>
-					<text class="remark" @click="handleOpenRemarkPanel">{{ optRemarkBtnText }}</text>
+					<text class="icon-btn icon iconfont" @click="handleOpenRemarkPanel">&#xe6f6;</text>
 				</view>
-				<!-- <view class="r-p">
-					<image :src="keepImage" :fade-show="false" mode="aspectFit"></image>
-					<text class="remark" @click="handleKeepImage">添加图片</text>
-					<text>查看</text>
-				</view> -->
 			</view>
 			<view class="m-keyboard">
 				<view class="m-keyboard-code">
@@ -141,6 +138,15 @@ export default {
 				this.remark = data.remark
 				this.activeCategoryId = data.categoryId
 				this.activeCategoryName = '';
+				if (!that.keepImage && data.imageFileId) {
+					wx.cloud.downloadFile({
+						fileID: data.imageFileId,
+						success: res => {
+							that.keepImage = res.tempFilePath;
+						}
+					});
+				}
+				this.keepImageFileId = data.imageFileId
 				this.isOpenRemarkPanel = false;
 				this.isOpenKeyboard = true;
 			}).catch(err=>{
@@ -419,12 +425,13 @@ export default {
 				,keepWeek = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][new Date(keepDate).getDay()]
 				,categoryId = this.activeCategoryId
 				,categoryType = this.currentCategoryType
-				,remark = this.activeCategoryName + this.remark
+				,remark = this.remark
 				,keepMoney = parseFloat(money)
 				,keepYear = keepDate.getFullYear()
 				,keepMonth = keepDate.getMonth() + 1
 				,keepDay = keepDate.getDate()
 				,createDate = new Date()
+				,imageFileId = this.keepImageFileId
 				
 			if(this.keepAccountId){
 				this.DB.collection('AccountsRecord')
@@ -434,7 +441,8 @@ export default {
 						keepMoney,
 						remark,
 						categoryId,
-						categoryType
+						categoryType,
+						imageFileId
 					}
 				}).then(res=>{
 					if (res.errMsg == 'document.update:ok') {
@@ -443,10 +451,8 @@ export default {
 						})
 					}
 				}).catch(err=>{
-					uni.showModal({
-						title:'程序异常',
-						content:err
-					})
+					this.showNetworkIsError()
+					console.error(err)
 				})
 			}else{
 				this.DB
@@ -457,6 +463,7 @@ export default {
 							remark,
 							categoryId,
 							categoryType,
+							imageFileId,
 							keepWeek,
 							keepDate,
 							keepYear,
@@ -473,10 +480,8 @@ export default {
 						}
 					})
 					.catch(err=>{
-						uni.showModal({
-							title:'程序异常',
-							content:err
-						})
+						this.showNetworkIsError()
+						console.error(err)
 					});
 			}
 		},
@@ -631,10 +636,10 @@ export default {
 		color: #a7a7a7;
 	}
 
-	.remark {
+	.icon-btn {
 		display: block;
 		color: #7e839f;
-		font-size: 28rpx;
+		font-size: 42rpx;
 		margin: 15rpx 0;
 	}
 
@@ -773,6 +778,12 @@ export default {
 			}
 		}
 	}
+}
+.split{
+	margin: 0 20rpx;
+	height: 20rpx;
+	border-right: 1rpx solid #ccc;
+	display: inline-block;
 }
 </style>
 <style>

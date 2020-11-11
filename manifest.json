@@ -1,5 +1,5 @@
 {
-    "name" : "meowth-app",
+    "name" : "喵喵记账",
     "appid" : "",
     "description" : "",
     "versionName" : "1.0.0",
@@ -57,14 +57,15 @@
     /* 小程序特有相关 */
     "mp-weixin" : {
         "appid" : "wx6a316c5ee139bdad",
-		"cloudfunctionRoot" : "static/cloudfunctions/",
+        "cloudfunctionRoot" : "static/cloudfunctions/",
         "setting" : {
             "urlCheck" : true,
             "es6" : true,
             "minified" : true,
             "postcss" : true
         },
-        "usingComponents" : true
+        "usingComponents" : true,
+        "permission" : {}
     },
     "mp-alipay" : {
         "usingComponents" : true

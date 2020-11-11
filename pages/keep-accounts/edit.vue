@@ -21,11 +21,15 @@
 				<label>备注</label>
 				<text>{{remark}}</text>
 			</view>
+			<view>
+				<label>票据</label>
+				<image class="image-pj" :src="keepImage" fade-show @click="previewImage"></image>
+			</view>
 		</view>
 		<view class="icon-col"><view class="icon iconfont" :style="getIconColor" v-html="categoryIcon"></view></view>
 	</view>
 </template>
-<script>
+<script> 
 const app = getApp()
 export default {
 	data() {
@@ -36,13 +40,12 @@ export default {
 			keepDate:'',
 			remark:'',
 			categoryName:'',
-			categoryIcon:''
+			categoryIcon:'',
+			keepImage:''
 		};
 	},
 	onLoad(options){
 		this.keepAccountId = options.keepAccountId
-	},
-	onShow(){
 		uni.showLoading({
 			title:'数据加载中...'
 		})
@@ -61,6 +64,15 @@ export default {
 				this.remark = data.remark
 				this.categoryName = data.categorys[0].name
 				this.categoryIcon = data.categorys[0].icon
+				if (data.imageFileId) {
+					const _self = this
+					wx.cloud.downloadFile({
+						fileID: data.imageFileId,
+						success: res => {
+							_self.keepImage = res.tempFilePath
+						}
+					});
+				}
 			}else{
 				uni.showModal({
 					title:'提示',
@@ -75,6 +87,13 @@ export default {
 	computed:{
 		getIconColor(){
 			return `color:#${this.categoryType === '收入'?'fb5e33':'30ac84'} !important;`
+		}
+	},
+	methods:{
+		previewImage(){
+			uni.previewImage({
+				urls:[this.keepImage]
+			})
 		}
 	}
 };
@@ -95,6 +114,10 @@ export default {
 }
 .page {
 	background: #fdfffe;
+	.image-pj{
+		width: 200rpx;
+		height: 200rpx;
+	}
 	.info {
 		width: 750rpx;
 		box-sizing: border-box;

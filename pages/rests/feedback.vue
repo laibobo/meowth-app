@@ -4,13 +4,14 @@
 		<form class="form">
 			<view class="type-box">
 				<label>类型：</label>
-				<picker :value="form.type" @change="handleType" :range="typeRange">
+				<picker :value="type" @change="handleType" :range="typeRange">
 					<text>{{getTypeRangeText}}</text>
 				</picker>
+				<image v-show="isShowImage" :src="require('@/static/image/tm.png')" class="tm-image"></image>
 			</view>
 			<view>
 				<label>描述：</label>
-				<textarea :value="content" placeholder="请输入内容" :maxlength="250" :auto-height="true"></textarea>
+				<textarea :value="content" placeholder="请输入内容" :maxlength="250" :auto-height="true" @input="handleContent" @focus="isShowImage=true" @blur="isShowImage=false"></textarea>
 			</view>
 		</form>
 		
@@ -28,10 +29,12 @@ export default {
 			DB: null,
 			typeRange:['反馈','建议'],
 			type:'',
-			content:''
+			content:'',
+			isShowImage:false
 		};
 	},
 	onLoad() {
+		this.DB = app.globalData.wxDB
 	},
 	computed:{
 		getTypeRangeText(){
@@ -39,6 +42,9 @@ export default {
 		}
 	},
 	methods:{
+		handleContent({detail}){
+			this.content = detail.value
+		},
 		handleType({detail}){
 			this.type = this.typeRange[Number(detail.value)]
 		},
@@ -57,7 +63,23 @@ export default {
 				})
 				return
 			}
-			console.log(this.content)
+			
+			this.DB.collection(this.$conf.database.FeedBack).add({
+				data:{
+					typeName:this.type,
+					content:this.content
+				}
+			}).then(res=>{
+				this.type = ''
+				this.content = ''
+				uni.showToast({
+					icon:'success',
+					title:'提交成功~'
+				})
+			}).catch(err=>{
+				this.showNetworkIsError()
+				console.error(err)
+			})
 		}
 	}
 };
@@ -86,11 +108,19 @@ export default {
 					padding: 10rpx;
 				}
 				margin-bottom: 20rpx;
+				position: relative;
 			}
 			textarea{
 				border: 1rpx solid #ccc;
 				padding: 20rpx;
 				margin-top: 10rpx;
+			}
+			.tm-image{
+				width: 100rpx;
+				height: 100rpx;
+				position: absolute;
+				right: 20rpx;
+				bottom: -40rpx;
 			}
 		}
 		.uni-btn-v {

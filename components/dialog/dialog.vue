@@ -2,7 +2,7 @@
 	<view 
 		:style="{backgroundColor:visible?`rgba(0,0,0,${opacity})`:'rgba(0,0,0,0)'}" 
 		:class="['modal',{ show: visible }]">
-		<view class="dialog__wrapper" v-if="type === 'centre'">
+		<view class="dialog__wrapper" v-if="type === 'center'">
 			<view class="header">
 				<text>{{title}}</text>
 			</view>
@@ -28,11 +28,11 @@
 		name:'Dialog',
 		props:{
 			/**
-			 * type: 类型  centre、bottom
+			 * type: 类型  center、bottom
 			 * */
 			type:{
 				type:String,
-				default:'centre'
+				default:'center'
 			},
 			visible:{
 				type:Boolean,

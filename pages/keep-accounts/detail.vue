@@ -40,7 +40,7 @@
 				        <view class="di-info">
 				        	<view class="typeinfo">
 				        		<view class="icon-col"><view class="icon iconfont" v-html="childItem.categorys[0].icon"></view></view>
-				        		<text class="explain">{{ childItem.categorys[0].name }}  {{ childItem.remark }}</text>
+				        		<text class="explain">{{ childItem.categorys[0].name }} {{ childItem.remark }}</text><text v-if="childItem.imageFileId" class="icon iconfont" style="color:red;">&#xe6f4;</text> 
 				        	</view>
 				        	<text class="money income" v-if="childItem.categoryType === 1">+{{ childItem.keepMoney | formatMoney }}</text>
 				        	<text class="money expend" v-else>-{{ childItem.keepMoney | formatMoney }}</text>
