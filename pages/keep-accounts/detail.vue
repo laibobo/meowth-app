@@ -4,7 +4,7 @@
 		<view class="header">
 			<view class="search-col">
 				<label>{{ year }}年</label>
-				<picker class="searchdate-picker" mode="date" fields="month" :value="searchDate" @change="bindSearchDateChange">
+				<picker class="searchdate-picker" mode="date" fields="month" :value="searchDate" @change="handleDate">
 					<view class="uni-input">
 						{{ month }}
 						<text class="fz10">月</text>
@@ -29,21 +29,22 @@
 		<scroll-view class="list" scroll-y="true" :style="getScrollHeight">
 			<view class="list-item" v-for="(item, index) in keepLogs" :key="index">
 				<view class="summary">
-					<text class="date">{{ item[0].keepMonth }}月{{ item[0].keepDay }}日 {{ item[0].keepWeek }}</text>
+					<text class="date">{{ item.month }}月{{ item.day }}日 {{ item.weekSeveral }}</text>
 					<view class="expenses">
-						<text class="income">收入 {{ getYearMoneySum(1, item) | formatMoney }}</text>
-						<text class="expend">支出 {{ getYearMoneySum(0, item) | formatMoney}}</text>
+						<text class="income">收入 {{ item.incomeSum | formatMoney }}</text>
+						<text class="expend">支出 {{ item.expendSum | formatMoney}}</text>
 					</view>
 				</view>
 				<uni-swipe-action>
-					<uni-swipe-action-item v-for="(childItem, idx) in item" :key="idx" :options="getSwipeOptions(childItem._id)" @click="handleSwipe">
+					<uni-swipe-action-item v-for="(childItem, idx) in item.logs" :key="idx" :options="getSwipeOptions(childItem._id,item._id,index,childItem.categoryType,childItem.money)" @click="handleSwipe">
 				        <view class="di-info">
 				        	<view class="typeinfo">
-				        		<view class="icon-col"><view class="icon iconfont" v-html="childItem.categorys[0].icon"></view></view>
-				        		<text class="explain">{{ childItem.categorys[0].name }} {{ childItem.remark }}</text><text v-if="childItem.imageFileId" class="icon iconfont" style="color:red;">&#xe6f4;</text> 
+				        		<view class="icon-col"><view class="icon iconfont" v-html="childItem.categoryIcon"></view></view>
+				        		<text class="explain">{{ childItem.categoryName }} {{ childItem.remark }}</text>
+								<text v-if="childItem.imageFileId" class="icon iconfont" style="color:red;">&#xe6f4;</text> 
 				        	</view>
-				        	<text class="money income" v-if="childItem.categoryType === 1">+{{ childItem.keepMoney | formatMoney }}</text>
-				        	<text class="money expend" v-else>-{{ childItem.keepMoney | formatMoney }}</text>
+				        	<text class="money income" v-if="childItem.categoryType === 1">+{{ childItem.money | formatMoney }}</text>
+				        	<text class="money expend" v-else>-{{ childItem.money | formatMoney }}</text>
 				        </view>
 				    </uni-swipe-action-item>
 				</uni-swipe-action>
@@ -80,9 +81,9 @@ export default {
 			surplusSum:0,
 			incomeSum: 0,
 			expenditureSum: 0,
-			scrollHeight: 0,
 			isLoading:false,
-			DB:null
+			DB:null,
+			keepDB:null
 		};
 	},
 	onLoad() {
@@ -96,10 +97,11 @@ export default {
 		this.month = month;
 		this.searchDate = `${year}-${month}`;
 		this.DB = app.globalData.wxDB;
+		this.keepDB = this.DB.collection(this.$conf.database.keepRecord)
 	},
 	onShow() {
 		this.getNowYearMonthAccountLog();
-		this.getNowMonthKeepInfo()
+		this.getNowBill()
 		const that = this;
 		getElement('.header').then(e => {
 			uni.getSystemInfo({
@@ -109,81 +111,8 @@ export default {
 			});
 		});
 	},
-	computed: {
-		getScrollHeight() {
-			return `height:${this.scrollHeight}px;`;
-		}
-	},
 	methods: {
-		//当前月账单
-		getNowMonthKeepInfo() {
-			const $ = this.DB.command.aggregate
-			this.DB.collection(this.$conf.database.AccountsRecord).aggregate().match({
-				_openid:this.getOpenid,
-				keepYear:Number(this.year) ,
-				keepMonth:Number(this.month)
-			}).group({
-				_id: '$categoryType',
-				 total: $.sum('$keepMoney')
-			}).end().then(({list,errMsg})=>{
-				if(errMsg.includes('ok') && list.length > 0){
-					let expenditure = 0,income = 0
-					for(let i=0;i<list.length;i++){
-						if(list[i]['_id'] === 0){
-							expenditure = list[i]['total']
-						}else{
-							income = list[i]['total']
-						}
-					}
-					this.expenditureSum = expenditure
-					this.incomeSum = income
-					this.surplusSum = income - expenditure
-				}else{
-					this.expenditureSum = 0
-					this.incomeSum = 0
-					this.surplusSum = 0
-				}	
-			})
-		},
-		//删除记账记录
-		deleteKeepAccount(id){
-			uni.showLoading({
-				title:'删除中...'
-			})
-			this.DB.collection(this.$conf.database.AccountsRecord)
-			.doc(id)
-			.remove()
-			.then(result=>{
-				if(result.errMsg === 'document.remove:ok'){
-					uni.showToast({
-						icon:'success',
-						title:'删除成功'
-					})
-					const keepLogs = this.keepLogs
-					for(let key in keepLogs){
-						const index = keepLogs[key].findIndex(o=>o._id === id)
-						if(index > -1){
-							this.keepLogs[key].splice(index,1)
-							if(keepLogs[key].length === 0){
-								delete keepLogs[key]
-							}
-							break
-						}
-					}
-					this.getNowMonthKeepInfo()
-				}else{
-					uni.showModal({
-						title:'提示',
-						content:result.errMsg 
-					})
-				}
-				
-			}).catch(err=>{
-				this.showNetworkIsError()
-				console.error(err)
-			})
-		},
-		getNowYearMonthAccountLog() {			
+		getNowYearMonthAccountLog() {
 			this.keepLogs = []
 			uni.showLoading({
 				title:'数据加载中...'
@@ -193,11 +122,11 @@ export default {
 				name:'getKeepAccountList',
 				data:{
 					openid:this.getOpenid,
-					keepYear: Number(this.year),
-					keepMonth: Number(this.month)
+					keepYear: this.year,
+					keepMonth: this.month
 				}
 			}).then(res=>{
-				this.keepLogs = this._dataGroup(res.result.list);				
+				this.keepLogs = res.result.data			
 				uni.hideLoading()				
 				this.isLoading = false
 			}).catch(err=>{
@@ -207,39 +136,101 @@ export default {
 				console.error(err)
 			})
 		},
-		getYearMoneySum(type, list = []) {
-			let result = list.filter(o => o.categoryType === type).map(p => p.keepMoney);
-			if (result.length > 0) {
-				return result.reduce((a, b) => a + b);
+		//当前月账单
+		getNowBill() {
+			this.keepDB.where({
+				_openid:this.getOpenid,
+				year:Number(this.year) ,
+				month:Number(this.month)
+			}).get().then(({data,errMsg})=>{
+				if(errMsg.includes('ok') && data.length > 0){
+					const { expendSum,incomeSum } = data[0]
+					this.expenditureSum = expendSum
+					this.incomeSum = incomeSum
+					this.surplusSum = this.incomeSum - this.expenditureSum
+				}else{
+					this.expenditureSum = 0
+					this.incomeSum = 0
+					this.surplusSum = 0
+				}
+			})
+		},
+		//删除记账记录
+		deleteKeepAccount(childId,parentId,parentIDX,type,keepMoney){
+			uni.showLoading({
+				title:'删除中...'
+			})
+			this.keepDB.doc(parentId)
+			.get()
+			.then(({data,errMsg})=>{
+				if(errMsg.includes('ok')){
+					this.deleteKeepLog(data,childId,parentIDX,type,keepMoney).then(result=>{
+						if(result.errMsg.includes('ok')){
+							uni.showToast({
+								icon:'success',
+								title:'删除成功'
+							})							
+							this.getNowBill()
+						}else{
+							uni.showModal({
+								title:'提示',
+								content:result.errMsg 
+							})
+						}
+					}).catch(err=>{
+					 	this.showNetworkIsError()
+						console.error(err)
+					})
+				}
+			})
+				
+				
+		},
+		deleteKeepLog(data,childId,parentIDX,type,keepMoney){			
+			if(data.logs.length === 1){
+				this.keepLogs.splice(parentIDX,1)
+				return this.keepDB.doc(data._id).remove()
 			}
-			return 0;
+			
+			const dataIdx = data.logs.findIndex(f=>f._id === childId)			
+			let expendSum = data.expendSum,incomeSum = data.incomeSum
+			if(type === 0){
+				expendSum = expendSum - keepMoney
+			}else{
+				incomeSum = incomeSum - keepMoney
+			}
+			if(dataIdx > -1){
+				data.logs.splice(dataIdx,1)
+				this.keepLogs[parentIDX].logs.splice(dataIdx,1)
+				this.keepLogs[parentIDX].expendSum = expendSum
+				this.keepLogs[parentIDX].incomeSum = incomeSum
+			}			
+			return this.keepDB.doc(data._id).update({
+				data:{
+					logs:data.logs,
+					expendSum,
+					incomeSum
+				}
+			})
 		},
-		_dataGroup(data) {
-			let keyContainer = {};
-			data.forEach(element => {
-				keyContainer[element.keepDay] = keyContainer[element.keepDay] || [];
-				keyContainer[element.keepDay].push(element);
-			});
-			return keyContainer;
-		},
-		bindSearchDateChange(e) {
+		handleDate(e) {
 			const value = e.target.value;
-			const dateArr = value.split('-');
-			this.year = dateArr[0];
-			this.month = dateArr[1];
+			const [year, month] = value.split('-');
+			this.year = year;
+			this.month = month;
 			this.searchDate = value;
 			this.getNowYearMonthAccountLog();
 		},
 		handleSwipe({content}){
 			const _self = this
-			const keepAccountId = content._id
+			const keepAccountId = content._id,parentId = content.parentId
 			if(content.code === 'detail'){
 				uni.navigateTo({
-					url:'./edit?keepAccountId='+keepAccountId
+					url:'./info?keepAccountId='+keepAccountId+ '&parentId='+parentId
 				})
 			}else if(content.code === 'edit'){
 				uni.navigateTo({
-					url:'./index?keepAccountId='+keepAccountId
+					url:'./index?keepAccountId='+keepAccountId+'&parentId='+parentId
 				})
 			}else if(content.code === 'delete'){
 				uni.showModal({
@@ -247,16 +238,18 @@ export default {
 					content: '确认删除该条记账吗？',
 					success: function(res) {
 						if (res.confirm) {
-							_self.deleteKeepAccount(keepAccountId)
+							_self.deleteKeepAccount(keepAccountId,parentId,content.parentIDX,content.type,content.keepMoney)
 						}
 					}
 				});
 			}
 		},
-		getSwipeOptions(id){
+		getSwipeOptions(id,parentId,parentIDX,type,keepMoney){
 			return [{
 				text: '详细',
 				_id:id,
+				parentId,
+				type,
 				code:'detail',
 				style: {
 					backgroundColor: '#07c160'
@@ -264,6 +257,8 @@ export default {
 			},{
 				text: '编辑',
 				_id:id,
+				parentId,
+				type,
 				code:'edit',
 				style: {
 					backgroundColor: '#FFA500'
@@ -271,6 +266,10 @@ export default {
 			},{
 				text: '删除',
 				_id:id,
+				parentId,
+				parentIDX,
+				keepMoney,
+				type,
 				code:'delete',
 				style: {
 					backgroundColor: '#dd524d'

@@ -15,7 +15,7 @@
 			}
 		},
 		{
-			"path": "pages/keep-accounts/edit"
+			"path": "pages/keep-accounts/info"
 		},
 		{
 			"path": "pages/my/account"

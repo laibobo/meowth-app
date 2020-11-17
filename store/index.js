@@ -8,7 +8,23 @@ const getters = {
 	categoryIncomeList:state=>state.category.categoryIncomeList,
 	monthBudgetMoney:state => state.budget.monthBudgetMoney,
 	monthExpendMoney:state => state.budget.monthExpendMoney,
-	currentLoadingChartPageCode: state => state.budget.currentLoadingChartPageCode
+	currentLoadingChartPageCode: state => state.budget.currentLoadingChartPageCode,
+	loginUserInfo:state=> state.user.userInfo,
+	loginUserPhoto:state=> state.user.userPhoto
+}
+
+function downloadFile(imageFileId){
+	return new Promise((resolve,reject)=>{
+		wx.cloud.downloadFile({
+			fileID: imageFileId,
+			success: res => {
+				resolve(res.tempFilePath)
+			},
+			fail: err=>{
+				resolve(err)
+			}
+		});
+	})
 }
 
 // https://webpack.js.org/guides/dependency-management/#requirecontext

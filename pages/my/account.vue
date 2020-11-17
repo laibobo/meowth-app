@@ -2,11 +2,12 @@
 	<view>
 		<!-- 个人信息 -->
 		<view class="info-list">
-			<view>
+			<view @click="handleEditPhoto">
 				<label>头像</label>
 				<view class="header v_s">
 					<image :src="photoUrl" :fade-show="false" mode="aspectFit"></image>
 				</view>
+				<view class="icon iconfont" v-html="rightIcon"></view>
 			</view>
 			<view @click="openUpdateNiceName">
 				<label>昵称</label>
@@ -22,13 +23,8 @@
 				</view>
 				<view class="icon iconfont" v-html="rightIcon"></view>
 			</view>
-			<!-- <view @click="handleEditPhone">
-				<label>手机号</label>
-				<view class="v_s"></view>
-				<view class="icon iconfont" v-html="rightIcon"></view>
-			</view> -->
 		</view>
-		<bobo-dialog class="nicename-dialog" :visible.sync="isEditNiceName" title="昵称" @affirm="handleNiceName">
+		<bobo-dialog v-if="visible" class="nicename-dialog" :visible.sync="visible" title="昵称" @affirm="handleNiceName">
 			<input type="text" v-model="editNiceName" maxlength="20" placeholder="请输入昵称" />
 		</bobo-dialog>
 	</view>
@@ -48,29 +44,18 @@
 				sex: 0,
 				photoUrl: '',
 				nickName: '',
-				userTableId: '',
-				isEditNiceName: false,
+				userId: '',
+				visible: false,
 				editNiceName:''
 			};
 		},
 		onLoad() {
-			const userInfo = this.getUserInfo;
 			this.db = app.globalData.wxDB;
-			this.photoUrl = userInfo.avatarUrl;
+			const userInfo = this.$store.getters.loginUserInfo;
+			this.photoUrl = this.$store.getters.loginUserPhoto
 			this.nickName = userInfo.nickName;
 			this.userInfo = userInfo;
-			// if (userInfo.isCustomPhoto) {
-			// 	wx.cloud.downloadFile({
-			// 		fileID: userInfo.avatarUrl,
-			// 		success: res => {
-			// 			_self.photoUrl = res.tempFilePath;
-			// 		},
-			// 		fail: err=>{
-			// 			console.error(err)
-			// 			uni.hideLoading()
-			// 		}
-			// 	});
-			// }
+			
 			this.db
 				.collection(this.$conf.database.User)
 				.where({
@@ -80,7 +65,7 @@
 				.then(res => {
 					if(res.data){
 						const data = res.data[0];
-						this.userTableId = data._id;
+						this.userId = data._id;
 						this.sex = data.gender;
 					}
 				})
@@ -91,18 +76,17 @@
 		},
 		methods: {
 			openUpdateNiceName() {
-				this.isEditNiceName = true;
+				this.visible = true;
 				this.editNiceName = this.nickName
 			},
 			handleNiceName(e) {
 				const nickName = this.editNiceName
 				if (nickName) {
 					this.updateUserInfo({
-						nickName,
-						isCustomNickName: true
+						nickName
 					}).then(res=>{
 						this.nickName = nickName
-						this.isEditNiceName = false
+						this.visible = false
 					})
 				}else{
 					uni.showToast({
@@ -122,9 +106,8 @@
 							filePath: res.tempFilePaths[0],
 							success: res => {
 								_self.updateUserInfo({
-									avatarUrl: res.fileID,
-									isCustomPhoto: true
-								});
+									imageFileId: res.fileID
+								})
 							},
 							fail: err=>{
 								_self.showNetworkIsError()
@@ -144,13 +127,13 @@
 				return new Promise((resolve,reject)=>{
 					this.db
 						.collection(this.$conf.database.User)
-						.doc(this.userTableId)
+						.doc(this.userId)
 						.update({
 							data
 						})
 						.then(res => {
 							this.userInfo = Object.assign({}, this.userInfo, data);
-							uni.setStorageSync('user.info', this.userInfo);
+							this.$store.commit('SET_USERINFO',this.userInfo)
 							resolve('更新成功')
 						})
 						.catch(err => {

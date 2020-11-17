@@ -3,8 +3,8 @@
 		<add-btn class="add-btn"></add-btn>
 		<view class="header">
 			<view class="userinfo" data-url="./account" @click="navigateTo">
-				<image :src="photoUrl" :fade-show="false" mode="aspectFit"></image>
-				<text>{{ nickName }}</text>
+				<image :src="getPhotoUrl || require('@/static/image/photo.png')" :fade-show="false" mode="aspectFit"></image>
+				<text>{{ getNickName }}</text>
 			</view>
 			<!-- 统计 -->
 			<view class="statistic">
@@ -101,8 +101,6 @@ export default {
 	data() {
 		const date = new Date()
 		return {
-			photoUrl: '',
-			nickName: '',
 			sumDay: '--',
 			sumLog: '--',
 			monthBill: {
@@ -112,7 +110,7 @@ export default {
 			},
 			db: null,
 			year:date.getFullYear(),
-			month:date.getMonth() + 1
+			month:date.getMonth() + 1			
 		};
 	},
 	onLoad() {
@@ -128,16 +126,11 @@ export default {
 		.then(res => {
 			uni.setStorageSync(_self.$conf.storageKey.openid, res.result.openid);
 			wx.getSetting({
-				success: function(res) {
-					const isAuthSetting = res.authSetting['scope.userInfo'] !== undefined && res.authSetting['scope.userInfo'] !== false;				
+				success: function(resSet) {
+					const isAuthSetting = resSet.authSetting['scope.userInfo'] !== undefined && resSet.authSetting['scope.userInfo'] !== false;				
 					uni.setStorageSync(_self.$conf.storageKey.isAuthSetting,isAuthSetting)
 					if(isAuthSetting){
-						wx.getUserInfo({
-							success: function(res) {
-								uni.setStorageSync(_self.$conf.storageKey.userInfo, res.userInfo)
-								_self.updateUserInfo()
-							}
-						});
+						_self.getNewUserInfo()
 					}
 				},
 				fail: function(err) {
@@ -148,15 +141,18 @@ export default {
 		});
 	},
 	onShow() {
-		const userInfo = this.getUserInfo;
-		this.nickName = userInfo.nickName || '您好！请先登录';
-		this.photoUrl = userInfo.avatarUrl || require('@/static/image/photo.png');
 		this.getNowMonthKeepInfo();
 		this.getKeepAccountsInfo();
 	},
 	computed: {
 		getMonth() {
 			return this.month < 10?`0${this.month}`:this.month;
+		},
+		getNickName(){
+			return this.$store.getters.loginUserInfo.nickName || '点击登录'
+		},
+		getPhotoUrl(){
+			return this.$store.getters.loginUserPhoto;
 		}
 	},
 	methods: {
@@ -170,10 +166,8 @@ export default {
 		//跳转页面
 		navigateTo(e) {
 			if(this.$authorize()){
-				const url = e.currentTarget.dataset.url
-				
 				uni.navigateTo({
-					url
+					url:e.currentTarget.dataset.url
 				});	
 			}
 		},
@@ -194,98 +188,31 @@ export default {
 		},
 		//记账统计
 		getKeepAccountsInfo() {
-			const $ = this.db.command.aggregate;
-			const _od = this.db.collection(this.$conf.database.AccountsRecord).aggregate()
-				.match({
+			const _od = this.db.collection(this.$conf.database.keepRecord)
+				.where({
 					_openid: this.getOpenid
+				}).get().then(({errMsg,data})=>{
+					if(data.length > 0){
+						this.sumDay = data.length
+						this.sumLog = data.map((rdata)=>rdata.logs.length).reduce((a,b)=>a+b)
+					}
 				})
-			//获取记账总天数
-			_od.group({
-				_id: '$keepDate'
-			})
-			.count('sumDay')
-			.end()
-			.then(res => {
-				if (res.list.length > 0) {
-					this.sumDay = res.list[0]['sumDay'];
-				}
-			});
-			//获取记账总笔数
-			_od.group({
-				_id: '$createDate'
-			}).count('sumLog')
-			.end()
-			.then(res => {
-				if (res.list.length > 0) {
-					this.sumLog = res.list[0]['sumLog'];
-				}
-			});
 		},
 		//当前月账单
 		getNowMonthKeepInfo() {
-			const $ = this.db.command.aggregate
-			this.db.collection(this.$conf.database.AccountsRecord).aggregate().match({
+			this.db.collection(this.$conf.database.keepRecord).where({
 				_openid:this.getOpenid,
-				keepYear:this.year,
-				keepMonth:this.month
-			}).group({
-				_id: '$categoryType',
-				 total: $.sum('$keepMoney')
-			}).end().then(({list,errMsg})=>{
-				if(errMsg.includes('ok') && list.length > 0){
-					let expenditure = 0,income = 0
-					for(let i=0;i<list.length;i++){
-						if(list[i]['_id'] === 0){
-							expenditure = list[i]['total']
-						}else{
-							income = list[i]['total']
-						}
-					}
-					this.monthBill.expenditure = expenditure
-					this.monthBill.income = income
-					this.monthBill.surplus = income - expenditure					
-					this.getCurrentMonthBudget(expenditure)
-				}else{
-					this.getCurrentMonthBudget(0)
+				year:Number(this.year) ,
+				month:Number(this.month)
+			}).get().then(({data,errMsg})=>{
+				if(errMsg.includes('ok') && data.length > 0){
+					const { expendSum,incomeSum } = data[0]
+					this.monthBill.expenditure = expendSum
+					this.monthBill.income = incomeSum
+					this.monthBill.surplus = incomeSum - expendSum
+					this.getCurrentMonthBudget(expendSum)
 				}
 			})
-		},
-		//更新用户信息
-		updateUserInfo() {
-			this.db
-				.collection(this.$conf.database.User)
-				.where({
-					_openid: this.getOpenid
-				})
-				.get()
-				.then(userRes => {
-					let userInfo = this.getUserInfo
-					if (userRes.data.length > 0) {
-						const resData = userRes.data[0],data = {};
-						//判断用户是否上传头像、更改昵称，如没有则获取微信数据设置
-						data.avatarUrl = userInfo.avatarUrl;
-						if (!resData.isCustomNickName) {
-							data.nickName = userInfo.nickName;
-						}
-						data.weChat = userInfo.NickName;
-						data.province = userInfo.province;
-						data.city = userInfo.city;
-						data.gender = userInfo.gender
-						this.db
-						.collection(this.$conf.database.User)
-						.doc(resData._id)
-						.update({
-							data
-						})
-						.then(updateRes => {
-							this.getNewUserInfo();
-						})
-						.catch(err => {
-							this.showNetworkIsError()
-							console.error(err)
-						});
-					}
-				});
 		},
 		//获取用户信息（数据库数据）
 		getNewUserInfo() {
@@ -295,9 +222,9 @@ export default {
 					_openid: this.getOpenid
 				})
 				.get()
-				.then(res => {
-					if (res.data.length > 0) {
-						uni.setStorageSync(this.$conf.storageKey.userInfo, res.data[0]);
+				.then(({data}) => {
+					if (data.length > 0) {
+						this.$store.commit('SET_USERINFO',data[0])
 					}
 				})
 				.catch(err => {

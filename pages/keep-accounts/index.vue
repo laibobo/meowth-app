@@ -3,25 +3,10 @@
 		<tabs class="tabs-col" :values="tabValues" :current="currentCategoryType" @clickItem="handleTabsItem"></tabs>
 		<!-- 类别列表 -->
 		<scroll-view class="category-scroll" :scroll-top="scrollTop" scroll-y="true" :style="getScrollHeight">
-			<!-- 支出 -->
-			<view class="expend-category-col" v-show="currentCategoryType === 0">
-				<loading v-if="expendCategoryLoading" />
+			<view class="category-col">
+				<loading v-if="loading" />
 				<view v-else class="tabs-container">
-					<view v-for="(item, index) in expendCategoryList" :key="index" :class="['category', { 'category-active': item._id === activeCategoryId }]" :data-id="item._id" :data-name="item.name"  @click="handleKeep">
-						<view class="icon-col"><view class="icon iconfont" v-html="item.icon"></view></view>
-						<text class="explain">{{ item.name }}</text>
-					</view>				
-					<view class="category" @click="handleDeploy">
-						<view class="icon-col"><view class="icon iconfont">&#xe6df;</view></view>
-						<text class="explain">设置</text>
-					</view>
-				</view>
-			</view>
-			<!-- 收入 -->
-			<view class="income-category-col" v-show="currentCategoryType !== 0">
-				<loading v-if="incomeCategoryLoading" />
-				<view v-else class="tabs-container">
-					<view v-for="(item, index) in incomeCategoryList" :key="index" :class="['category', { 'category-active': item._id === activeCategoryId }]" :data-id="item._id" :data-name="item.name"  @click="handleKeep">
+					<view v-for="(item, index) in getSocietyCategoryList || categoryList" :key="index" :class="['category', { 'category-active': item._id === activeCategoryId }]" :data-id="item._id" :data-name="item.name" :data-icon="item.icon" @click="handleKeep">
 						<view class="icon-col"><view class="icon iconfont" v-html="item.icon"></view></view>
 						<text class="explain">{{ item.name }}</text>
 					</view>				
@@ -84,19 +69,15 @@ export default {
 			ufuncArr: ['÷', 'x', '+', '-'],
 			keyboardCodeArr: [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0],
 			tabValues: ['支出', '收入'],
-			windowHeight: 0,
-			scrollHeight: 0,
 			keepDate: '',
 			money: '',
 			remark: '',
 			currentCategoryType: 0,
-			typeArr:['expenditureList','incomeList'],
-			expendCategoryList:[],
-			incomeCategoryList:[],
-			expendCategoryLoading:false,
-			incomeCategoryLoading:false,
+			categoryList:[],
+			loading:true,
 			activeCategoryId: '',
 			activeCategoryName: '',
+			activeCategoryIcon:'',
 			isMoneySum: false,
 			isOpenKeyboard: false,
 			isOpenRemarkPanel: false,
@@ -104,6 +85,7 @@ export default {
 			ufuncArr: ['÷', 'x', '+', '-'],
 			scrollTop:0,
 			keepAccountId:'',
+			parentId:'',
 			keepImage:'',
 			keepImageFileId:'',
 			timer:null
@@ -114,6 +96,7 @@ export default {
 		this.DB = app.globalData.wxDB;
 		if(Object.keys(option).length > 0){
 			this.keepAccountId = option.keepAccountId
+			this.parentId = option.parentId
 		}
 	},
 	onShow() {
@@ -125,48 +108,47 @@ export default {
 				that.windowHeight = windowHeight;
 			}
 		});
+		this.getCategoryList()
 		if(this.keepAccountId){
-			this.DB.collection(this.$conf.database.AccountsRecord).doc(this.keepAccountId).get().then(({data})=>{
-				this.currentCategoryType = data.categoryType
-				if(data.categoryType === 0){
-					this.getExpendCategoryList()
-				}else{
-					this.getIncomeCategoryList()
-				}
-				this.keepDate = data.keepDate
-				this.money = data.keepMoney
-				this.remark = data.remark
-				this.activeCategoryId = data.categoryId
-				this.activeCategoryName = '';
-				if (!that.keepImage && data.imageFileId) {
-					wx.cloud.downloadFile({
-						fileID: data.imageFileId,
-						success: res => {
-							that.keepImage = res.tempFilePath;
-						}
-					});
-				}
-				this.keepImageFileId = data.imageFileId
-				this.isOpenRemarkPanel = false;
-				this.isOpenKeyboard = true;
-			}).catch(err=>{
-				this.showNetworkIsError()
-				console.error(err)
-			})
-		}else{
-			this.getExpendCategoryList();
-		}	
+			app.globalData.wxDB.collection(this.$conf.database.keepRecord).doc(this.parentId).get()
+				.then(({data,errMsg})=>{
+					const keepData = data.logs.find(f=>f._id === this.keepAccountId)
+					this.categoryType = this.tabValues[keepData.categoryType]
+					this.keepDate = keepData.keepDate
+					this.money = keepData.money
+					this.remark = keepData.remark
+					this.activeCategoryName = keepData.categoryName
+					this.activeCategoryIcon = keepData.categoryIcon
+					this.activeCategoryId = keepData.categoryId
+					
+					if (keepData.imageFileId) {
+						const _self = this
+						wx.cloud.downloadFile({
+							fileID: keepData.imageFileId,
+							success: res => {
+								_self.keepImage = res.tempFilePath
+							}
+						});
+					}
+					this.keepImageFileId = keepData.imageFileId
+					this.isOpenRemarkPanel = false;
+					this.isOpenKeyboard = true;
+				}).catch(err=>{
+					this.showNetworkIsError()
+					console.error(err)
+				})
+		}
 	},
 	computed: {
+		getSocietyCategoryList(){
+			return this.currentCategoryType === 0? this.expendCategoryList:this.incomeCategoryList
+		},
 		getShowKeepDate(){
 			if(this.keepDate){
 				const keepDate = new Date(this.keepDate),date = new Date(),y = keepDate.getFullYear(),m = keepDate.getMonth() + 1,d = keepDate.getDate()						
 				return y == date.getFullYear() && m == (date.getMonth() + 1) && d == date.getDate() ? '今天':`${y}/${m}/${d}`
 			}
 			return ''
-		},
-		getScrollHeight() {
-			return `height:${this.scrollHeight}px;`;
 		},
 		optRemarkBtnText() {
 			return this.remark === '' ? '添加备注' : '修改';
@@ -193,70 +175,35 @@ export default {
 				}
 			});
 		},
-		//获取支出类目数据
-		getExpendCategoryList() {
-			const expendList = this.$store.getters.categoryExpendList
-			if(expendList.length > 0){
-				this.expendCategoryList = expendList;
-				return
-			}
-			
-			this.expendCategoryLoading= true
-			this.getCategoryList().then(({ result }) => {
-				this.expendCategoryList = result.data;
-				this.$store.commit('SET_CATEGORYEXPENDLIST',result.data)
-				this.calculateScrollHeight();
-				setTimeout(_=>{
-					this.expendCategoryLoading = false
-				},1000)
-			})
-			.catch(err=>{
-				this.showNetworkIsError()
-				console.error(err)
-			});
-		},
-		//获取收入类目数据
-		getIncomeCategoryList() {
-			const incomeList = this.$store.getters.categoryIncomeList
-			if(incomeList.length > 0){
-				this.incomeCategoryList = incomeList
-				return
-			}
-			
-			this.incomeCategoryLoading = true
-			this.getCategoryList().then(({ result }) => {
-				this.incomeCategoryList = result.data;
-				this.$store.commit('SET_CATEGORYINCOMELIST',result.data)
-				this.calculateScrollHeight();
-				setTimeout(_=>{
-					this.incomeCategoryLoading = false
-				},1000)
-			})
-			.catch(err=>{
-				this.showNetworkIsError()
-				console.error(err)
-			});
-		},
-		//获取类目数据
-		getCategoryList() {
-			const type = this.currentCategoryType;
-		 	return wx.cloud.callFunction({
-				name: 'getCategoryList',
-				data: {
-					type,
+		getCategoryList(){
+			this.expendCategoryList = this.$store.getters.categoryExpendList,this.incomeCategoryList = this.$store.getters.categoryIncomeList
+			if(this.expendCategoryList.length === 0 || this.incomeCategoryList.length === 0){			
+				this.DB.collection(this.$conf.database.Category).where({
 					_openid:this.getOpenid
-				}
-			})
+				}).get().then(({data})=>{
+					if(data.length > 0){
+						const { expends,incomes } = data[0]
+						this.expendCategoryList = expends
+						this.incomeCategoryList = incomes
+						this.categoryList = this.currentCategoryType === 0?expends:incomes
+						this.$store.commit('SET_CATEGORYEXPENDLIST',expends) //支出
+						this.$store.commit('SET_CATEGORYINCOMELIST',incomes) //收入
+						this.calculateScrollHeight();
+					}
+					setTimeout(_=>{
+						this.loading = false
+					},1000)
+				})
+			}else{
+				this.loading = false
+				this.categoryList = this.currentCategoryType === 0?this.expendCategoryList:this.incomeCategoryList
+			}
 		},
 		//点击tabs项
 		handleTabsItem(index) {
 			if (this.currentCategoryType !== index) {
 				this.currentCategoryType = index;
-				if(index === 0 && this.expendCategoryList.length === 0){
-					this.getExpendCategoryList()
-				}else if(index === 1 && this.incomeCategoryList.length === 0){
-					this.getIncomeCategoryList()
-				}
+				this.getCategoryList()
 			}
 			this.calculateScrollHeight()
 		},
@@ -268,10 +215,10 @@ export default {
 			});
 		},
 		//点击类目
-		handleKeep(e) {
-			const data = e.currentTarget
-			this.activeCategoryId = data.dataset.id;
-			this.activeCategoryName = data.dataset.name;
+		handleKeep({currentTarget}) {
+			this.activeCategoryId = currentTarget.dataset.id;
+			this.activeCategoryName = currentTarget.dataset.name;
+			this.activeCategoryIcon = currentTarget.dataset.icon;
 			this.isOpenKeyboard = true;
 			this.isOpenRemarkPanel = false;
 			this.calculateScrollHeight();
@@ -421,69 +368,117 @@ export default {
 			if (money === '' || Number(money) === 0) {
 				return;
 			}
-			const keepDate = new Date(`${this.keepDate} 00:00:00`)
+			const keepDB = this.DB.collection(this.$conf.database.keepRecord)
+				,keepDate = new Date(`${this.keepDate} 00:00:00`)
 				,keepWeek = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][new Date(keepDate).getDay()]
 				,categoryId = this.activeCategoryId
 				,categoryType = this.currentCategoryType
+				,categoryName = this.activeCategoryName
+				,categoryIcon = this.activeCategoryIcon
 				,remark = this.remark
 				,keepMoney = parseFloat(money)
 				,keepYear = keepDate.getFullYear()
 				,keepMonth = keepDate.getMonth() + 1
 				,keepDay = keepDate.getDate()
-				,createDate = new Date()
 				,imageFileId = this.keepImageFileId
-				
-			if(this.keepAccountId){
-				this.DB.collection('AccountsRecord')
-				.doc(this.keepAccountId)
-				.update({
-					data:{
-						keepMoney,
-						remark,
-						categoryId,
-						categoryType,
-						imageFileId
+				,timestamp = Date.parse(new Date())
+			
+			const keepData = {
+				_id: `id_${timestamp}`,
+				categoryType,
+				categoryIcon,
+				categoryName,
+				categoryId,
+				imageFileId,
+				money:keepMoney,
+				remark,
+				createTime:timestamp
+			}
+			//先去查询当天是否有记账记录
+			keepDB.where({
+				_openid:this.getOpenid,
+				keepDate:this.keepDate
+			}).get().then(result=>{
+				let baseData = {}
+				//没有记录：
+				if(result.data.length === 0){
+					baseData = {
+						expendSum:categoryType === 0? keepMoney:0,
+						incomeSum:categoryType !== 0? keepMoney:0,
+						year:keepYear,
+						month:keepMonth,
+						day:keepDay,
+						keepDate:this.keepDate,
+						weekSeveral:keepWeek,
+						logs:[keepData]
 					}
-				}).then(res=>{
-					if (res.errMsg == 'document.update:ok') {
-						uni.switchTab({
-							url:'./detail'
-						})
-					}
-				}).catch(err=>{
-					this.showNetworkIsError()
-					console.error(err)
-				})
-			}else{
-				this.DB
-					.collection('AccountsRecord')
-					.add({
-						data: {
-							keepMoney,
-							remark,
-							categoryId,
-							categoryType,
-							imageFileId,
-							keepWeek,
-							keepDate,
-							keepYear,
-							keepMonth,
-							keepDay,
-							createDate
-						}
-					})
-					.then(res => {
-						if (res.errMsg.includes('ok')) {
+					keepDB.add({
+						data:baseData
+					}).then(addRes=>{
+					if (addRes.errMsg.includes('ok')) {
 							uni.switchTab({
 								url:'./detail'
 							})
 						}
-					})
-					.catch(err=>{
+					}).catch(err=>{
 						this.showNetworkIsError()
 						console.error(err)
-					});
-			}
+					})
+				}else{
+					baseData = result.data[0]
+					let expendSum = baseData.expendSum,incomeSum = baseData.incomeSum,logs = baseData.logs
+					if(!this.keepAccountId){
+						if(categoryType === 0){
+							expendSum = baseData.expendSum + keepMoney
+						}else{
+							incomeSum = baseData.incomeSum + keepMoney
+						}
+						logs.push(keepData)
+					}else{
+						const updateDataIndex = baseData.logs.findIndex(v=>v._id === this.keepAccountId)
+						,d = JSON.parse(JSON.stringify(baseData.logs[updateDataIndex]))
+						if(categoryType === baseData.logs[updateDataIndex].categoryType){
+							if(baseData.logs[updateDataIndex].categoryType === 0){
+								expendSum = baseData.expendSum - d.money + keepMoney
+							}else if(baseData.logs[updateDataIndex].categoryType === 1){
+								incomeSum = baseData.incomeSum - d.money + keepMoney
+							}
+						}else{
+							if(categoryType === 0 && baseData.logs[updateDataIndex].categoryType === 1){							
+								expendSum = baseData.expendSum + keepMoney
+								incomeSum = baseData.incomeSum - d.money
+							}else if(categoryType === 1 && baseData.logs[updateDataIndex].categoryType === 0){								
+								incomeSum = baseData.incomeSum + keepMoney
+								expendSum = baseData.expendSum - d.money
+							}
+						}
+						baseData.logs[updateDataIndex].money = keepMoney
+						baseData.logs[updateDataIndex].remark = remark
+						baseData.logs[updateDataIndex].categoryId = categoryId
+						baseData.logs[updateDataIndex].categoryType = categoryType
+						baseData.logs[updateDataIndex].categoryIcon = categoryIcon
+						baseData.logs[updateDataIndex].categoryName = categoryName
+						baseData.logs[updateDataIndex].imageFileId = imageFileId
+						logs = baseData.logs
+					}
+					keepDB.doc(baseData._id).update({
+						data:{
+							expendSum,
+							incomeSum,
+							logs
+						}
+					}).then(updateRes =>{
+						if(updateRes.errMsg.includes('ok')){
+							uni.switchTab({
+								url:'./detail'
+							})
+						}
+					}).catch(err=>{
+						this.showNetworkIsError()
+						console.error(err)
+					})
+				}
+			})
 		},
 		//选择账单日期
 		handleKeepDateChange(e) {
@@ -529,7 +524,8 @@ export default {
 			this.timer = setTimeout(() => {
 			    this.calculateScrollHeight()
 			}, 1000)
-		}
+		},
+		
 	}
 };
 </script>

@@ -2,25 +2,15 @@
 	<view class="category-col">
 		<tabs class="tabs-col" :current="currentCategoryType" :values="items" @clickItem="handleTabsItem"></tabs>
 		<scroll-view class="category-scroll" scroll-y="true" :style="getScrollHeight">
-			<view class="expend-category-col" v-if="currentCategoryType === 0">
-				<loading v-if="expendCategoryLoading" />
+			<view>
+				<loading v-if="loading" />
 				<view v-else>
-					<view class="category-item" v-for="(categorys, index) in expendCategoryList" :key="index" :data-id="categorys._id" @click="handleDeleteCategory(categorys,index)">
+					<view class="category-item" v-for="(categorys, index) in getSocietyCategoryList" :key="index" :data-id="categorys._id" @click="handleDeleteCategory(categorys,index)">
 						<view class="icon-col delete-btn"><view class="icon iconfont">&#xe6ed;</view></view>
 						<view class="icon-col"><view class="icon iconfont" v-html="categorys.icon"></view></view>
 						{{ categorys.name }}
 					</view>
 				</view>
-			</view>
-			<view class="income-category-col" v-else>
-				<loading v-if="incomeCategoryLoading" />
-				<view v-else>
-					<view class="category-item" v-for="(categorys, index) in incomeCategoryList" :key="index" :data-id="categorys._id" @click="handleDeleteCategory(categorys,index)">
-						<view class="icon-col delete-btn"><view class="icon iconfont">&#xe6ed;</view></view>
-						<view class="icon-col"><view class="icon iconfont" v-html="categorys.icon"></view></view>
-						{{ categorys.name }}
-					</view>
-				</view>				
 			</view>
 		</scroll-view>
 		<view class="bottom-btn" @click="handleAddCategory">+添加类别</view>
@@ -37,8 +27,7 @@ export default {
 		return {
 			expendCategoryList: [],
 			incomeCategoryList:[],
-			expendCategoryLoading:false,
-			incomeCategoryLoading:false,
+			loading:true,
 			items: ['支出', '收入'],
 			currentCategoryType: 0
 		};
@@ -47,100 +36,59 @@ export default {
 		this.DB = app.globalData.wxDB;
 		this.currentCategoryType = options.categoryType || 0;
 	},
-	onShow() {
-		const type = Number(this.currentCategoryType)
-		if(type === 0){
-			this.getExpendCategoryList();
-		}else{
-			this.getIncomeCategoryList();
-		}
-		
-		const _self = this;
-		getElement('.tabs-col').then(e => {
-			uni.getSystemInfo({
-				success: function(res) {
-					_self.scrollHeight = res.windowHeight - e.height;
-				}
-			});
-		});
+	onShow() {		
+		this.getCategoryList()
 	},
 	computed: {
-		getScrollHeight() {
-			return `height:${this.scrollHeight}px;`;
+		getSocietyCategoryList(){
+			return Number(this.currentCategoryType) === 0? this.expendCategoryList:this.incomeCategoryList
 		}
 	},
 	methods: {
 		getCategoryList(){
-			const type = Number(this.currentCategoryType)
-		    return	wx.cloud.callFunction({
-				name: 'getCategoryList',
-				data: {
-					type,
-					_openid:this.getOpenid
-				}
-			})
-		},
-		getIncomeCategoryList() {
-			const incomeList = this.$store.getters.categoryIncomeList
-			if(incomeList.length > 0){
-				this.incomeCategoryList = incomeList
-				return
-			}
+			// this.expendCategoryList = this.$store.getters.categoryExpendList,this.incomeCategoryList = this.$store.getters.categoryIncomeList
 			
-			this.incomeCategoryLoading = true
-			this.getCategoryList().then(({ result }) => {
-				this.incomeCategoryList = result.data;
-				this.$store.commit('SET_CATEGORYINCOMELIST', result.data)
-				setTimeout(_=>{
-					this.incomeCategoryLoading = false
-				},1000)
-			})
-			.catch(err=>{
-				this.showNetworkIsError()
-				console.error(err)
-			});
-		},
-		getExpendCategoryList() {
-			const expendList = this.$store.getters.categoryExpendList
-			if(expendList.length > 0){
-				this.expendCategoryList = expendList
-				return
-			}
-			this.expendCategoryLoading= true
-			this.getCategoryList().then(({ result }) => {
-				this.expendCategoryList = result.data;
-				this.$store.commit('SET_CATEGORYEXPENDLIST',result.data)
-				setTimeout(_=>{
-					this.expendCategoryLoading = false
-				},1000)
-			})
-			.catch(err=>{
-				this.showNetworkIsError()
-				console.error(err)
-			});
-		},
-		deleteCategoryCorrelationData(categoryId,type,index){
-			const _self = this
-			wx.cloud.callFunction({
-				name:'deleteKeepAccounts',
-				data:{
-					categoryId,
-					openid:this.getOpenid
+			this.DB.collection(this.$conf.database.Category).where({
+				_openid:this.getOpenid
+			}).get().then(({data})=>{
+				if(data.length > 0){
+					const { expends,incomes } = data[0]
+					this.expendCategoryList = expends
+					this.incomeCategoryList = incomes
+					this.$store.commit('SET_CATEGORYEXPENDLIST',expends) //支出
+					this.$store.commit('SET_CATEGORYINCOMELIST',incomes) //收入
+					this.calculateScrollHeight();
 				}
-			}).then(({result})=>{
-				this.DB.collection(this.$conf.database.Category)
-					.doc(categoryId)
-					.remove()
-					.then(res=>{
+				setTimeout(_=>{
+					this.loading = false
+				},1000)
+			})
+		},
+		deleteCategory(categoryId,type,index){
+			const listName = ['expends','incomes'][type]
+			,DB_Category = this.DB.collection(this.$conf.database.Category)
+			
+			DB_Category.where({
+				_openid:this.getOpenid
+			}).get().then(res=>{
+				if(res.data.length > 0){
+					let data = {}
+					data[listName] = res.data[0][listName]
+					data[listName].splice(index,1)
+					
+					DB_Category.doc(res.data[0]._id).update({
+						data
+					}).then(res=>{
 						let typeCode1 = 'INCOME',typeCode2 = 'Income'
 						if(type === 0){
 							typeCode1 = 'EXPEND'
 							typeCode2 = 'Expend'
 						}
-						const list = this.$store.getters[`category${typeCode2}List`]
+						let list = this.$store.getters[`category${typeCode2}List`]
 						list.splice(index,1)
-						_self.$store.commit(`SET_CATEGORY${typeCode1}LIST`,list)
+						this.$store.commit(`SET_CATEGORY${typeCode1}LIST`,list)
 					})
+				}
 			})
 		},
 		handleDeleteCategory(categorys,index){
@@ -152,24 +100,32 @@ export default {
 					if (res.confirm) {
 						const typeArr = ['expend','income']
 						_self[`${typeArr[_self.currentCategoryType]}CategoryList`].splice(index,1)
-						_self.deleteCategoryCorrelationData(categorys._id,Number(_self.currentCategoryType),index);
+						_self.deleteCategory(categorys._id,Number(_self.currentCategoryType),index);
 					}
 				}
 			});
 		},
 		handleTabsItem(index) {
 			if (this.currentCategoryType !== index) {
-				this.currentCategoryType = index;
-				if(index === 0 && this.expendCategoryList.length === 0){
-					this.getExpendCategoryList()
-				}else if(index === 1 && this.incomeCategoryList.length === 0){
-					this.getIncomeCategoryList()
+				this.currentCategoryType = index
+				if(this.expendCategoryList.length === 0 || this.incomeCategoryList.length === 0){
+					this.getCategoryList()
 				}
 			}
 		},
 		handleAddCategory() {
 			uni.navigateTo({
 				url: '../icon-manage/index?categoryType=' + this.currentCategoryType
+			});
+		},
+		calculateScrollHeight(){
+			const _self = this;
+			getElement('.tabs-col').then(e => {
+				uni.getSystemInfo({
+					success: function(res) {
+						_self.scrollHeight = res.windowHeight - e.height + 50;
+					}
+				});
 			});
 		}
 	}

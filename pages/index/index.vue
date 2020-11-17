@@ -32,7 +32,7 @@ export default {
 			success: function(res) {
 				_self.isAuthSetting = res.authSetting['scope.userInfo'] === undefined;
 				if (!_self.isAuthSetting) {
-					_self.optUserInfo();
+					_self.saveUserInfo();
 				}
 			},
 			fail: function(err) {
@@ -44,60 +44,52 @@ export default {
 		 wx.hideHomeButton()
 	},
 	methods: {
-		/**
-		 * 获取微信用户信息
-		 * */
 		getWxUserInfo() {
 			const _self = this;
 			wx.getUserInfo({
 				success: function(res) {
-					uni.setStorageSync(_self.$conf.storageKey.userInfo, res.userInfo);
-					_self.optUserInfo();
 					uni.setStorageSync(_self.$conf.storageKey.isAuthSetting,true)
+					_self.saveUserInfo(res.userInfo);
 				}
 			});
 		},
-		optUserInfo() {
+		saveUserInfo(userInfo) {
 			this.db
 				.collection(this.$conf.database.User)
 				.where({
-					_openid: this.$conf.storageKey.isAuthSetting
+					_openid: this.getOpenId
 				})
 				.get()
-				.then(userRes => {
-					let userInfo = this.$conf.storageKey.userInfo || {};
-					if (userRes.data.length === 0) {
-						this.addedUserInfo(userInfo);
-						const categorysList = categorysData.defaultCategorysList
-						for(let i=0,leng=categorysList.length;i<leng;i++){
-							this.addDefaultCategorys(categorysList[i])
-						}
+				.then(({data}) => {
+					if(data.length > 0){
+						userInfo = data[0]
+					}
+					this.$store.commit('SET_USERINFO',userInfo)
+					if (data.length === 0) {
+						this.addUserInfo(userInfo)
+						this.addDefaultCategorys()
 					}
 					uni.switchTab({
 					    url: '/pages/my/index'
 					})
 				});
 		},
-		/**
-		 * 添加用户信息
-		 * */
-		addedUserInfo(userInfo) {
-			const nowdate = new Date();
+		addUserInfo(userInfo) {
+			const nowdate = new Date()
 			this.db
 				.collection(this.$conf.database.User)
 				.add({
 					data: {
-						nickName: userInfo.NickName,
+						nickName: userInfo.nickName,
 						gender: userInfo.gender,
 						avatarUrl: userInfo.avatarUrl,
-						weChat: userInfo.NickName,
+						imageFileId:'',
+						weChat: userInfo.nickName,
 						province: userInfo.province,
 						city: userInfo.city,
 						theme: 'mint-green',
 						registerTime: nowdate.getTime(),
-						registerYear: nowdate.getFullYear(),
-						isCustomPhoto: false,
-						isCustomNickName: false
+						registerYear: nowdate.getFullYear()
 					}
 				})
 				.then(addRes => {
@@ -108,9 +100,13 @@ export default {
 					console.error(err)
 				});
 		},
-		addDefaultCategorys(data){
+		addDefaultCategorys(){
+			const defaultCategorys = categorysData.defaultCategorysList
 			this.db.collection(this.$conf.database.Category).add({
-				data
+				data:{
+					expends:defaultCategorys.expends,
+					incomes:defaultCategorys.incomes
+				}
 			}).then(res => {
 			  console.log(res)
 			})

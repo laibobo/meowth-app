@@ -36,7 +36,6 @@ export default {
 			isFocus: false,
 			categoryType: null,
 			categoryName: '',
-			scrollHeight: 375,
 			activeValue: '&#xe67e;',
 			iconList: categorysData.iconList
 		};
@@ -50,11 +49,6 @@ export default {
 			}
 		});
 		this.DB = app.globalData.wxDB;
-	},
-	computed: {
-		getScrollHeight() {
-			return `height:${this.scrollHeight}px;`;
-		}
 	},
 	methods: {
 		handleSelectIcon(iconCode) {
@@ -80,32 +74,40 @@ export default {
 				return;
 			}
 			const type = Number(this.categoryType),icon = this.activeValue,name = this.categoryName
-			this.DB
-				.collection(this.$conf.database.Category)
-				.add({
-					data: {
-						type,
+			
+			const listName = ['expends','incomes'][type]
+			const dbCategory = this.DB.collection(this.$conf.database.Category)
+			dbCategory.where({
+				_openid:this.getOpenid
+			}).get().then(res=>{
+				if(res.data.length > 0){
+					let data = {}
+					data[listName] = res.data[0][listName]
+					data[listName].push({
+						_id:Date.parse(new Date()),
 						icon,
 						name
-					}
-				})
-				.then(res => {
-					let typeCode1 = 'INCOME',typeCode2 = 'Income'
-					if(type === 0){
-						typeCode1 = 'EXPEND'
-						typeCode2 = 'Expend'
-					}
-					let list = this.$store.getters[`category${typeCode2}List`]
-					list.push({
-						type,
-						icon,
-						name	
 					})
-					this.$store.commit(`SET_CATEGORY${typeCode1}LIST`,list)
-					uni.navigateBack({
-						delta: 1
-					});
-				});
+				   dbCategory.doc(res.data[0]._id).update({
+					   data
+				   }).then(res=>{
+					   let typeCode1 = 'INCOME',typeCode2 = 'Income'
+					   if(type === 0){
+					   	typeCode1 = 'EXPEND'
+					   	typeCode2 = 'Expend'
+					   }
+					   let list = this.$store.getters[`category${typeCode2}List`]
+					   list.push({
+					   	icon,
+					   	name	
+					   })
+					   this.$store.commit(`SET_CATEGORY${typeCode1}LIST`,list)
+					   uni.navigateBack({
+					   	delta: 1
+					   });
+				   })
+				}
+			})
 		}
 	}
 };

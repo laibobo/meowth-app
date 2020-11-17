@@ -4,7 +4,7 @@
 			<view class="header">
 				<text class="title"></text>
 				<view class="yeardate-select">
-					<picker mode="date" fields="year" :value="yearDate" @change="bindYearDateChange">
+					<picker mode="date" fields="year" :value="yearDate" @change="handleYearDate">
 						<view class="uni-input">{{yearDate}}年</view>
 					</picker>
 				</view>
@@ -55,7 +55,6 @@
 					expenditure:'0.00',
 					surplus:'0.00'
 				},
-				scrollHeight:0,
 				DB:null
 			}
 		},
@@ -78,17 +77,11 @@
 			this.DB = app.globalData.wxDB
 		},
 		onShow(){
-			
 			this.getYearBillList()
 			this.getNowMonthKeepInfo()
 		},
-		computed:{
-			getScrollHeight(){
-				return `height:${this.scrollHeight}px;`
-			}
-		},
 		methods:{
-			bindYearDateChange(e){
+			handleYearDate(e){
 				this.yearDate = Number(e.detail.value)
 				this.getNowMonthKeepInfo()
 				this.getYearBillList()
@@ -98,29 +91,22 @@
 					title:'数据加载中...'
 				})
 				const $ = this.DB.command.aggregate;
-				this.yearBill.income = '0.00'
-				this.yearBill.expenditure = '0.00'
-				this.yearBill.surplus = '0.00'
-				this.DB.collection(this.$conf.database.AccountsRecord).aggregate()
+				this.DB.collection(this.$conf.database.keepRecord).aggregate()
 					.match({
 						_openid:this.getOpenid,
-						keepYear: this.yearDate
+						year: this.yearDate
 					}).group({
-						_id:'$categoryType',
-						keepMoney:$.sum('$keepMoney')
+						_id:null,
+						expendSum:$.sum('$expendSum'),
+						incomeSum:$.sum('$incomeSum')
 					})
 					.end()
-					.then(res=>{
-						if(res.errMsg === 'collection.aggregate:ok' && res.list.length > 0){
-							const filterExpenditure = res.list.filter(o=>o._id === 0)
-							const filterIncome = res.list.filter(o=>o._id === 1)
-							if(filterExpenditure.length > 0){
-								this.yearBill.expenditure = filterExpenditure[0]['keepMoney'].toFixed(2);
-							}
-							if(filterIncome.length > 0){
-								this.yearBill.income = filterIncome[0]['keepMoney'].toFixed(2);							
-							}
-							this.yearBill.surplus = (this.yearBill.income - this.yearBill.expenditure).toFixed(2)
+					.then(({list})=>{
+						if(list.length > 0){
+							const { expendSum,incomeSum } = list[0]
+							this.yearBill.expenditure = expendSum
+							this.yearBill.income = incomeSum
+							this.yearBill.surplus = incomeSum - expendSum
 						}
 						uni.hideLoading()
 					}).catch(_=>{
@@ -129,41 +115,27 @@
 			},
 			getYearBillList(){
 				const $ = this.DB.command.aggregate;
-				this.DB.collection(this.$conf.database.AccountsRecord)
-					.aggregate()
+				this.DB.collection(this.$conf.database.keepRecord).aggregate()
 					.match({
 						_openid: this.getOpenid,
-						keepYear:this.yearDate
+						year:this.yearDate
 					}).group({
-						_id: {
-							keepMonth:'$keepMonth'
-						},
-						students: $.push({
-							categoryType: '$categoryType',
-							keepMoney:'$keepMoney'
-						})
+						_id:'$month',
+						expendSum:$.sum('$expendSum'),
+						incomeSum:$.sum('$incomeSum')
 					})
 					.end()
-					.then(res => {
-						const list = res.list
-						let arr = []
-						for(let i=0,len=list.length;i<len;i++){
-							const childList =list[i]['students']
-							const month = list[i]['_id']['keepMonth']
-							let res1 = childList.filter(o=>o.categoryType === 0).reduce((acc,cur) => {
-							    return acc+cur.keepMoney
-							},0)
-							let res2 = childList.filter(o=>o.categoryType === 1).reduce((acc,cur) => {
-							    return acc+cur.keepMoney
-							},0)
-							arr.push({
-								month,
-								expenditure:res1.toFixed(2),
-								income:res2.toFixed(2),
-								surplus:(res2-res1).toFixed(2)
+					.then(({list}) => {
+						if(list.length > 0){
+							this.yearBillList = list.map((item)=>{
+								return {
+									month:item._id,
+									expenditure:item.expendSum.toFixed(2),
+									income:item.incomeSum.toFixed(2),
+									surplus:(item.expendSum - item.incomeSum).toFixed(2),
+								}
 							})
-						}
-						this.yearBillList = arr
+						}						
 					});
 			}
 		}
@@ -251,7 +223,6 @@
 				width: 209.83rpx;
 				color: #919191;
 				font-size: 24rpx;
-				padding-left: 10rpx;
 				box-sizing: border-box;
 				&:first-child{
 					padding-left: 30rpx;

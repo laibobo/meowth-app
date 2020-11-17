@@ -14,6 +14,12 @@ Vue.prototype.$authorize = isAuthorize
 Vue.prototype.$conf = config
 const getApp2 = getApp();
 Vue.mixin({
+	data(){
+		return {
+			scrollHeight:0,
+			windowHeight:0
+		}
+	},
 	computed:{
 		getMonthBudgetMoney(){
 			return this.$store.getters.monthBudgetMoney
@@ -31,9 +37,9 @@ Vue.mixin({
 		getOpenid(){
 			return uni.getStorageSync(this.$conf.storageKey.openid)
 		},
-		getUserInfo(){
-			return uni.getStorageSync(this.$conf.storageKey.userInfo) || {}
-		}
+		getScrollHeight() {
+			return `height:${this.scrollHeight}px`;
+		},
 	},
 	methods:{
 		loadingBudgetMonthChart(){

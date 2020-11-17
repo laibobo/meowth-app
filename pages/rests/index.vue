@@ -68,7 +68,7 @@ export default {
 				margin-top: 20rpx;
 				background-color: $uni-theme-bg-color;
 				width: auto;
-				padding:6rpx 20rpx;
+				padding:10rpx 20rpx;
 				border-radius: 0 200rpx 140rpx 0;
 				&:last-child{
 					margin-left: 50rpx;
