@@ -93,6 +93,14 @@ import circleButton from '@/components/circle-button/circle-button.vue';
 import Budget from '@/components/budget/budget.vue';
 import RingChart from '@/components/ring-chart/ring-chart.vue';
 const categorysData = require('@/public/data.json')
+import { 
+	login,
+	getKeepRecord,
+	getBudget,
+	getCurrentUser,
+	registerUser,
+	addCategorys
+} from '@/public/api.js'
 
 export default {
 	components: {
@@ -110,18 +118,16 @@ export default {
 				expenditure: '0.00',
 				surplus: '0.00'
 			},
-			db: null,
 			year:date.getFullYear(),
 			month:date.getMonth() + 1			
 		};
 	},
 	onLoad() {
-		const _self = this
-		app.globalData.wxDB = wx.cloud.database({
-			env: this.$conf.cloud_env
-		});
-		this.db = app.globalData.wxDB
-		this.login()
+		login().then(({isAuthSetting})=>{
+			if(isAuthSetting){
+				this.saveUserInfo()
+			}
+		})
 	},
 	onShow() {
 		this.getNowMonthKeepInfo();
@@ -156,12 +162,12 @@ export default {
 		},
 		//当月总预算
 		getCurrentMonthBudget(expenditure) {
-			this.db.collection(this.$conf.database.Budget).where({
+			getBudget({
 				_openid: this.getOpenid,
 				year:this.year,
 				month:this.month,
 				type:0
-			}).get().then(({data,errMsg})=>{
+			}).then(({data,errMsg})=>{
 				if(errMsg.includes('ok') && data.length > 0){
 					this.$store.commit('SET_MONTHBUDGEMONEY',data[0]['money'])
 				}
@@ -171,70 +177,37 @@ export default {
 		},
 		//记账统计
 		getKeepAccountsInfo() {
-			const _od = this.db.collection(this.$conf.database.keepRecord)
-				.where({
-					_openid: this.getOpenid
-				}).get().then(({errMsg,data})=>{
-					if(data.length > 0){
-						this.sumDay = data.length
-						this.sumLog = data.map((rdata)=>rdata.logs.length).reduce((a,b)=>a+b)
-					}
-				})
+			getKeepRecord({
+				_openid: this.getOpenid
+			}).then(({errMsg,data})=>{
+				if(data.length > 0){
+					this.sumDay = data.length
+					this.sumLog = data.map((rdata)=>rdata.logs.length).reduce((a,b)=>a+b)
+				}
+			})
 		},
 		//当前月账单
 		getNowMonthKeepInfo() {
-			this.db.collection(this.$conf.database.keepRecord).where({
+			getKeepRecord({
 				_openid:this.getOpenid,
-				year:Number(this.year) ,
+				year:Number(this.year),
 				month:Number(this.month)
-			}).get().then(({data,errMsg})=>{
+			}).then(({data,errMsg})=>{
 				if(errMsg.includes('ok') && data.length > 0){
 					const { expendSum,incomeSum } = data[0]
 					this.monthBill.expenditure = expendSum
 					this.monthBill.income = incomeSum
 					this.monthBill.surplus = incomeSum - expendSum
 					this.getCurrentMonthBudget(expendSum)
+				}else{
+					this.getCurrentMonthBudget(0)	
 				}
-			})
-		},
-		login(){
-			const _self = this
-			return new Promise((resolve,reject)=>{
-				wx.cloud
-				.callFunction({
-					name: 'login'
-				})
-				.then(res => {
-					uni.setStorageSync(this.$conf.storageKey.openid, res.result.openid);
-					wx.getSetting({
-						success: function(resSet) {
-							const isAuthSetting = resSet.authSetting['scope.userInfo'] !== undefined && resSet.authSetting['scope.userInfo'] !== false;				
-							uni.setStorageSync(_self.$conf.storageKey.isAuthSetting,isAuthSetting)
-							if(isAuthSetting){
-								_self.saveUserInfo().then(_=>{
-									resolve()
-								})
-							}
-						},
-						fail: function(err) {
-							_self.showNetworkIsError()
-							console.error(err)
-							reject(err)
-						}
-					});
-				});
+				
 			})
 		},
 		saveUserInfo() {
 			return new Promise((resolve,reject)=>{
-				this.db
-					.collection(this.$conf.database.User)
-					.where({
-						_openid: this.getOpenid
-					})
-					.get()
-					.then(({data}) => {
-						console.log('database:',data)
+				getCurrentUser().then(({data}) => {
 						if (data.length > 0) {
 							this.$store.commit('SET_USERINFO',data[0])
 						}else{
@@ -251,29 +224,23 @@ export default {
 					})
 					.catch(err => {
 						this.showNetworkIsError()
-						console.error(err)
-						console.log(1111111111111)
 						reject(err)
 					});
 			})
 		},
 		addUserInfo(userInfo) {
 			const nowdate = new Date()
-			this.db
-				.collection(this.$conf.database.User)
-				.add({
-					data: {
-						nickName: userInfo.nickName,
-						gender: userInfo.gender,
-						avatarUrl: userInfo.avatarUrl,
-						imageFileId:'',
-						weChat: userInfo.nickName,
-						province: userInfo.province,
-						city: userInfo.city,
-						theme: 'mint-green',
-						registerTime: nowdate.getTime(),
-						registerYear: nowdate.getFullYear()
-					}
+				registerUser({
+					nickName: userInfo.nickName,
+					gender: userInfo.gender,
+					avatarUrl: userInfo.avatarUrl,
+					imageFileId:'',
+					weChat: userInfo.nickName,
+					province: userInfo.province,
+					city: userInfo.city,
+					theme: 'mint-green',
+					registerTime: nowdate.getTime(),
+					registerYear: nowdate.getFullYear()
 				})
 				.then(addRes => {
 					console.log('添加用户信息成功！', addRes);
@@ -285,13 +252,9 @@ export default {
 		},
 		addDefaultCategorys(){
 			const defaultCategorys = categorysData.defaultCategorysList
-			this.db.collection(this.$conf.database.Category).add({
-				data:{
-					expends:defaultCategorys.expends,
-					incomes:defaultCategorys.incomes
-				}
-			}).then(res => {
-			  console.log(res)
+			addCategorys({
+				expends:defaultCategorys.expends,
+				incomes:defaultCategorys.incomes
 			})
 		}
 	}

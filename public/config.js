@@ -1,7 +1,6 @@
 export default {
 	cloud_env:'production-5g1k6p3j1948d18f',
 	database:{
-		AccountsRecord:'AccountsRecord',
 		Budget:'Budget',
 		Category:'Category',
 		InvoiceManage:'InvoiceManage',

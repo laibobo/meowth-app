@@ -20,7 +20,7 @@
 <script>
 import Tabs from '@/components/tabs/tabs.vue';
 import { getElement } from '@/public/index.js';
-const app = getApp();
+import { getCurrentUserCategory, updateCategory } from '@/public/api.js'
 export default {
 	components: { Tabs },
 	data() {
@@ -34,7 +34,6 @@ export default {
 		};
 	},
 	onLoad(options) {
-		this.DB = app.globalData.wxDB;
 		this.currentCategoryType = Number(options.categoryType) || 0;
 	},
 	onShow() {		
@@ -45,9 +44,7 @@ export default {
 			this.expendCategoryList = this.$store.getters.categoryExpendList,this.incomeCategoryList = this.$store.getters.categoryIncomeList
 						
 			if(this.expendCategoryList.length === 0 || this.incomeCategoryList.length === 0){			
-				this.DB.collection(this.$conf.database.Category).where({
-					_openid:this.getOpenid
-				}).get().then(({data})=>{
+				getCurrentUserCategory().then(({data})=>{
 					if(data.length > 0){
 						const { expends,incomes } = data[0]
 						this.expendCategoryList = expends
@@ -71,20 +68,18 @@ export default {
 			const typeArr = ['expend','income']
 			,type = Number(this.currentCategoryType)
 			,listName = ['expends','incomes'][type]
-			,DB_Category = this.DB.collection(this.$conf.database.Category)
 			
 			this[`${typeArr[this.currentCategoryType]}CategoryList`].splice(index,1)
-			DB_Category.where({
-				_openid:this.getOpenid
-			}).get().then(res=>{
+			getCurrentUserCategory().then(res=>{
 				if(res.data.length > 0){
 					let data = {}
 					data[listName] = res.data[0][listName]
 					data[listName].splice(index,1)
 					
-					DB_Category.doc(res.data[0]._id).update({
+					updateCategory({
+						id:res.data[0]._id,
 						data
-					}).then(res=>{
+					}).then(_=>{
 						let typeCode1 = 'INCOME',typeCode2 = 'Income'
 						if(type === 0){
 							typeCode1 = 'EXPEND'

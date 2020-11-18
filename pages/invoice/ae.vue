@@ -35,7 +35,7 @@
 </template>
 
 <script>
-const app = getApp();
+import { removeInvoice,addInvoice,updateInvoice } from '@/public/api.js'
 export default {
 	data() {
 		return {
@@ -48,8 +48,7 @@ export default {
 				bankAccount:'',
 				_id:''
 			},
-			isEdit:false,
-			DB:null
+			isEdit:false
 		};
 	},
 	onLoad(option){
@@ -57,7 +56,6 @@ export default {
 			this.form = JSON.parse(decodeURIComponent(option.item));
 			this.isEdit = true
 		}
-		this.DB = app.globalData.wxDB
 	},
 	methods: {
 		handleDel:function(){
@@ -76,19 +74,17 @@ export default {
 			})
 		},
 		deleteInvoice(){
-			this.DB.collection(this.$conf.database.InvoiceManage).doc(this.form._id).remove({
-				success:function(res){
-					if(res.errMsg === 'document.remove:ok'){
-						uni.showToast({
-							title:'删除成功',
-							icon:'success'
+			removeInvoice(this.form._id).then(({errMsg})=>{
+				if(errMsg.includes('ok')){
+					uni.showToast({
+						title:'删除成功',
+						icon:'success'
+					})
+					setTimeout(_=>{
+						uni.navigateBack({
+							delta: 1
 						})
-						setTimeout(_=>{
-							uni.navigateBack({
-								delta: 1
-							})
-						},1000)
-					}
+					},1000)
 				}
 			})
 		},
@@ -113,36 +109,31 @@ export default {
 			uni.hideLoading({
 				title:'保存中...'
 			})
-			const db_invoiceManage = this.DB.collection(this.$conf.database.InvoiceManage)
 			if(this.isEdit){
-				db_invoiceManage.doc(this.form._id)
-					.update({
-						data:{
-							companyName:data.companyName,
-							bankAccount:data.bankAccount,
-							bankOfDeposit:data.bankOfDeposit,
-							companyAddr:data.companyAddr,
-							tel:data.tel,
-							tfn:data.tfn
-						}
-					}).then(result=>{
-						this._opts()	
-					}).catch(err=>{
-						this.showNetworkIsError()
-						console.error(err)
-					})
+				updateInvoice({
+					invoiceId:this.form._id,
+					data:{
+						companyName:data.companyName,
+						bankAccount:data.bankAccount,
+						bankOfDeposit:data.bankOfDeposit,
+						companyAddr:data.companyAddr,
+						tel:data.tel,
+						tfn:data.tfn
+					}
+				}).then(result=>{
+					this._opts()	
+				}).catch(err=>{
+					this.showNetworkIsError()
+					console.error(err)
+				})
 			}else{
-				db_invoiceManage
-					.add({
-						data: data
-					})
-					.then(res => {
-						this._opts()					
-					})
-					.catch(err=>{
-						this.showNetworkIsError()
-						console.error(err)
-					});
+				addInvoice(data).then(res => {
+					this._opts()					
+				})
+				.catch(err=>{
+					this.showNetworkIsError()
+					console.error(err)
+				});
 			}
 		},
 		_opts(){

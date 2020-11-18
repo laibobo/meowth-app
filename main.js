@@ -12,7 +12,6 @@ Vue.filter('formatMoney',function(value){	return value? Math.floor(value * 100)
 
 Vue.prototype.$authorize = isAuthorize
 Vue.prototype.$conf = config
-const getApp2 = getApp();
 Vue.mixin({
 	data(){
 		return {

@@ -60,11 +60,11 @@
 </template>
 
 <script>
-const app = getApp();
 import { getElement } from '@/public/index.js';
 import uniSwipeAction from '@/components/uni-swipe-action/uni-swipe-action.vue'
 import uniSwipeActionItem from '@/components/uni-swipe-action-item/uni-swipe-action-item.vue'
 import circleButton from '@/components/circle-button/circle-button.vue'
+import { getKeepAccountList,getKeepRecord,getkeepRecordById,removeKeepRecord,updateKeepRecord } from '@/public/api.js'
 
 export default {
 	components: {
@@ -81,9 +81,7 @@ export default {
 			surplusSum:0,
 			incomeSum: 0,
 			expenditureSum: 0,
-			isLoading:false,
-			DB:null,
-			keepDB:null
+			isLoading:false
 		};
 	},
 	onLoad() {
@@ -96,8 +94,6 @@ export default {
 		this.year = year;
 		this.month = month;
 		this.searchDate = `${year}-${month}`;
-		this.DB = app.globalData.wxDB;
-		this.keepDB = this.DB.collection(this.$conf.database.keepRecord)
 	},
 	onShow() {
 		this.getNowYearMonthAccountLog();
@@ -118,13 +114,10 @@ export default {
 				title:'数据加载中...'
 			})
 			this.isLoading = true
-			wx.cloud.callFunction({
-				name:'getKeepAccountList',
-				data:{
+			getKeepAccountList({
 					openid:this.getOpenid,
 					keepYear: this.year,
 					keepMonth: this.month
-				}
 			}).then(res=>{
 				this.keepLogs = res.result.data			
 				uni.hideLoading()				
@@ -138,11 +131,11 @@ export default {
 		},
 		//当前月账单
 		getNowBill() {
-			this.keepDB.where({
+			getKeepRecord({
 				_openid:this.getOpenid,
 				year:Number(this.year) ,
 				month:Number(this.month)
-			}).get().then(({data,errMsg})=>{
+			}).then(({data,errMsg})=>{
 				if(errMsg.includes('ok') && data.length > 0){
 					const { expendSum,incomeSum } = data[0]
 					this.expenditureSum = expendSum
@@ -160,12 +153,10 @@ export default {
 			uni.showLoading({
 				title:'删除中...'
 			})
-			this.keepDB.doc(parentId)
-			.get()
-			.then(({data,errMsg})=>{
+			getkeepRecordById(parentId).then(({data,errMsg})=>{
 				if(errMsg.includes('ok')){
-					this.deleteKeepLog(data,childId,parentIDX,type,keepMoney).then(result=>{
-						if(result.errMsg.includes('ok')){
+					this.deleteKeepLog(data,childId,parentIDX,type,keepMoney).then(res=>{						
+						if(res.errMsg.includes('ok')){
 							uni.showToast({
 								icon:'success',
 								title:'删除成功'
@@ -174,7 +165,7 @@ export default {
 						}else{
 							uni.showModal({
 								title:'提示',
-								content:result.errMsg 
+								content:errMsg 
 							})
 						}
 					}).catch(err=>{
@@ -189,7 +180,7 @@ export default {
 		deleteKeepLog(data,childId,parentIDX,type,keepMoney){			
 			if(data.logs.length === 1){
 				this.keepLogs.splice(parentIDX,1)
-				return this.keepDB.doc(data._id).remove()
+				return removeKeepRecord(data._id)
 			}
 			
 			const dataIdx = data.logs.findIndex(f=>f._id === childId)			
@@ -205,7 +196,8 @@ export default {
 				this.keepLogs[parentIDX].expendSum = expendSum
 				this.keepLogs[parentIDX].incomeSum = incomeSum
 			}			
-			return this.keepDB.doc(data._id).update({
+			return updateKeepRecord({
+				recordId:data._id,
 				data:{
 					logs:data.logs,
 					expendSum,

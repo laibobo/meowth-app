@@ -28,8 +28,8 @@
 </template>
 
 <script>
-const app = getApp();
 const categorysData = require('@/public/data.json')
+import { getCurrentUserCategory,updateCategory } from '@/public/api.js'
 export default {
 	data() {
 		return {
@@ -47,8 +47,7 @@ export default {
 			success: function(res) {
 				that.scrollHeight = res.windowHeight;
 			}
-		});
-		this.DB = app.globalData.wxDB;
+		})
 	},
 	methods: {
 		handleSelectIcon(iconCode) {
@@ -74,12 +73,9 @@ export default {
 				return;
 			}
 			const type = Number(this.categoryType),icon = this.activeValue,name = this.categoryName
+			,listName = ['expends','incomes'][type]
 			
-			const listName = ['expends','incomes'][type]
-			const dbCategory = this.DB.collection(this.$conf.database.Category)
-			dbCategory.where({
-				_openid:this.getOpenid
-			}).get().then(res=>{
+			getCurrentUserCategory().then(res=>{
 				if(res.data.length > 0){
 					let data = {}
 					data[listName] = res.data[0][listName]
@@ -88,23 +84,24 @@ export default {
 						icon,
 						name
 					})
-				   dbCategory.doc(res.data[0]._id).update({
+				    updateCategory({
+					   id:res.data[0]._id,
 					   data
-				   }).then(res=>{
-					   let typeCode1 = 'INCOME',typeCode2 = 'Income'
-					   if(type === 0){
-					   	typeCode1 = 'EXPEND'
-					   	typeCode2 = 'Expend'
-					   }
-					   let list = this.$store.getters[`category${typeCode2}List`]
-					   list.push({
-					   	icon,
-					   	name	
-					   })
-					   this.$store.commit(`SET_CATEGORY${typeCode1}LIST`,list)
-					   uni.navigateBack({
-					   	delta: 1
-					   });
+				    }).then(res=>{
+					    let typeCode1 = 'INCOME',typeCode2 = 'Income'
+					    if(type === 0){
+							typeCode1 = 'EXPEND'
+							typeCode2 = 'Expend'
+					    }
+					    let list = this.$store.getters[`category${typeCode2}List`]
+					    list.push({
+							icon,
+							name	
+						})
+						this.$store.commit(`SET_CATEGORY${typeCode1}LIST`,list)
+						uni.navigateBack({
+							delta: 1
+						})
 				   })
 				}
 			})

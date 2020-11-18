@@ -55,10 +55,11 @@
 </template>
 
 <script>
-const app = getApp();
 import RemarkPanel from './remark-panel.vue';
-import { getElement } from '@/public/index.js';
+import { getElement,uploadImageFile } from '@/public/index.js';
 import Tabs from '@/components/tabs/tabs.vue';
+import { getkeepRecordById,getKeepRecord,addKeepRecord,updateKeepRecord,getCurrentUserCategory } from '@/public/api.js'
+
 export default {
 	components: {
 		RemarkPanel,
@@ -95,11 +96,10 @@ export default {
 	},
 	onLoad(option) {
 		this.setKeepDate();
-		this.DB = app.globalData.wxDB;
 		if(Object.keys(option).length > 0){
 			this.keepAccountId = option.keepAccountId
 			this.parentId = option.parentId
-			this.currentCategoryType = option.type
+			this.currentCategoryType = Number(option.type)
 		}
 	},
 	onShow() {
@@ -113,33 +113,32 @@ export default {
 		});
 		this.getCategoryList()
 		if(this.keepAccountId){
-			app.globalData.wxDB.collection(this.$conf.database.keepRecord).doc(this.parentId).get()
-				.then(({data,errMsg})=>{
-					const keepData = data.logs.find(f=>f._id === this.keepAccountId)
-					this.keepDate = keepData.keepDate
-					this.money = keepData.money
-					this.remark = keepData.remark
-					this.activeCategoryName = keepData.categoryName
-					this.activeCategoryIcon = keepData.categoryIcon
-					this.activeCategoryId = keepData.categoryId
-					
-					if (keepData.imageFileId) {
-						const _self = this
-						wx.cloud.downloadFile({
-							fileID: keepData.imageFileId,
-							success: res => {
-								_self.keepImage = res.tempFilePath
-							}
-						});
-					}
-					this.keepImageFileId = keepData.imageFileId
-					this.isOpenRemarkPanel = false;
-					this.isOpenKeyboard = true;
-					this.calculateScrollHeight();
-				}).catch(err=>{
-					this.showNetworkIsError()
-					console.error(err)
-				})
+			getkeepRecordById(this.parentId).then(({data,errMsg})=>{
+				const keepData = data.logs.find(f=>f._id === this.keepAccountId)
+				this.keepDate = keepData.keepDate
+				this.money = keepData.money
+				this.remark = keepData.remark
+				this.activeCategoryName = keepData.categoryName
+				this.activeCategoryIcon = keepData.categoryIcon
+				this.activeCategoryId = keepData.categoryId
+				
+				if (keepData.imageFileId) {
+					const _self = this
+					wx.cloud.downloadFile({
+						fileID: keepData.imageFileId,
+						success: res => {
+							_self.keepImage = res.tempFilePath
+						}
+					});
+				}
+				this.keepImageFileId = keepData.imageFileId
+				this.isOpenRemarkPanel = false;
+				this.isOpenKeyboard = true;
+				this.calculateScrollHeight();
+			}).catch(err=>{
+				this.showNetworkIsError()
+				console.error(err)
+			})
 		}
 	},
 	computed: {
@@ -156,31 +155,18 @@ export default {
 	},
 	methods: {
 		handleKeepImage() {
-			const _self = this;
-			uni.chooseImage({
-				count: 1,
-				success(res) {
-					_self.keepImage = res.tempFilePaths[0];
-					wx.cloud.uploadFile({
-						cloudPath: `user/${Date.parse(new Date())}.png`,
-						filePath: res.tempFilePaths[0],
-						success: res => {
-							_self.keepImageFileId = res.fileID
-						},
-						fail: err=>{
-							_self.showNetworkIsError()
-							console.error(err)
-						}
-					});
-				}
-			});
+			uploadImageFile({basePash:'keepImage'}).then(({fileId,tempFilePath})=>{
+				this.keepImageFileId = fileId
+				this.keepImage = tempFilePath
+			}).catch(err=>{
+				this.showNetworkIsError()
+				console.error(err)
+			})
 		},
 		getCategoryList(){
 			this.expendCategoryList = this.$store.getters.categoryExpendList,this.incomeCategoryList = this.$store.getters.categoryIncomeList
 			if(this.expendCategoryList.length === 0 || this.incomeCategoryList.length === 0){			
-				this.DB.collection(this.$conf.database.Category).where({
-					_openid:this.getOpenid
-				}).get().then(({data})=>{
+				getCurrentUserCategory().then(({data})=>{
 					if(data.length > 0){
 						const { expends,incomes } = data[0]
 						this.expendCategoryList = expends
@@ -368,8 +354,7 @@ export default {
 			if (money === '' || Number(money) === 0) {
 				return;
 			}
-			const keepDB = this.DB.collection(this.$conf.database.keepRecord)
-				,keepDate = new Date(`${this.keepDate} 00:00:00`)
+			const keepDate = new Date(`${this.keepDate} 00:00:00`)
 				,keepWeek = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][new Date(keepDate).getDay()]
 				,categoryId = this.activeCategoryId
 				,categoryType = this.currentCategoryType
@@ -395,10 +380,10 @@ export default {
 				createTime:timestamp
 			}
 			//先去查询当天是否有记账记录
-			keepDB.where({
+			getKeepRecord({
 				_openid:this.getOpenid,
 				keepDate:this.keepDate
-			}).get().then(result=>{
+			}).then(result=>{
 				let baseData = {}
 				//没有记录：
 				if(result.data.length === 0){
@@ -413,10 +398,8 @@ export default {
 						weekSeveral:keepWeek,
 						logs:[keepData]
 					}
-					keepDB.add({
-						data:baseData
-					}).then(addRes=>{
-					if (addRes.errMsg.includes('ok')) {
+					addKeepRecord(baseData).then(addRes=>{
+						if (addRes.errMsg.includes('ok')) {
 							uni.switchTab({
 								url:'./detail'
 							})
@@ -462,7 +445,8 @@ export default {
 						baseData.logs[updateDataIndex].imageFileId = imageFileId
 						logs = baseData.logs
 					}
-					keepDB.doc(baseData._id).update({
+					updateKeepRecord({
+						recordId:baseData._id,
 						data:{
 							expendSum,
 							incomeSum,

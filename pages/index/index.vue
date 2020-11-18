@@ -13,8 +13,8 @@
 </template>
 
 <script>
-const app = getApp();
 const categorysData = require('@/public/data.json')
+import { getCurrentUser,addCategorys,registerUser } from '@/public/api.js'
 export default {
 	data() {
 		return {
@@ -22,10 +22,6 @@ export default {
 		};
 	},
 	onLoad() {
-		app.globalData.wxDB = wx.cloud.database({
-			env: this.$conf.cloud_env
-		});
-		this.db = app.globalData.wxDB;
 		const _self = this;
 		//获取用户是否授权
 		wx.getSetting({
@@ -54,61 +50,46 @@ export default {
 			});
 		},
 		saveUserInfo(userInfo) {
-			this.db
-				.collection(this.$conf.database.User)
-				.where({
-					_openid: this.getOpenId
+			getCurrentUser().then(({data}) => {
+				if(data.length > 0){
+					userInfo = data[0]
+				}
+				this.$store.commit('SET_USERINFO',userInfo)
+				if (data.length === 0) {
+					this.addUserInfo(userInfo)
+					this.addDefaultCategorys()
+				}
+				uni.switchTab({
+					url: '/pages/my/index'
 				})
-				.get()
-				.then(({data}) => {
-					if(data.length > 0){
-						userInfo = data[0]
-					}
-					this.$store.commit('SET_USERINFO',userInfo)
-					if (data.length === 0) {
-						this.addUserInfo(userInfo)
-						this.addDefaultCategorys()
-					}
-					uni.switchTab({
-					    url: '/pages/my/index'
-					})
-				});
+			})
 		},
 		addUserInfo(userInfo) {
 			const nowdate = new Date()
-			this.db
-				.collection(this.$conf.database.User)
-				.add({
-					data: {
-						nickName: userInfo.nickName,
-						gender: userInfo.gender,
-						avatarUrl: userInfo.avatarUrl,
-						imageFileId:'',
-						weChat: userInfo.nickName,
-						province: userInfo.province,
-						city: userInfo.city,
-						theme: 'mint-green',
-						registerTime: nowdate.getTime(),
-						registerYear: nowdate.getFullYear()
-					}
-				})
-				.then(addRes => {
-					console.log('添加用户信息成功！', addRes);
-				})
-				.catch(err => {
-					this.showNetworkIsError()
-					console.error(err)
-				});
+			registerUser({
+					nickName: userInfo.nickName,
+					gender: userInfo.gender,
+					avatarUrl: userInfo.avatarUrl,
+					imageFileId:'',
+					weChat: userInfo.nickName,
+					province: userInfo.province,
+					city: userInfo.city,
+					theme: 'mint-green',
+					registerTime: nowdate.getTime(),
+					registerYear: nowdate.getFullYear()
+			}).then(addRes => {
+				console.log('添加用户信息成功！', addRes);
+			})
+			.catch(err => {
+				this.showNetworkIsError()
+				console.error(err)
+			})
 		},
 		addDefaultCategorys(){
 			const defaultCategorys = categorysData.defaultCategorysList
-			this.db.collection(this.$conf.database.Category).add({
-				data:{
-					expends:defaultCategorys.expends,
-					incomes:defaultCategorys.incomes
-				}
-			}).then(res => {
-			  console.log(res)
+			addCategorys({
+				expends:defaultCategorys.expends,
+				incomes:defaultCategorys.incomes
 			})
 		}
 	}

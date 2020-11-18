@@ -22,11 +22,10 @@
 </template>
 
 <script>
-const app = getApp();
+import { addFeedBack } from '@/public/api.js'
 export default {
 	data() {
 		return {
-			DB: null,
 			typeRange:['反馈','建议'],
 			type:'',
 			content:'',
@@ -34,7 +33,6 @@ export default {
 		};
 	},
 	onLoad() {
-		this.DB = app.globalData.wxDB
 	},
 	computed:{
 		getTypeRangeText(){
@@ -64,11 +62,9 @@ export default {
 				return
 			}
 			
-			this.DB.collection(this.$conf.database.FeedBack).add({
-				data:{
-					typeName:this.type,
-					content:this.content
-				}
+			addFeedBack({
+				typeName:this.type,
+				content:this.content
 			}).then(res=>{
 				this.type = ''
 				this.content = ''

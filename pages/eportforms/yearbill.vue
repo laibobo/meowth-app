@@ -44,7 +44,7 @@
 </template>
 
 <script>
-	const app = getApp();
+	import { getNowMonthKeepInfo, getYearBillList } from '@/public/api.js'
 	export default {
 		data(){
 			return {
@@ -54,8 +54,7 @@
 					income:'0.00',
 					expenditure:'0.00',
 					surplus:'0.00'
-				},
-				DB:null
+				}
 			}
 		},
 		onLoad(){
@@ -74,7 +73,6 @@
 						}).exec();
 				}
 			})
-			this.DB = app.globalData.wxDB
 		},
 		onShow(){
 			this.getYearBillList()
@@ -87,56 +85,40 @@
 				this.getYearBillList()
 			},
 			getNowMonthKeepInfo(){
+				this.yearBill.expenditure = 0
+				this.yearBill.income = 0
+				this.yearBill.surplus = 0
 				uni.showLoading({
 					title:'数据加载中...'
 				})
-				const $ = this.DB.command.aggregate;
-				this.DB.collection(this.$conf.database.keepRecord).aggregate()
-					.match({
-						_openid:this.getOpenid,
-						year: this.yearDate
-					}).group({
-						_id:null,
-						expendSum:$.sum('$expendSum'),
-						incomeSum:$.sum('$incomeSum')
-					})
-					.end()
-					.then(({list})=>{
-						if(list.length > 0){
-							const { expendSum,incomeSum } = list[0]
-							this.yearBill.expenditure = expendSum
-							this.yearBill.income = incomeSum
-							this.yearBill.surplus = incomeSum - expendSum
-						}
-						uni.hideLoading()
-					}).catch(_=>{
-						uni.hideLoading()
-					})
+				getNowMonthKeepInfo({
+					year: this.yearDate
+				}).then(({list})=>{
+					if(list.length > 0){
+						const { expendSum,incomeSum } = list[0]
+						this.yearBill.expenditure = expendSum
+						this.yearBill.income = incomeSum
+						this.yearBill.surplus = incomeSum - expendSum
+					}
+					uni.hideLoading()
+				}).catch(_=>{
+					uni.hideLoading()
+				})
 			},
 			getYearBillList(){
-				const $ = this.DB.command.aggregate;
-				this.DB.collection(this.$conf.database.keepRecord).aggregate()
-					.match({
-						_openid: this.getOpenid,
-						year:this.yearDate
-					}).group({
-						_id:'$month',
-						expendSum:$.sum('$expendSum'),
-						incomeSum:$.sum('$incomeSum')
-					})
-					.end()
-					.then(({list}) => {
-						if(list.length > 0){
-							this.yearBillList = list.map((item)=>{
-								return {
-									month:item._id,
-									expenditure:item.expendSum.toFixed(2),
-									income:item.incomeSum.toFixed(2),
-									surplus:(item.expendSum - item.incomeSum).toFixed(2),
-								}
-							})
-						}						
-					});
+				this.yearBillList = []
+				getYearBillList({ year: this.yearDate }).then(({list}) => {
+					if(list.length > 0){
+						this.yearBillList = list.map((item)=>{
+							return {
+								month:item._id,
+								expenditure:item.expendSum.toFixed(2),
+								income:item.incomeSum.toFixed(2),
+								surplus:(item.expendSum - item.incomeSum).toFixed(2)
+							}
+						})
+					}						
+				})
 			}
 		}
 	}

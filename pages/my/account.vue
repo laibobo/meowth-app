@@ -5,7 +5,7 @@
 			<view @click="handleEditPhoto">
 				<label>头像</label>
 				<view class="header v_s">
-					<image :src="photoUrl" :fade-show="false" mode="aspectFit"></image>
+					<image :src="photoUrl" :fade-show="false" mode="aspectFill"></image>
 				</view>
 				<view class="icon iconfont" v-html="rightIcon"></view>
 			</view>
@@ -24,15 +24,20 @@
 				<view class="icon iconfont" v-html="rightIcon"></view>
 			</view>
 		</view>
-		<bobo-dialog v-if="visible" class="nicename-dialog" :visible.sync="visible" title="昵称" @affirm="handleNiceName">
+		<bobo-dialog v-if="visible" class="nicename__dialog" :visible.sync="visible" title="昵称" @affirm="handleNiceName">
 			<input type="text" v-model="editNiceName" maxlength="20" placeholder="请输入昵称" />
 		</bobo-dialog>
 	</view>
 </template>
 
 <script>
-	const app = getApp();
 	import BoboDialog from '@/components/dialog/dialog.vue'
+	import {
+		getCurrentUser,
+		updateUser
+	} from '@/public/api.js'
+	import { uploadImageFile } from '@/public/index.js'
+	
 	export default {
 		components: {
 			BoboDialog
@@ -50,29 +55,21 @@
 			};
 		},
 		onLoad() {
-			this.db = app.globalData.wxDB;
 			const userInfo = this.$store.getters.loginUserInfo;
 			this.photoUrl = this.$store.getters.loginUserPhoto
 			this.nickName = userInfo.nickName;
 			this.userInfo = userInfo;
-			
-			this.db
-				.collection(this.$conf.database.User)
-				.where({
-					_openid: this.getOpenid
-				})
-				.get()
-				.then(res => {
-					if(res.data){
-						const data = res.data[0];
-						this.userId = data._id;
-						this.sex = data.gender;
-					}
-				})
-				.catch(err => {
-					this.showNetworkIsError()
-					console.error(err)
-				});
+			getCurrentUser()
+			.then(({data}) => {
+				if(data.length > 0){
+					this.userId = data[0]._id;
+					this.sex = data[0].gender;
+				}
+			})
+			.catch(err => {
+				this.showNetworkIsError()
+				console.error(err)
+			});
 		},
 		methods: {
 			openUpdateNiceName() {
@@ -96,26 +93,17 @@
 				}
 			},
 			handleEditPhoto() {
-				const _self = this;
-				uni.chooseImage({
-					count: 1,
-					success(res) {
-						_self.photoUrl = res.tempFilePaths[0];
-						wx.cloud.uploadFile({
-							cloudPath: `user/${Date.parse(new Date())}.png`,
-							filePath: res.tempFilePaths[0],
-							success: res => {
-								_self.updateUserInfo({
-									imageFileId: res.fileID
-								})
-							},
-							fail: err=>{
-								_self.showNetworkIsError()
-								console.error(err)
-							}
-						});
-					}
-				});
+				uploadImageFile({
+					basePath:'photo'
+				}).then(({ fileId,tempFilePath }) => {
+					this.photoUrl = tempFilePath
+					this.updateUserInfo({
+						imageFileId: fileId
+					})
+				}).catch(err=>{
+					this.showNetworkIsError()
+					console.error(err)
+				})
 			},
 			handleSex(data) {
 				this.sex = Number(data.detail.value);
@@ -125,23 +113,18 @@
 			},
 			updateUserInfo(data) {
 				return new Promise((resolve,reject)=>{
-					this.db
-						.collection(this.$conf.database.User)
-						.doc(this.userId)
-						.update({
-							data
-						})
-						.then(res => {
-							this.userInfo = Object.assign({}, this.userInfo, data);
-							this.$store.commit('SET_USERINFO',this.userInfo)
-							resolve('更新成功')
-						})
-						.catch(err => {
-							this.showNetworkIsError()
-							reject('更新失败')
-							console.error(err)
-						});
+					const userId = this.userId
+					updateUser({userId,data}).then(res => {
+						this.userInfo = Object.assign({}, this.userInfo, data);
+						this.$store.commit('SET_USERINFO',this.userInfo)
+						resolve('更新成功')
 					})
+					.catch(err => {
+						this.showNetworkIsError()
+						reject('更新失败')
+						console.error(err)
+					});
+				})
 			}
 		}
 	};
@@ -213,7 +196,7 @@
 		}
 	}
 
-	.nicename-dialog {
+	.nicename__dialog {
 		input {
 			border-bottom: 2rpx solid #C0C0C0;
 			font-size: 28rpx;

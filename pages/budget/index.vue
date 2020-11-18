@@ -24,14 +24,15 @@
 <script>
 import Budget from '@/components/budget/budget.vue';
 import BoboDialog from '@/components/dialog/dialog.vue';
-const app = getApp();
+import { getBudget,removeBudget,updateBudget,addBudget } from '@/public/api.js'
+
 export default {
 	components: {
 		Budget,
 		BoboDialog
 	},
 	data() {
-		const date = new Date();
+		const date = new Date()
 		return {
 			year: date.getFullYear(),
 			month: date.getMonth() + 1,
@@ -39,22 +40,20 @@ export default {
 			editDialog: false,
 			budgetMoney: null,
 			overallBudgetTitle: '',
-			DB: null,
 			monthBudgetId: '',
 			database_Budget:null
 		};
 	},
 	onLoad() {
-		this.DB = app.globalData.wxDB
 		this.database_Budget = this.$conf.database.Budget
 		this.overallBudgetTitle = `${this.month}月份总预算`
 		this.isShowBudgetDialog = this.getMonthBudgetMoney <= 0
 	},
 	computed: {
 		getMonth() {
-			let month = this.month;
+			let month = this.month
 			if (this.month < 10) {
-				month = `0${this.month}`;
+				month = `0${this.month}`
 			}
 			return month;
 		}
@@ -62,15 +61,15 @@ export default {
 	methods: {
 		openEdit() {
 			this.getMonthBudgetId()
-			this.editDialog = true;
+			this.editDialog = true
 		},
 		getMonthBudgetId(){
-			this.DB.collection(this.database_Budget).where({
+			getBudget({
 				_openid:this.getOpenid,
 				year:this.year,
 				month:this.month,
 				type:0
-			}).get().then(({data,errMsg})=>{
+			}).then(({data,errMsg})=>{
 				if(errMsg.includes('ok') && data.length > 0){
 					this.monthBudgetId = data[0]['_id']
 				}
@@ -84,14 +83,14 @@ export default {
 		},
 		//清除总预算
 		clearSumBudget(){
-			 this.DB.collection(this.database_Budget).doc(this.monthBudgetId).remove().then(result=>{
-				 if(result.errMsg.includes('ok')){
+			 removeBudget(this.monthBudgetId).then(({errMsg})=>{
+				 if(errMsg.includes('ok')){
 					this.cancel()
 					this.$store.commit('SET_MONTHBUDGEMONEY',0)
 				 }else{
 					uni.showModal({
 						title:'警告',
-						content:result.errMsg
+						content:errMsg
 					})
 				 }
 			 })
@@ -101,26 +100,22 @@ export default {
 			if (this.budgetMoney === '' || this.budgetMoney <= 0) {
 				return;
 			}
-			let _od = this.DB.collection(this.database_Budget),
+			let _od = null,
 				data = {
 					money: Number(this.budgetMoney)
 				};
 			if (this.getMonthBudgetMoney > 0) {
-				_od = _od.doc(this.monthBudgetId).update({
-					data
-				});
+				_od = updateBudget({id:this.monthBudgetId,data})
 			} else {
 				data.expendMoney = 0
 				data.type = 0
 				data.year = this.year
 				data.month = this.month
-				_od = _od.add({
-					data
-				});
+				_od = addBudget(data)
 			}
 			//type 预算类型 0全部预算 1分类预算
-			_od.then(result => {
-				if (result.errMsg.includes('ok')) {
+			_od.then(({errMsg}) => {
+				if (errMsg.includes('ok')) {
 					this.$store.commit('SET_MONTHBUDGEMONEY',data.money)
 					this.loadingBudgetMonthChart()
 				}

@@ -10,7 +10,7 @@
 </template>
 
 <script>
-const app = getApp();
+import { getCurrentUserInvoice } from '@/public/api.js'
 export default {
 	data() {
 		return {
@@ -26,22 +26,16 @@ export default {
 	methods: {
 		getInvoiceList() {
 			this.rows = [];
-			app.globalData.wxDB
-				.collection(this.$conf.database.InvoiceManage)
-				.where({
-					_openid: this.getOpenid
-				})
-				.get()
-				.then(res => {
-					if (res.errMsg == 'collection.get:ok') {
-						this.rows = res.data;
-					}
-					uni.hideLoading()
-				})
-				.catch(err=>{
-					this.showNetworkIsError()
-					console.error(err)
-				});
+			getCurrentUserInvoice().then(({errMsg,data}) => {
+				if (errMsg.includes('ok')) {
+					this.rows = data;
+				}
+				uni.hideLoading()
+			})
+			.catch(err=>{
+				this.showNetworkIsError()
+				console.error(err)
+			});
 		},
 		openAdd() {
 			uni.navigateTo({
