@@ -65,7 +65,7 @@ export default {
 		},
 		getMonthBudgetId(){
 			getBudget({
-				_openid:this.getOpenid,
+				_openid:uni.getStorageSync(this.$conf.storageKey.openid),
 				year:this.year,
 				month:this.month,
 				type:0

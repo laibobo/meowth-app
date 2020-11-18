@@ -33,9 +33,6 @@ Vue.mixin({
 		getIsMonthBudget(){
 			return this.getMonthBudgetMoney > 0
 		},
-		getOpenid(){
-			return uni.getStorageSync(this.$conf.storageKey.openid)
-		},
 		getScrollHeight() {
 			return `height:${this.scrollHeight}px`;
 		},

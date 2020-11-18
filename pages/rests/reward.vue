@@ -5,10 +5,6 @@
 			<label>微信</label>
 			<image :src="require('@/static/image/wx.jpg')"></image>
 		</view>
-		<view>
-			<label>支付宝</label>
-			<image :src="require('@/static/image/zfb.jpg')"></image>
-		</view>
 	</view>
 </template>
 

@@ -381,7 +381,7 @@ export default {
 			}
 			//先去查询当天是否有记账记录
 			getKeepRecord({
-				_openid:this.getOpenid,
+				_openid:uni.getStorageSync(this.$conf.storageKey.openid),
 				keepDate:this.keepDate
 			}).then(result=>{
 				let baseData = {}

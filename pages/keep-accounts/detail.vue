@@ -115,7 +115,7 @@ export default {
 			})
 			this.isLoading = true
 			getKeepAccountList({
-					openid:this.getOpenid,
+					openid:uni.getStorageSync(this.$conf.storageKey.openid),
 					keepYear: this.year,
 					keepMonth: this.month
 			}).then(res=>{
@@ -132,7 +132,7 @@ export default {
 		//当前月账单
 		getNowBill() {
 			getKeepRecord({
-				_openid:this.getOpenid,
+				_openid:uni.getStorageSync(this.$conf.storageKey.openid),
 				year:Number(this.year) ,
 				month:Number(this.month)
 			}).then(({data,errMsg})=>{

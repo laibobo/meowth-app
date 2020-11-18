@@ -163,7 +163,7 @@ export default {
 		//当月总预算
 		getCurrentMonthBudget(expenditure) {
 			getBudget({
-				_openid: this.getOpenid,
+				_openid: uni.getStorageSync(this.$conf.storageKey.openid),
 				year:this.year,
 				month:this.month,
 				type:0
@@ -178,18 +178,21 @@ export default {
 		//记账统计
 		getKeepAccountsInfo() {
 			getKeepRecord({
-				_openid: this.getOpenid
+				_openid: uni.getStorageSync(this.$conf.storageKey.openid)
 			}).then(({errMsg,data})=>{
 				if(data.length > 0){
 					this.sumDay = data.length
 					this.sumLog = data.map((rdata)=>rdata.logs.length).reduce((a,b)=>a+b)
+				}else{
+					this.sumDay = '--'
+					this.sumLog = '--'
 				}
 			})
 		},
 		//当前月账单
 		getNowMonthKeepInfo() {
 			getKeepRecord({
-				_openid:this.getOpenid,
+				_openid:uni.getStorageSync(this.$conf.storageKey.openid),
 				year:Number(this.year),
 				month:Number(this.month)
 			}).then(({data,errMsg})=>{
@@ -200,6 +203,9 @@ export default {
 					this.monthBill.surplus = incomeSum - expendSum
 					this.getCurrentMonthBudget(expendSum)
 				}else{
+					this.monthBill.expenditure = 0
+					this.monthBill.income = 0
+					this.monthBill.surplus = 0
 					this.getCurrentMonthBudget(0)	
 				}
 				
