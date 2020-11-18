@@ -1,9 +1,9 @@
 <template>
 	<view>
-		<add-btn class="add-btn"></add-btn>
+		<circle-button class="add-btn" />
 		<view class="header">
 			<view class="userinfo" data-url="./account" @click="navigateTo">
-				<image :src="getPhotoUrl || require('@/static/image/photo.png')" :fade-show="false" mode="aspectFit"></image>
+				<image :src="getPhotoUrl || require('@/static/image/photo.png')" :fade-show="false" mode="aspectFill"></image>
 				<text>{{ getNickName }}</text>
 			</view>
 			<!-- 统计 -->
@@ -89,12 +89,14 @@
 
 <script>
 const app = getApp();
-import addBtn from '@/components/add-btn/add-btn.vue';
+import circleButton from '@/components/circle-button/circle-button.vue';
 import Budget from '@/components/budget/budget.vue';
 import RingChart from '@/components/ring-chart/ring-chart.vue';
+const categorysData = require('@/public/data.json')
+
 export default {
 	components: {
-		addBtn,
+		circleButton,
 		Budget,
 		RingChart
 	},
@@ -119,26 +121,7 @@ export default {
 			env: this.$conf.cloud_env
 		});
 		this.db = app.globalData.wxDB
-		wx.cloud
-		.callFunction({
-			name: 'login'
-		})
-		.then(res => {
-			uni.setStorageSync(_self.$conf.storageKey.openid, res.result.openid);
-			wx.getSetting({
-				success: function(resSet) {
-					const isAuthSetting = resSet.authSetting['scope.userInfo'] !== undefined && resSet.authSetting['scope.userInfo'] !== false;				
-					uni.setStorageSync(_self.$conf.storageKey.isAuthSetting,isAuthSetting)
-					if(isAuthSetting){
-						_self.getNewUserInfo()
-					}
-				},
-				fail: function(err) {
-					_self.showNetworkIsError()
-					console.error(err)
-				}
-			});
-		});
+		this.login()
 	},
 	onShow() {
 		this.getNowMonthKeepInfo();
@@ -168,7 +151,7 @@ export default {
 			if(this.$authorize()){
 				uni.navigateTo({
 					url:e.currentTarget.dataset.url
-				});	
+				})
 			}
 		},
 		//当月总预算
@@ -214,24 +197,103 @@ export default {
 				}
 			})
 		},
-		//获取用户信息（数据库数据）
-		getNewUserInfo() {
+		login(){
+			const _self = this
+			return new Promise((resolve,reject)=>{
+				wx.cloud
+				.callFunction({
+					name: 'login'
+				})
+				.then(res => {
+					uni.setStorageSync(this.$conf.storageKey.openid, res.result.openid);
+					wx.getSetting({
+						success: function(resSet) {
+							const isAuthSetting = resSet.authSetting['scope.userInfo'] !== undefined && resSet.authSetting['scope.userInfo'] !== false;				
+							uni.setStorageSync(_self.$conf.storageKey.isAuthSetting,isAuthSetting)
+							if(isAuthSetting){
+								_self.saveUserInfo().then(_=>{
+									resolve()
+								})
+							}
+						},
+						fail: function(err) {
+							_self.showNetworkIsError()
+							console.error(err)
+							reject(err)
+						}
+					});
+				});
+			})
+		},
+		saveUserInfo() {
+			return new Promise((resolve,reject)=>{
+				this.db
+					.collection(this.$conf.database.User)
+					.where({
+						_openid: this.getOpenid
+					})
+					.get()
+					.then(({data}) => {
+						console.log('database:',data)
+						if (data.length > 0) {
+							this.$store.commit('SET_USERINFO',data[0])
+						}else{
+							const _self = this
+							wx.getUserInfo({
+								success: function(res) {
+									_self.$store.commit('SET_USERINFO',res.userInfo)
+									_self.addUserInfo(res.userInfo)
+									_self.addDefaultCategorys()
+								}
+							});
+						}
+						resolve()
+					})
+					.catch(err => {
+						this.showNetworkIsError()
+						console.error(err)
+						console.log(1111111111111)
+						reject(err)
+					});
+			})
+		},
+		addUserInfo(userInfo) {
+			const nowdate = new Date()
 			this.db
 				.collection(this.$conf.database.User)
-				.where({
-					_openid: this.getOpenid
-				})
-				.get()
-				.then(({data}) => {
-					if (data.length > 0) {
-						this.$store.commit('SET_USERINFO',data[0])
+				.add({
+					data: {
+						nickName: userInfo.nickName,
+						gender: userInfo.gender,
+						avatarUrl: userInfo.avatarUrl,
+						imageFileId:'',
+						weChat: userInfo.nickName,
+						province: userInfo.province,
+						city: userInfo.city,
+						theme: 'mint-green',
+						registerTime: nowdate.getTime(),
+						registerYear: nowdate.getFullYear()
 					}
+				})
+				.then(addRes => {
+					console.log('添加用户信息成功！', addRes);
 				})
 				.catch(err => {
 					this.showNetworkIsError()
 					console.error(err)
 				});
 		},
+		addDefaultCategorys(){
+			const defaultCategorys = categorysData.defaultCategorysList
+			this.db.collection(this.$conf.database.Category).add({
+				data:{
+					expends:defaultCategorys.expends,
+					incomes:defaultCategorys.incomes
+				}
+			}).then(res => {
+			  console.log(res)
+			})
+		}
 	}
 };
 </script>

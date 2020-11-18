@@ -1,6 +1,6 @@
 <template>
 	<view class="page">
-		<add-btn class="add-btn"></add-btn>
+		<circle-button class="add-btn" />
 		<view class="header">
 			<view class="search-col">
 				<label>{{ year }}年</label>
@@ -64,13 +64,13 @@ const app = getApp();
 import { getElement } from '@/public/index.js';
 import uniSwipeAction from '@/components/uni-swipe-action/uni-swipe-action.vue'
 import uniSwipeActionItem from '@/components/uni-swipe-action-item/uni-swipe-action-item.vue'
-import addBtn from '@/components/add-btn/add-btn.vue'
+import circleButton from '@/components/circle-button/circle-button.vue'
 
 export default {
 	components: {
 		uniSwipeAction,
 		uniSwipeActionItem,
-		addBtn
+		circleButton
 	},
 	data() {
 		return {
@@ -230,7 +230,7 @@ export default {
 				})
 			}else if(content.code === 'edit'){
 				uni.navigateTo({
-					url:'./index?keepAccountId='+keepAccountId+'&parentId='+parentId
+					url:'./index?keepAccountId='+keepAccountId+'&parentId='+parentId+'&type='+content.type
 				})
 			}else if(content.code === 'delete'){
 				uni.showModal({

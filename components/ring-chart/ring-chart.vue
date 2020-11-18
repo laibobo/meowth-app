@@ -53,7 +53,7 @@
 			showRing(){
 				this.subtitle.fontSize = 15 * this.pixelRatio
 				
-				const monthBudgetMoney = this.getMonthBudgetMoney,
+				let monthBudgetMoney = this.getMonthBudgetMoney,
 					monthExpendMoney = this.getMonthExpendMoney,
 					isOverspend = monthExpendMoney > monthBudgetMoney,
 					canvasId = this.chartElementId
@@ -61,6 +61,7 @@
 				if(monthBudgetMoney <= 0){
 					this.subtitle.name = '0%'
 					this.subtitle.color = '#A0A0A0'
+					monthExpendMoney = 0
 				}else if(isOverspend){
 					this.subtitle.name = '已超支'
 					this.subtitle.color = '#E06C73'

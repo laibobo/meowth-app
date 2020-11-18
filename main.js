@@ -22,10 +22,10 @@ Vue.mixin({
 	},
 	computed:{
 		getMonthBudgetMoney(){
-			return this.$store.getters.monthBudgetMoney
+			return this.$store.getters.monthBudgetMoney || 0
 		},
 		getMonthExpendMoney(){
-			return this.$store.getters.monthExpendMoney	
+			return this.$store.getters.monthExpendMoney	|| 0
 		},
 		getSurplusBudgetMoney(){
 		    const surplusBudgetMoney = this.getMonthBudgetMoney - this.getMonthExpendMoney

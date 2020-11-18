@@ -5,7 +5,7 @@
 			<view>
 				<loading v-if="loading" />
 				<view v-else>
-					<view class="category-item" v-for="(categorys, index) in getSocietyCategoryList" :key="index" :data-id="categorys._id" @click="handleDeleteCategory(categorys,index)">
+					<view class="category-item" v-for="(categorys, index) in categoryList" :key="index" :data-id="categorys._id" @click="handleDeleteCategory(categorys,index)">
 						<view class="icon-col delete-btn"><view class="icon iconfont">&#xe6ed;</view></view>
 						<view class="icon-col"><view class="icon iconfont" v-html="categorys.icon"></view></view>
 						{{ categorys.name }}
@@ -25,6 +25,7 @@ export default {
 	components: { Tabs },
 	data() {
 		return {
+			categoryList:[],
 			expendCategoryList: [],
 			incomeCategoryList:[],
 			loading:true,
@@ -34,40 +35,45 @@ export default {
 	},
 	onLoad(options) {
 		this.DB = app.globalData.wxDB;
-		this.currentCategoryType = options.categoryType || 0;
+		this.currentCategoryType = Number(options.categoryType) || 0;
 	},
 	onShow() {		
 		this.getCategoryList()
 	},
-	computed: {
-		getSocietyCategoryList(){
-			return Number(this.currentCategoryType) === 0? this.expendCategoryList:this.incomeCategoryList
-		}
-	},
 	methods: {
-		getCategoryList(){
-			// this.expendCategoryList = this.$store.getters.categoryExpendList,this.incomeCategoryList = this.$store.getters.categoryIncomeList
-			
-			this.DB.collection(this.$conf.database.Category).where({
-				_openid:this.getOpenid
-			}).get().then(({data})=>{
-				if(data.length > 0){
-					const { expends,incomes } = data[0]
-					this.expendCategoryList = expends
-					this.incomeCategoryList = incomes
-					this.$store.commit('SET_CATEGORYEXPENDLIST',expends) //支出
-					this.$store.commit('SET_CATEGORYINCOMELIST',incomes) //收入
-					this.calculateScrollHeight();
-				}
-				setTimeout(_=>{
-					this.loading = false
-				},1000)
-			})
+		getCategoryList(){			
+			this.expendCategoryList = this.$store.getters.categoryExpendList,this.incomeCategoryList = this.$store.getters.categoryIncomeList
+						
+			if(this.expendCategoryList.length === 0 || this.incomeCategoryList.length === 0){			
+				this.DB.collection(this.$conf.database.Category).where({
+					_openid:this.getOpenid
+				}).get().then(({data})=>{
+					if(data.length > 0){
+						const { expends,incomes } = data[0]
+						this.expendCategoryList = expends
+						this.incomeCategoryList = incomes
+						this.categoryList = this.currentCategoryType === 0?expends:incomes
+						this.$store.commit('SET_CATEGORYEXPENDLIST',expends) //支出
+						this.$store.commit('SET_CATEGORYINCOMELIST',incomes) //收入
+						this.calculateScrollHeight();
+					}
+					setTimeout(_=>{
+						this.loading = false
+					},1000)
+				})
+			}else{
+				this.loading = false
+				this.categoryList = this.currentCategoryType === 0?this.expendCategoryList:this.incomeCategoryList
+				this.calculateScrollHeight();
+			}
 		},
-		deleteCategory(categoryId,type,index){
-			const listName = ['expends','incomes'][type]
+		handleDeleteCategory(categorys,index){
+			const typeArr = ['expend','income']
+			,type = Number(this.currentCategoryType)
+			,listName = ['expends','incomes'][type]
 			,DB_Category = this.DB.collection(this.$conf.database.Category)
 			
+			this[`${typeArr[this.currentCategoryType]}CategoryList`].splice(index,1)
 			DB_Category.where({
 				_openid:this.getOpenid
 			}).get().then(res=>{
@@ -91,26 +97,10 @@ export default {
 				}
 			})
 		},
-		handleDeleteCategory(categorys,index){
-			const _self = this
-			uni.showModal({
-				title: '警告',
-				content: '删除类别会同时删除该类别下的所有记账',
-				success: function(res) {
-					if (res.confirm) {
-						const typeArr = ['expend','income']
-						_self[`${typeArr[_self.currentCategoryType]}CategoryList`].splice(index,1)
-						_self.deleteCategory(categorys._id,Number(_self.currentCategoryType),index);
-					}
-				}
-			});
-		},
 		handleTabsItem(index) {
 			if (this.currentCategoryType !== index) {
 				this.currentCategoryType = index
-				if(this.expendCategoryList.length === 0 || this.incomeCategoryList.length === 0){
-					this.getCategoryList()
-				}
+				this.getCategoryList()
 			}
 		},
 		handleAddCategory() {

@@ -6,7 +6,7 @@
 			<view class="category-col">
 				<loading v-if="loading" />
 				<view v-else class="tabs-container">
-					<view v-for="(item, index) in getSocietyCategoryList || categoryList" :key="index" :class="['category', { 'category-active': item._id === activeCategoryId }]" :data-id="item._id" :data-name="item.name" :data-icon="item.icon" @click="handleKeep">
+					<view v-for="(item, index) in categoryList" :key="index" :class="['category', { 'category-active': item._id === activeCategoryId }]" :data-id="item._id" :data-name="item.name" :data-icon="item.icon" @click="handleKeep">
 						<view class="icon-col"><view class="icon iconfont" v-html="item.icon"></view></view>
 						<text class="explain">{{ item.name }}</text>
 					</view>				
@@ -74,6 +74,8 @@ export default {
 			remark: '',
 			currentCategoryType: 0,
 			categoryList:[],
+			incomeCategoryList:[],
+			expendCategoryList:[],
 			loading:true,
 			activeCategoryId: '',
 			activeCategoryName: '',
@@ -97,6 +99,7 @@ export default {
 		if(Object.keys(option).length > 0){
 			this.keepAccountId = option.keepAccountId
 			this.parentId = option.parentId
+			this.currentCategoryType = option.type
 		}
 	},
 	onShow() {
@@ -113,7 +116,6 @@ export default {
 			app.globalData.wxDB.collection(this.$conf.database.keepRecord).doc(this.parentId).get()
 				.then(({data,errMsg})=>{
 					const keepData = data.logs.find(f=>f._id === this.keepAccountId)
-					this.categoryType = this.tabValues[keepData.categoryType]
 					this.keepDate = keepData.keepDate
 					this.money = keepData.money
 					this.remark = keepData.remark
@@ -133,6 +135,7 @@ export default {
 					this.keepImageFileId = keepData.imageFileId
 					this.isOpenRemarkPanel = false;
 					this.isOpenKeyboard = true;
+					this.calculateScrollHeight();
 				}).catch(err=>{
 					this.showNetworkIsError()
 					console.error(err)
@@ -140,9 +143,6 @@ export default {
 		}
 	},
 	computed: {
-		getSocietyCategoryList(){
-			return this.currentCategoryType === 0? this.expendCategoryList:this.incomeCategoryList
-		},
 		getShowKeepDate(){
 			if(this.keepDate){
 				const keepDate = new Date(this.keepDate),date = new Date(),y = keepDate.getFullYear(),m = keepDate.getMonth() + 1,d = keepDate.getDate()						
@@ -196,7 +196,7 @@ export default {
 				})
 			}else{
 				this.loading = false
-				this.categoryList = this.currentCategoryType === 0?this.expendCategoryList:this.incomeCategoryList
+				this.categoryList = this.currentCategoryType === 0?this.expendCategoryList:this.incomeCategoryList				
 			}
 		},
 		//点击tabs项
@@ -409,6 +409,7 @@ export default {
 						month:keepMonth,
 						day:keepDay,
 						keepDate:this.keepDate,
+						keepTimestamp:Date.parse(new Date(this.keepDate)),
 						weekSeveral:keepWeek,
 						logs:[keepData]
 					}
