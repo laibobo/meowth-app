@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import App from './App'
 import Loading from '@/components/loading/loading.vue'
-import { isAuthorize } from '@/public/index.js'
 import store from './store'
 import config from './public/config.js'
 
@@ -10,7 +9,6 @@ Vue.component('loading',Loading)
 App.mpType = 'app'
 Vue.filter('formatMoney',function(value){	return value? Math.floor(value * 100) / 100 : 0})
 
-Vue.prototype.$authorize = isAuthorize
 Vue.prototype.$conf = config
 Vue.mixin({
 	data(){
@@ -48,6 +46,11 @@ Vue.mixin({
 			})
 		}
 	}
+})
+
+wx.cloud.init({
+	env: 'develop-tm3ye',
+	traceUser: true
 })
 const app = new Vue({
     ...App,

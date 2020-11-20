@@ -11,6 +11,7 @@
 
 <script>
 import { getCurrentUserInvoice } from '@/public/api.js'
+import { setSoundEffects } from '@/public/index.js'
 export default {
 	data() {
 		return {
@@ -38,11 +39,13 @@ export default {
 			});
 		},
 		openAdd() {
+			setSoundEffects('click')
 			uni.navigateTo({
 				url: './ae'
 			});
 		},
 		openEdit(e) {
+			setSoundEffects('click')
 			uni.navigateTo({
 				url: './ae?item='+encodeURIComponent(JSON.stringify(e.currentTarget.dataset.item)) 
 			});

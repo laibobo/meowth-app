@@ -36,6 +36,7 @@
 
 <script>
 import { removeInvoice,addInvoice,updateInvoice } from '@/public/api.js'
+import { setSoundEffects } from '@/public/index.js'
 export default {
 	data() {
 		return {
@@ -59,6 +60,7 @@ export default {
 	},
 	methods: {
 		handleDel:function(){
+			setSoundEffects('click')
 			const _self = this
 			uni.showModal({
 				title:'提示',
@@ -80,6 +82,7 @@ export default {
 						title:'删除成功',
 						icon:'success'
 					})
+					setSoundEffects('remove')
 					setTimeout(_=>{
 						uni.navigateBack({
 							delta: 1
@@ -89,6 +92,7 @@ export default {
 			})
 		},
 		formSubmit: function(e) {
+			setSoundEffects('click')
 			const data = e.detail.value,
 				tfnRule = /^[A-Z0-9]{15}$|^[A-Z0-9]{17}$|^[A-Z0-9]{18}$|^[A-Z0-9]{20}$/;
 			if (data.companyName == '') {
@@ -97,6 +101,7 @@ export default {
 					icon: 'none',
 					position: 'bottom'
 				});
+				setSoundEffects('msg2')
 				return false;
 			} else if (data.tfn != '' && !tfnRule.test(data.tfn)) {
 				uni.showToast({
@@ -104,6 +109,7 @@ export default {
 					icon: 'none',
 					position: 'bottom'
 				});
+				setSoundEffects('msg2')
 				return false;
 			}
 			uni.hideLoading({

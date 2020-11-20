@@ -92,6 +92,7 @@ const app = getApp();
 import circleButton from '@/components/circle-button/circle-button.vue';
 import Budget from '@/components/budget/budget.vue';
 import RingChart from '@/components/ring-chart/ring-chart.vue';
+import { setSoundEffects } from '@/public/index.js'
 const categorysData = require('@/public/data.json')
 import { 
 	login,
@@ -99,7 +100,8 @@ import {
 	getBudget,
 	getCurrentUser,
 	registerUser,
-	addCategorys
+	addCategorys,
+	getMonthKeepInfo
 } from '@/public/api.js'
 
 export default {
@@ -123,11 +125,6 @@ export default {
 		};
 	},
 	onLoad() {
-		login().then(({isAuthSetting})=>{
-			if(isAuthSetting){
-				this.saveUserInfo()
-			}
-		})
 	},
 	onShow() {
 		this.getNowMonthKeepInfo();
@@ -153,12 +150,11 @@ export default {
 			}
 		},
 		//跳转页面
-		navigateTo(e) {
-			if(this.$authorize()){
-				uni.navigateTo({
-					url:e.currentTarget.dataset.url
-				})
-			}
+		navigateTo(e) {			
+			setSoundEffects('click')
+			uni.navigateTo({
+				url:e.currentTarget.dataset.url
+			})
 		},
 		//当月总预算
 		getCurrentMonthBudget(expenditure) {
@@ -191,13 +187,12 @@ export default {
 		},
 		//当前月账单
 		getNowMonthKeepInfo() {
-			getKeepRecord({
-				_openid:uni.getStorageSync(this.$conf.storageKey.openid),
-				year:Number(this.year),
-				month:Number(this.month)
-			}).then(({data,errMsg})=>{
-				if(errMsg.includes('ok') && data.length > 0){
-					const { expendSum,incomeSum } = data[0]
+			getMonthKeepInfo({
+				year:this.year,
+				month:this.month
+			}).then(({list,errMsg})=>{
+				if(list.length > 0){
+					const { expendSum,incomeSum } = list[0]
 					this.monthBill.expenditure = expendSum
 					this.monthBill.income = incomeSum
 					this.monthBill.surplus = incomeSum - expendSum
@@ -209,58 +204,6 @@ export default {
 					this.getCurrentMonthBudget(0)	
 				}
 				
-			})
-		},
-		saveUserInfo() {
-			return new Promise((resolve,reject)=>{
-				getCurrentUser().then(({data}) => {
-						if (data.length > 0) {
-							this.$store.commit('SET_USERINFO',data[0])
-						}else{
-							const _self = this
-							wx.getUserInfo({
-								success: function(res) {
-									_self.$store.commit('SET_USERINFO',res.userInfo)
-									_self.addUserInfo(res.userInfo)
-									_self.addDefaultCategorys()
-								}
-							});
-						}
-						resolve()
-					})
-					.catch(err => {
-						this.showNetworkIsError()
-						reject(err)
-					});
-			})
-		},
-		addUserInfo(userInfo) {
-			const nowdate = new Date()
-				registerUser({
-					nickName: userInfo.nickName,
-					gender: userInfo.gender,
-					avatarUrl: userInfo.avatarUrl,
-					imageFileId:'',
-					weChat: userInfo.nickName,
-					province: userInfo.province,
-					city: userInfo.city,
-					theme: 'mint-green',
-					registerTime: nowdate.getTime(),
-					registerYear: nowdate.getFullYear()
-				})
-				.then(addRes => {
-					console.log('添加用户信息成功！', addRes);
-				})
-				.catch(err => {
-					this.showNetworkIsError()
-					console.error(err)
-				});
-		},
-		addDefaultCategorys(){
-			const defaultCategorys = categorysData.defaultCategorysList
-			addCategorys({
-				expends:defaultCategorys.expends,
-				incomes:defaultCategorys.incomes
 			})
 		}
 	}

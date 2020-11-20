@@ -50,13 +50,13 @@
 			</view>
 		</view>
 		<!-- 备注面板 -->
-		<remark-panel class="remarkp" :visible.sync="isOpenRemarkPanel" :content="remark" @confirm="handleConfirmRemark" @close="handleCancelRemark" />
+		<remark-panel class="remarkp" :visible.sync="isOpenRemarkPanel" :content.sync="remark" @confirm="handleConfirmRemark" @close="handleCancelRemark" />
 	</view>
 </template>
 
 <script>
 import RemarkPanel from './remark-panel.vue';
-import { getElement,uploadImageFile } from '@/public/index.js';
+import { getElement,uploadImageFile,setSoundEffects } from '@/public/index.js';
 import Tabs from '@/components/tabs/tabs.vue';
 import { getkeepRecordById,getKeepRecord,addKeepRecord,updateKeepRecord,getCurrentUserCategory } from '@/public/api.js'
 
@@ -115,13 +115,12 @@ export default {
 		if(this.keepAccountId){
 			getkeepRecordById(this.parentId).then(({data,errMsg})=>{
 				const keepData = data.logs.find(f=>f._id === this.keepAccountId)
-				this.keepDate = keepData.keepDate
+				this.keepDate = data.keepDate
 				this.money = keepData.money
 				this.remark = keepData.remark
 				this.activeCategoryName = keepData.categoryName
 				this.activeCategoryIcon = keepData.categoryIcon
 				this.activeCategoryId = keepData.categoryId
-				
 				if (keepData.imageFileId) {
 					const _self = this
 					wx.cloud.downloadFile({
@@ -132,14 +131,16 @@ export default {
 					});
 				}
 				this.keepImageFileId = keepData.imageFileId
-				this.isOpenRemarkPanel = false;
-				this.isOpenKeyboard = true;
-				this.calculateScrollHeight();
+				this.isOpenRemarkPanel = false
+				this.isOpenKeyboard = true
+				this.calculateScrollHeight()
 			}).catch(err=>{
 				this.showNetworkIsError()
 				console.error(err)
 			})
-		}
+		}else{
+			this.calculateScrollHeight()
+		}		
 	},
 	computed: {
 		getShowKeepDate(){
@@ -155,6 +156,7 @@ export default {
 	},
 	methods: {
 		handleKeepImage() {
+			setSoundEffects('click')
 			uploadImageFile({basePash:'keepImage'}).then(({fileId,tempFilePath})=>{
 				this.keepImageFileId = fileId
 				this.keepImage = tempFilePath
@@ -195,6 +197,7 @@ export default {
 		},
 		//设置类目  跳转类目管理页面
 		handleDeploy() {
+			setSoundEffects('click')
 			const categoryType = this.currentCategoryType;
 			uni.navigateTo({
 				url: '../category-config/index?categoryType=' + categoryType
@@ -202,6 +205,8 @@ export default {
 		},
 		//点击类目
 		handleKeep({currentTarget}) {
+			setSoundEffects('dilei',0.3)
+			
 			this.activeCategoryId = currentTarget.dataset.id;
 			this.activeCategoryName = currentTarget.dataset.name;
 			this.activeCategoryIcon = currentTarget.dataset.icon;
@@ -241,11 +246,13 @@ export default {
 				}).exec();
 		},
 		handleOpenRemarkPanel() {
+			setSoundEffects('click')
 			this.isOpenRemarkPanel = true;
 			this.isOpenKeyboard = false;
 			this.calculateScrollHeight();
 		},
 		handleCancelRemark() {
+			setSoundEffects('click')
 			this.isOpenKeyboard = true;
 			this.calculateScrollHeight();
 			if (this.optRemarkBtnText === '修改') {
@@ -254,6 +261,8 @@ export default {
 			this.remark = '';
 		},
 		handleConfirmRemark(value) {
+			console.log('value:',value)
+			setSoundEffects('click')
 			this.isOpenKeyboard = true;
 			this.calculateScrollHeight();
 			this.remark = value;
@@ -311,6 +320,7 @@ export default {
 					return;
 				}
 			}
+			setSoundEffects('enter')
 			this.money = tepMoney;
 			this.setCategoryContainerHeight()
 		},
@@ -333,6 +343,7 @@ export default {
 			if (isMoneyCount) {
 				return;
 			}
+			setSoundEffects('keyin')
 			this.money = moneyStr + code;
 		},
 		//=按钮操作 金额合计
@@ -354,26 +365,20 @@ export default {
 			if (money === '' || Number(money) === 0) {
 				return;
 			}
-			const keepDate = new Date(`${this.keepDate} 00:00:00`)
-				,keepWeek = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][new Date(keepDate).getDay()]
-				,categoryId = this.activeCategoryId
-				,categoryType = this.currentCategoryType
-				,categoryName = this.activeCategoryName
-				,categoryIcon = this.activeCategoryIcon
-				,remark = this.remark
-				,keepMoney = parseFloat(money)
-				,keepYear = keepDate.getFullYear()
-				,keepMonth = keepDate.getMonth() + 1
-				,keepDay = keepDate.getDate()
-				,imageFileId = this.keepImageFileId
-				,timestamp = Date.parse(new Date())
-			
-			const keepData = {
+			const categoryId = this.activeCategoryId
+			,categoryType = this.currentCategoryType
+			,categoryName = this.activeCategoryName
+			,categoryIcon = this.activeCategoryIcon
+			,remark = this.remark
+			,keepMoney = parseFloat(money)
+			,imageFileId = this.keepImageFileId
+			,timestamp = Date.parse(new Date())
+			,keepData = {
 				_id: `id_${timestamp}`,
 				categoryType,
 				categoryIcon,
 				categoryName,
-				categoryId,
+				categoryId:this.activeCategoryId,
 				imageFileId,
 				money:keepMoney,
 				remark,
@@ -387,15 +392,18 @@ export default {
 				let baseData = {}
 				//没有记录：
 				if(result.data.length === 0){
+					const keepDate = new Date(this.keepDate)
+					const week = new Date(keepDate).getDay()
+					const weekSeveral = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][week]
 					baseData = {
 						expendSum:categoryType === 0? keepMoney:0,
 						incomeSum:categoryType !== 0? keepMoney:0,
-						year:keepYear,
-						month:keepMonth,
-						day:keepDay,
+						year:keepDate.getFullYear(),
+						month:keepDate.getMonth() + 1,
+						day:keepDate.getDate(),
 						keepDate:this.keepDate,
 						keepTimestamp:Date.parse(new Date(this.keepDate)),
-						weekSeveral:keepWeek,
+						weekSeveral,
 						logs:[keepData]
 					}
 					addKeepRecord(baseData).then(addRes=>{
@@ -419,8 +427,9 @@ export default {
 						}
 						logs.push(keepData)
 					}else{
+						console.log('updateDataIndex:',updateDataIndex,this.keepAccountId,baseData.logs,result.data,this.keepDate)
 						const updateDataIndex = baseData.logs.findIndex(v=>v._id === this.keepAccountId)
-						,d = JSON.parse(JSON.stringify(baseData.logs[updateDataIndex]))
+						const d = JSON.parse(JSON.stringify(baseData.logs[updateDataIndex]))
 						if(categoryType === baseData.logs[updateDataIndex].categoryType){
 							if(baseData.logs[updateDataIndex].categoryType === 0){
 								expendSum = baseData.expendSum - d.money + keepMoney
@@ -438,7 +447,7 @@ export default {
 						}
 						baseData.logs[updateDataIndex].money = keepMoney
 						baseData.logs[updateDataIndex].remark = remark
-						baseData.logs[updateDataIndex].categoryId = categoryId
+						baseData.logs[updateDataIndex].categoryId = this.activeCategoryId
 						baseData.logs[updateDataIndex].categoryType = categoryType
 						baseData.logs[updateDataIndex].categoryIcon = categoryIcon
 						baseData.logs[updateDataIndex].categoryName = categoryName
@@ -467,6 +476,7 @@ export default {
 		},
 		//选择账单日期
 		handleKeepDateChange(e) {
+			setSoundEffects('click')
 			this.keepDate = e.detail.value;
 		},
 		setKeepDate() {

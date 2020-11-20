@@ -60,11 +60,11 @@
 </template>
 
 <script>
-import { getElement } from '@/public/index.js';
+import { getElement,setSoundEffects } from '@/public/index.js';
 import uniSwipeAction from '@/components/uni-swipe-action/uni-swipe-action.vue'
 import uniSwipeActionItem from '@/components/uni-swipe-action-item/uni-swipe-action-item.vue'
 import circleButton from '@/components/circle-button/circle-button.vue'
-import { getKeepAccountList,getKeepRecord,getkeepRecordById,removeKeepRecord,updateKeepRecord } from '@/public/api.js'
+import { getKeepAccountList,getKeepRecord,getkeepRecordById,removeKeepRecord,updateKeepRecord,getMonthKeepInfo } from '@/public/api.js'
 
 export default {
 	components: {
@@ -131,13 +131,12 @@ export default {
 		},
 		//当前月账单
 		getNowBill() {
-			getKeepRecord({
-				_openid:uni.getStorageSync(this.$conf.storageKey.openid),
-				year:Number(this.year) ,
-				month:Number(this.month)
-			}).then(({data,errMsg})=>{
-				if(errMsg.includes('ok') && data.length > 0){
-					const { expendSum,incomeSum } = data[0]
+			getMonthKeepInfo({
+				year:this.year,
+				month:this.month
+			}).then(({list,errMsg})=>{
+				if(list.length > 0){
+					const { expendSum,incomeSum } = list[0]
 					this.expenditureSum = expendSum
 					this.incomeSum = incomeSum
 					this.surplusSum = this.incomeSum - this.expenditureSum
@@ -162,6 +161,7 @@ export default {
 								title:'删除成功'
 							})							
 							this.getNowBill()
+							setSoundEffects('remove')
 						}else{
 							uni.showModal({
 								title:'提示',
@@ -216,6 +216,7 @@ export default {
 		handleSwipe({content}){
 			const _self = this
 			const keepAccountId = content._id,parentId = content.parentId
+			setSoundEffects('click')
 			if(content.code === 'detail'){
 				uni.navigateTo({
 					url:'./info?keepAccountId='+keepAccountId+ '&parentId='+parentId
@@ -406,7 +407,7 @@ export default {
 					align-items: center;
 					.explain {
 						margin-left: 30rpx;
-						width: 500rpx;
+						width: 400rpx;
 					}
 					.icon-col {
 						width: 75rpx;

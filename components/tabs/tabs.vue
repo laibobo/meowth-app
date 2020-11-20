@@ -5,6 +5,7 @@
 </template>
 
 <script>
+import { setSoundEffects } from '@/public/index.js'
 export default {
 	name: 'Tabs',
 	props: {
@@ -47,6 +48,7 @@ export default {
 			if (this.currentIndex !== index) {
 				this.currentIndex = index;
 				this.$emit('clickItem', index);
+				setSoundEffects('sou')
 			}
 		}
 	}

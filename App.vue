@@ -1,21 +1,24 @@
 <script>
-const app = getApp();
-const config = require('./public/config.js')
+const app = getApp()
 export default {
 	onLaunch: function() {
+		const config = require('./public/config.js'),api = require('@/public/api.js')
 		wx.cloud.init({
 			env: config.cloud_env,
 			traceUser: true
-		});
+		})
+		api.login()
 	},
-	onShow: function() {},
+	onShow: function() {
+		console.log('App show')
+	},
 	onHide: function() {
-		console.log('App Hide');
+		console.log('App Hide')
 	}
 };
 </script>
 
-<style>
+<style lang="scss">
 /*每个页面公共css */
 @font-face {
   font-family: 'iconfont';  /* project id 1479363 */

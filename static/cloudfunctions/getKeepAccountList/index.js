@@ -12,7 +12,8 @@ exports.main = async(event,context)=>{
 			year: Number(event.keepYear),
 			month: Number(event.keepMonth) 
 		})
-		.limit(1000).get()
+		.orderBy('keepTimestamp','desc')
+		.limit(50).get()
 	}catch(e){
 		console.error(e)
 	}  

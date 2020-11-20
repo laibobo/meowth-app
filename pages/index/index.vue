@@ -15,6 +15,7 @@
 <script>
 const categorysData = require('@/public/data.json')
 import { getCurrentUser,addCategorys,registerUser } from '@/public/api.js'
+import { setSoundEffects } from '@/public/index.js'
 export default {
 	data() {
 		return {
@@ -35,6 +36,7 @@ export default {
 				console.error('查询是否授权失败！', err);
 			}
 		});
+		setSoundEffects('miao')
 	},
 	onShow(){
 		 wx.hideHomeButton()

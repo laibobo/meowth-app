@@ -30,6 +30,7 @@
 <script>
 const categorysData = require('@/public/data.json')
 import { getCurrentUserCategory,updateCategory } from '@/public/api.js'
+import { setSoundEffects } from '@/public/index.js'
 export default {
 	data() {
 		return {
@@ -51,25 +52,21 @@ export default {
 	},
 	methods: {
 		handleSelectIcon(iconCode) {
+			setSoundEffects('dilei')
 			this.activeValue = iconCode;
 		},
 		handleCategoryName(event) {
 			this.categoryName = event.detail.value.trim();
 		},
 		submit() {
+			setSoundEffects('click')
 			const categoryName = this.categoryName.trim();
 			if (categoryName == '') {
 				uni.showToast({
 					title: '请输入类别名称',
 					icon: 'none'
 				});
-				return;
-			}
-			if (categoryName.length > 4) {
-				uni.showToast({
-					title: '类别名称不能超过4个字符',
-					icon: 'none'
-				});
+				setSoundEffects('msg2')
 				return;
 			}
 			const type = Number(this.categoryType),icon = this.activeValue,name = this.categoryName

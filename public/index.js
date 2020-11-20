@@ -6,24 +6,6 @@ export function getElement(elname){
 			}).exec();
 	})
 }
-export function isAuthorize(){
-	if(!uni.getStorageSync('isAuthSetting')){
-		uni.showModal({
-			title:'提示',
-			content:'请先去授权登录',
-			showCancel:false,
-			success:function(res){
-				if (res.confirm) {
-				   uni.redirectTo({
-					url:'../index/index'
-				   })
-				}
-			}
-		})
-		return false;
-	}
-	return true
-}
 export function uploadImageFile({basePath}){
 	return new Promise((resolve,reject) => {
 		uni.chooseImage({
@@ -47,3 +29,14 @@ export function uploadImageFile({basePath}){
 		})
 	})
 }
+const config = require('@/public/config').default
+export function setSoundEffects(soundName,volume,loop=false){
+		const innerAudioContext = uni.createInnerAudioContext()
+		innerAudioContext.src = config.audio[soundName]
+		innerAudioContext.autoplay = true
+		innerAudioContext.loop = loop
+		innerAudioContext.volume = volume || 0.4
+		innerAudioContext.onEnded = ()=>{			
+			innerAudioContext.destroy()
+		}
+	}

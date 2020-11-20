@@ -23,6 +23,7 @@
 
 <script>
 import { addFeedBack } from '@/public/api.js'
+import { setSoundEffects } from '@/public/index.js';
 export default {
 	data() {
 		return {
@@ -47,11 +48,13 @@ export default {
 			this.type = this.typeRange[Number(detail.value)]
 		},
 		submit(){
+			setSoundEffects('click')
 			if(!this.type){
 				uni.showToast({
 					title: '请选择类型',
 					icon: 'none'
 				})
+				setSoundEffects('msg2')
 				return
 			}
 			if(!this.content){
@@ -59,6 +62,7 @@ export default {
 					title: '请输入描述',
 					icon: 'none'
 				})
+				setSoundEffects('msg2')
 				return
 			}
 			

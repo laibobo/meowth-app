@@ -58,7 +58,11 @@ export default {
 			this.$emit('close');
 		},
 		handleConfirmRemark() {
-			this.$emit('confirm', this.remark);
+			let value = this.remark
+			if(!value){
+				value = this.content
+			}
+			this.$emit('confirm',value);
 			this.handleCancelRemark();
 		},
 		handleInputRemark(e) {

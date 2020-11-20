@@ -19,7 +19,7 @@
 
 <script>
 import Tabs from '@/components/tabs/tabs.vue';
-import { getElement } from '@/public/index.js';
+import { getElement,setSoundEffects } from '@/public/index.js';
 import { getCurrentUserCategory, updateCategory } from '@/public/api.js'
 export default {
 	components: { Tabs },
@@ -70,6 +70,7 @@ export default {
 			,listName = ['expends','incomes'][type]
 			
 			this[`${typeArr[this.currentCategoryType]}CategoryList`].splice(index,1)
+			setSoundEffects('remove')
 			getCurrentUserCategory().then(res=>{
 				if(res.data.length > 0){
 					let data = {}
@@ -99,6 +100,7 @@ export default {
 			}
 		},
 		handleAddCategory() {
+			setSoundEffects('click')
 			uni.navigateTo({
 				url: '../icon-manage/index?categoryType=' + this.currentCategoryType
 			});
