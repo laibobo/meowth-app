@@ -4,51 +4,17 @@
 			"path": "pages/my/index"
 		},
 		{
-			"path": "pages/index/index"
-		},
-		{
-			"path": "pages/keep-accounts/index",
-			"style": {
-				"app-plus": {
-					"scrollIndicator": "none"
-				}
-			}
-		},
-		{
-			"path": "pages/keep-accounts/edit"
-		},
-		{
 			"path": "pages/my/account"
 		},
 		{
-			"path": "pages/keep-accounts/detail"
-		},
-		{
-			"path": "pages/icon-manage/index"
-		},
-		{
 			"path": "pages/category-config/index"
-		}, {
-			"path": "pages/invoice/index"
-		}, {
-			"path": "pages/invoice/ae"
-		}, {
-			"path": "pages/eportforms/yearbill"
-		}, {
-			"path": "pages/budget/index"
-		}, {
-			"path": "pages/rests/feedback"
-		}, {
-			"path": "pages/rests/reward"
-		}, {
-			"path": "pages/rests/index"
 		}
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "喵喵记账",
-		"navigationBarBackgroundColor": "#FFDB45",
-		"backgroundColor": "#FFDB45",
+		"navigationBarTitleText": "锦鲤记账",
+		"navigationBarBackgroundColor": "#F74026",
+		"backgroundColor": "#F74026",
 		"mp-alipay": {
 			"titleBarColor": "#3D2F22"
 		}
@@ -58,7 +24,7 @@
 		"selectedColor": "#443415",
 		"backgroundColor": "#FFFFFF",
 		"list": [{
-				"pagePath": "pages/keep-accounts/detail",
+				"pagePath": "pages/my/index",
 				"iconPath": "static/image/tabBar/detail.png",
 				"selectedIconPath": "static/image/tabBar/detail-act.png",
 				"text": "明细"

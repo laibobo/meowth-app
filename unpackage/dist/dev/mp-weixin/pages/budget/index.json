@@ -1,6 +1,0 @@
-{
-  "usingComponents": {
-    "budget": "/components/budget/budget",
-    "bobo-dialog": "/components/dialog/dialog"
-  }
-}

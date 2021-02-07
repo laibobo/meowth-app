@@ -22,6 +22,8 @@ $uni-color-error: #dd524d;
 
 /* 文字基本颜色 */
 $uni-text-color: #333; //基本色
+$uni-matter-text-color: #333331; 
+$uni-label-text-color:#A0A0A0; //标题颜色
 $uni-text-color-inverse: #fff; //反色
 $uni-text-color-grey: #999; //辅助灰色，如加载更多的提示信息
 $uni-text-color-placeholder: #808080;
@@ -76,64 +78,4 @@ $uni-color-paragraph: #3f536e; // 文章段落颜色
 $uni-font-size-paragraph: 30upx;
 
 /*主题 相关*/
-$uni-theme-bg-color: #FFDB45;
-$uni-theme-active-color: #66f9cf;
-$uni-theme-font-color: #fff;
-$uni-theme-icon-color: #FFDB45;
-$uni-theme-active-icon-color: #fff;
-$uni-theme-active-icon-bgcolor: #FED845;
-$uni-theme-tab-font-color: #3C3A29;
-$uni-theme-active-tab-font-color: #3C3A29;
-
-$uni-btn-hover-color:#F1F1F1;
-view.v-button {
-	background: #fff;
-	width: 750rpx;
-	height: 100rpx;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	position: fixed;
-	left: 0;
-	bottom: 0;
-	z-index: 10;
-	font-size: 32rpx;
-	border-top: 2rpx solid #eee;
-	background: $uni-theme-bg-color;
-	color: #fff;
-}
-.right-btn{
-	display: flex;
-	color: #C9C9C9;
-	font-size: 24rpx;
-	align-items: center;
-	>text{
-		margin-top: -5rpx;
-	}
-}
-.ybtn{
-	background-color: #FFDA44;
-	border-radius: 10rpx;
-	font-size: 24rpx;
-	&::after{
-		border: none;
-	}
-}
-.bottom-btn{
-	background: #fff;
-	width: 750rpx;
-	height: 100rpx;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	position: fixed;
-	left: 0;
-	bottom: 0;
-	z-index: 10;
-	font-size: 32rpx;
-	border-top: 2rpx solid #eee;
-	background: $uni-theme-bg-color;
-	color: #3d3d3d;
-	box-shadow: 1px 2px 5px #3d3d3d;
-	
-}
+$uni-theme-color:#F74026;

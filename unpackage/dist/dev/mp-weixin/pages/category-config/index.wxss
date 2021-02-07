@@ -25,68 +25,25 @@
 /* 透明度 */
 /* 文章场景相关 */
 /*主题 相关*/
-.tabs.data-v-0c6a3426 {
-  position: fixed;
-  background-color: #66f9cf;
-  width: 750rpx;
-  left: 0;
-  top: 0;
-  z-index: 10;
-}
-.category-col.data-v-0c6a3426 .segmented-control {
-  margin-bottom: 20rpx;
-}
-.category-col.data-v-0c6a3426 .segmented-control .segmented-control-item.active {
-    color: #66f9cf !important;
-}
-.category-col .add-category-btn.data-v-0c6a3426 {
+.category-col .category-scroll.data-v-e60bf5f2 {
   background: #fff;
-  width: 750rpx;
-  height: 100rpx;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-pack: center;
-  -webkit-justify-content: center;
-      -ms-flex-pack: center;
-          justify-content: center;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-      -ms-flex-align: center;
-          align-items: center;
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  z-index: 10;
-  font-size: 32rpx;
-  border-top: 2rpx solid #eee;
-  background: #66f9cf;
-  color: #fff;
+  box-sizing: border-box;
+  padding: 75rpx 0 100rpx;
 }
-.category-col .category-scroll.data-v-0c6a3426 {
-  background: #fff;
-  -webkit-box-sizing: border-box;
-          box-sizing: border-box;
-  padding: 80rpx 0 100rpx;
-}
-.category-col .category-scroll .category-item.data-v-0c6a3426 {
+.category-col .category-scroll .category-item.data-v-e60bf5f2 {
     padding: 20rpx 0;
     height: 100rpx;
-    -webkit-box-sizing: border-box;
-            box-sizing: border-box;
+    box-sizing: border-box;
     margin-left: 20px;
     display: -webkit-box;
     display: -webkit-flex;
-    display: -ms-flexbox;
     display: flex;
     -webkit-box-align: center;
     -webkit-align-items: center;
-        -ms-flex-align: center;
             align-items: center;
     border-top: 2rpx solid #eee;
 }
-.category-col .category-scroll .category-item .icon-col.data-v-0c6a3426 {
+.category-col .category-scroll .category-item .icon-col.data-v-e60bf5f2 {
       width: 60rpx;
       height: 60rpx;
       line-height: 60rpx;
@@ -96,7 +53,24 @@
       margin-left: 10rpx;
       margin-right: 20rpx;
 }
-.category-col .category-scroll .category-item .icon-col .icon.data-v-0c6a3426 {
+.category-col .category-scroll .category-item .icon-col .icon.data-v-e60bf5f2 {
         font-size: 35rpx;
+        color: #FED845;
+}
+.category-col .category-scroll .category-item .delete-btn.data-v-e60bf5f2 {
+      background-color: initial;
+}
+.category-col .category-scroll .category-item .delete-btn .icon.data-v-e60bf5f2 {
+        font-size: 50rpx;
+        color: red;
+}
+.tabs-col.data-v-e60bf5f2 {
+  position: fixed;
+  z-index: 10;
+}
+
+
+page{
+	background: #fff;
 }
 

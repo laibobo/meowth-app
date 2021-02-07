@@ -1,126 +1,45 @@
 <template>
-	<view>
-		<add-btn class="add-btn"></add-btn>
+	<view class="home">
 		<view class="header">
-			<view class="userinfo" data-url="./account" @click="navigateTo">
-				<image :src="photoUrl" :fade-show="false" mode="aspectFit"></image>
-				<text>{{ nickName }}</text>
-			</view>
-			<!-- 统计 -->
-			<view class="statistic">
-				<view>
-					<text>{{ sumDay }}</text>
-					<text>记账总天数</text>
-				</view>
-				<view>
-					<text>{{ sumLog }}</text>
-					<text>记账总笔数</text>
-				</view>
-			</view>
-		</view>
-		<!-- 账单 -->
-		<view class="month-bill" hover-class="hoverstatus" data-url="../eportforms/yearbill" @click="navigateTo">
-			<view class="title">
-				账单
-				<view class="icon iconfont">&#xe6ec;</view>
-			</view>
 			<view class="info">
-				<view class="month-s">
-					<text class="month">{{ getMonth }}</text>
-					<text class="unit">月</text>
+				<view class="head"></view>
+				<text>帅破川穹</text>
+			</view>
+			<!-- 记账统计 -->
+			<view class="statistics">
+				<view>
+					<text>1</text>
+					<view class="label">已连续打卡</view>
 				</view>
 				<view>
-					<label>收入</label>
-					<text>{{ monthBill.income | formatMoney }}</text>
+					<text>1</text>
+					<view class="label">记账总天数</view>
 				</view>
 				<view>
-					<label>支出</label>
-					<text>{{ monthBill.expenditure | formatMoney }}</text>
-				</view>
-				<view>
-					<label>结余</label>
-					<text>{{ monthBill.surplus | formatMoney }}</text>
+					<text>10</text>
+					<view class="label">记账总笔数</view>
 				</view>
 			</view>
 		</view>
-		<!-- 总预算 -->
-		<view class="budget-col" hover-class="hoverstatus" data-url="../budget/index" @click="navigateTo">
-			<view class="title">
-				{{ getMonth }}月总预算
-				<view>
-					<view v-if="getIsMonthBudget" class="right-btn">
-						<text>查看全部</text>
-						<view class="icon iconfont">&#xe6ec;</view>
-					</view>
-					<view v-else>
-						<button class="ybtn">+ 设置预算</button>
-					</view>
-				</view>
-			</view>
-			<view class="info">
-				<budget chartElementId="my_chart" />
-			</view>
-		</view>
-		<view class="tool">
-			<view class="t-item" data-url="../invoice/index" @click="navigateTo">
-				<view class="icon-col"><view class="icon iconfont">&#xe71a;</view></view>
-				<text>发票助手</text>
-			</view>
-			<button class="t-item share-btn" plain="true" open-type="share">
-				<view class="icon-col"><view class="icon iconfont">&#xe742;</view></view>
-				<text>推荐给好友</text>
-			</button>
-			<view class="t-item" data-url="../rests/reward" @click="navigateTo">
-				<view class="icon-col"><view class="icon iconfont">&#xe6e6;</view></view>
-				<text>打赏作者</text>
-			</view>
-			<view class="t-item" data-url="../rests/feedback" @click="navigateTo">
-				<view class="icon-col"><view class="icon iconfont">&#xe6e9;</view></view>
-				<text>建议或反馈</text>
-			</view>
-			<view class="t-item" data-url="../rests/index" @click="navigateTo">
-				<view class="icon-col"><view class="icon iconfont">&#xe6ea;</view></view>
-				<text>关于喵喵</text>
-			</view>
-			<image class="cartoon-img" :src="require('@/static/image/an.gif')" />
+		<view class="panels">
+			<koi-panel title="账单" />
 		</view>
 	</view>
 </template>
 
 <script>
 const app = getApp();
-import addBtn from '@/components/add-btn/add-btn.vue';
-import Budget from '@/components/budget/budget.vue';
-import RingChart from '@/components/ring-chart/ring-chart.vue';
+import KoiPanel from '@/components/koi-panel.vue'
 export default {
 	components: {
-		addBtn,
-		Budget,
-		RingChart
+		KoiPanel
 	},
 	data() {
-		const date = new Date()
 		return {
-			photoUrl: '',
-			nickName: '',
-			sumDay: '--',
-			sumLog: '--',
-			monthBill: {
-				income: '0.00',
-				expenditure: '0.00',
-				surplus: '0.00'
-			},
-			db: null,
-			year:date.getFullYear(),
-			month:date.getMonth() + 1
-		};
+		}
 	},
 	onLoad() {
 		const _self = this
-		app.globalData.wxDB = wx.cloud.database({
-			env: this.$conf.cloud_env
-		});
-		this.db = app.globalData.wxDB
 		wx.cloud
 		.callFunction({
 			name: 'login'
@@ -148,16 +67,8 @@ export default {
 		});
 	},
 	onShow() {
-		const userInfo = this.getUserInfo;
-		this.nickName = userInfo.nickName || '您好！请先登录';
-		this.photoUrl = userInfo.avatarUrl || require('@/static/image/photo.png');
-		this.getNowMonthKeepInfo();
-		this.getKeepAccountsInfo();
 	},
 	computed: {
-		getMonth() {
-			return this.month < 10?`0${this.month}`:this.month;
-		}
 	},
 	methods: {
 		//分享好友
@@ -169,302 +80,47 @@ export default {
 		},
 		//跳转页面
 		navigateTo(e) {
-			if(this.$authorize()){
-				const url = e.currentTarget.dataset.url
-				
-				uni.navigateTo({
-					url
-				});	
-			}
-		},
-		//当月总预算
-		getCurrentMonthBudget(expenditure) {
-			this.db.collection(this.$conf.database.Budget).where({
-				_openid: this.getOpenid,
-				year:this.year,
-				month:this.month,
-				type:0
-			}).get().then(({data,errMsg})=>{
-				if(errMsg.includes('ok') && data.length > 0){
-					this.$store.commit('SET_MONTHBUDGEMONEY',data[0]['money'])
-				}
-				this.$store.commit('SET_MONTHEXPENDMONEY',expenditure)
-				this.loadingBudgetMonthChart()
-			})
-		},
-		//记账统计
-		getKeepAccountsInfo() {
-			const $ = this.db.command.aggregate;
-			const _od = this.db.collection(this.$conf.database.AccountsRecord).aggregate()
-				.match({
-					_openid: this.getOpenid
-				})
-			//获取记账总天数
-			_od.group({
-				_id: '$keepDate'
-			})
-			.count('sumDay')
-			.end()
-			.then(res => {
-				if (res.list.length > 0) {
-					this.sumDay = res.list[0]['sumDay'];
-				}
-			});
-			//获取记账总笔数
-			_od.group({
-				_id: '$createDate'
-			}).count('sumLog')
-			.end()
-			.then(res => {
-				if (res.list.length > 0) {
-					this.sumLog = res.list[0]['sumLog'];
-				}
-			});
-		},
-		//当前月账单
-		getNowMonthKeepInfo() {
-			const $ = this.db.command.aggregate
-			this.db.collection(this.$conf.database.AccountsRecord).aggregate().match({
-				_openid:this.getOpenid,
-				keepYear:this.year,
-				keepMonth:this.month
-			}).group({
-				_id: '$categoryType',
-				 total: $.sum('$keepMoney')
-			}).end().then(({list,errMsg})=>{
-				if(errMsg.includes('ok') && list.length > 0){
-					let expenditure = 0,income = 0
-					for(let i=0;i<list.length;i++){
-						if(list[i]['_id'] === 0){
-							expenditure = list[i]['total']
-						}else{
-							income = list[i]['total']
-						}
-					}
-					this.monthBill.expenditure = expenditure
-					this.monthBill.income = income
-					this.monthBill.surplus = income - expenditure					
-					this.getCurrentMonthBudget(expenditure)
-				}else{
-					this.getCurrentMonthBudget(0)
-				}
-			})
-		},
-		//更新用户信息
-		updateUserInfo() {
-			this.db
-				.collection(this.$conf.database.User)
-				.where({
-					_openid: this.getOpenid
-				})
-				.get()
-				.then(userRes => {
-					let userInfo = this.getUserInfo
-					if (userRes.data.length > 0) {
-						const resData = userRes.data[0],data = {};
-						//判断用户是否上传头像、更改昵称，如没有则获取微信数据设置
-						data.avatarUrl = userInfo.avatarUrl;
-						if (!resData.isCustomNickName) {
-							data.nickName = userInfo.nickName;
-						}
-						data.weChat = userInfo.NickName;
-						data.province = userInfo.province;
-						data.city = userInfo.city;
-						data.gender = userInfo.gender
-						this.db
-						.collection(this.$conf.database.User)
-						.doc(resData._id)
-						.update({
-							data
-						})
-						.then(updateRes => {
-							this.getNewUserInfo();
-						})
-						.catch(err => {
-							this.showNetworkIsError()
-							console.error(err)
-						});
-					}
-				});
-		},
-		//获取用户信息（数据库数据）
-		getNewUserInfo() {
-			this.db
-				.collection(this.$conf.database.User)
-				.where({
-					_openid: this.getOpenid
-				})
-				.get()
-				.then(res => {
-					if (res.data.length > 0) {
-						uni.setStorageSync(this.$conf.storageKey.userInfo, res.data[0]);
-					}
-				})
-				.catch(err => {
-					this.showNetworkIsError()
-					console.error(err)
-				});
-		},
+		}
 	}
 };
 </script>
 <style lang="scss" scoped>
-@mixin panel-style {
-	background: #fff;
-	margin: 20rpx;
-	border-radius: 8rpx;
-	overflow: hidden;
-}
-@mixin title-style {
-	.title {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		.icon {
-			color: #b3b3b3;
-			text-align: right;
-			width: 30rpx;
-		}
-	}
-}
-.cartoon-img{
-	width: 240rpx;
-	height: 100px;
-	position: absolute;
-	right: 10rpx;
-	bottom: 0;
-}
-.hoverstatus {
-	background: #f5f5f5 !important;
-}
-.add-btn {
-	position: fixed;
-	right: 40rpx;
-	bottom: 80rpx;
-	z-index: 10;
-}
-.budget-col {
-	@include panel-style;
-	padding: 20rpx 40rpx 50rpx;
-	font-size: 32rpx;
-	@include title-style;
-	height: 185px;
-	box-sizing: border-box;
-}
-.month-bill {
-	@include panel-style;
-	margin-top: -80rpx;
-	padding: 20rpx 40rpx;
-	font-size: 32rpx;
-	@include title-style;
-	.info {
-		display: flex;
-		color: #3f3f3f;
-		margin-top: 30rpx;
-		align-items: flex-end;
-		label {
-			color: #8f8f8f;
-			font-size: 26rpx;
-		}
-		view {
-			display: flex;
-			flex-direction: column;
-			line-height: 50rpx;
-			width: 163.3rpx;
-			&.month-s {
+	.home{
+		.header{
+			background-color: $uni-theme-color;
+			border-radius: 0 0 10% 10%;
+			padding: 10upx 40upx 80upx;
+			.info{
 				display: flex;
-				flex-direction: row;
-				height: 50rpx;
-				width: 105rpx;
-				padding-right: 20rpx;
-				margin-right: 40rpx;
-				margin-bottom: 10rpx;
-				box-sizing: border-box;
-				border-right: 2rpx solid #9b9b9b;
-				.month {
-					font-size: 50rpx;
-					font-weight: 400;
+				align-items: center;
+				.head{
+					border: 1px solid #fff;
+					border-radius: 50%;
+					height: 120upx;
+					width: 120upx;
+					margin-right: 10upx;
 				}
-				.unit {
-					font-size: 26rpx;
-					margin-top: 10rpx;
+			}
+			.statistics{
+				width: 680upx;
+				margin: 60upx auto 0;
+				display: flex;
+				>view{
+					flex: 1;
+					text-align: center;
+					text{
+						font-size: 40upx;
+						font-weight: 600;
+					}
+					.label{
+						font-size: 25upx;
+					}
 				}
 			}
 		}
-	}
-}
-.tool {
-	@include panel-style;
-	padding: 40rpx 5rpx;
-	display: flex;
-	flex-wrap: wrap;
-	position: relative;
-	.t-item {
-		width: 150rpx;
-		height: auto;
-		text-align: center;
-		margin: 0 5rpx;
-		.icon-col {
-			background: #f8f8f8;
-			width: 100rpx;
-			height: 100rpx;
-			border-radius: 50rpx;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			margin: 0 auto;
-			.iconfont {
-				color: #000;
-			}
-		}
-		text {
-			font-size: 24rpx;
-			color: #333;
-			white-space:nowrap;
+		.panels{
+			padding:0 30upx;
+			margin-top: -46upx;
 		}
 	}
-}
-.header {
-	background: #ffdb45;
-	border-radius: 0 0 40rpx 40rpx;
-
-	.userinfo {
-		margin: 0 40rpx;
-		padding: 20rpx 0 0;
-		box-sizing: border-box;
-		color: #333;
-		image {
-			width: 100rpx;
-			height: 100rpx;
-			border-radius: 50rpx;
-			vertical-align: middle;
-			margin-right: 40rpx;
-		}
-	}
-	.statistic {
-		display: flex;
-		padding: 20rpx 0 100rpx;
-		> view {
-			flex: 1;
-			text-align: center;
-			> text {
-				display: block;
-				font-size: 24rpx;
-				&:first-child {
-					color: #333235;
-					font-size: 36rpx;
-					font-weight: 600;
-				}
-				&:last-child {
-					color: #565656;
-				}
-			}
-		}
-	}
-}
-.share-btn{
-	line-height: 35rpx;
-	border: none;
-	padding: 0;
-}
 </style>

@@ -25,46 +25,71 @@
 /* 透明度 */
 /* 文章场景相关 */
 /*主题 相关*/
-.info-list > view.data-v-4cd52970 {
+.info-list > view.data-v-38c145f2 {
   position: relative;
   width: 750rpx;
-  height: 100rpx;
-  -webkit-box-sizing: border-box;
-          box-sizing: border-box;
+  height: 110rpx;
+  box-sizing: border-box;
   display: -webkit-box;
   display: -webkit-flex;
-  display: -ms-flexbox;
   display: flex;
   -webkit-box-pack: justify;
   -webkit-justify-content: space-between;
-      -ms-flex-pack: justify;
           justify-content: space-between;
   -webkit-box-align: center;
   -webkit-align-items: center;
-      -ms-flex-align: center;
           align-items: center;
-  padding: 0 30rpx;
   font-size: 32rpx;
+  color: #333;
+  padding: 0 30rpx;
 }
-.info-list > view.data-v-4cd52970:before {
+.info-list > view label.data-v-38c145f2 {
+    color: #000;
+}
+.info-list > view .v_s.data-v-38c145f2 {
+    margin-right: 40rpx;
+}
+.info-list > view .sex-picker.data-v-38c145f2 {
+    width: 500rpx;
+}
+.info-list > view .sex-picker view.data-v-38c145f2 {
+      text-align: right;
+}
+.info-list > view .iconfont.data-v-38c145f2 {
+    color: #333;
+    margin-right: -10rpx;
+    position: absolute;
+    right: 30rpx;
+}
+.info-list > view.data-v-38c145f2:before {
     content: '';
     position: absolute;
-    left: 0;
+    left: 25rpx;
     bottom: -1rpx;
-    width: 1500rpx;
-    border-bottom: 1px solid #DCDCDC;
+    width: 1400rpx;
+    border-bottom: 1px solid #dcdcdc;
     -webkit-transform-origin: 0 0;
-        -ms-transform-origin: 0 0;
             transform-origin: 0 0;
     -webkit-transform: scale(0.5, 0.5);
-        -ms-transform: scale(0.5, 0.5);
             transform: scale(0.5, 0.5);
-    -webkit-box-sizing: border-box;
     box-sizing: border-box;
 }
-.info-list > view .header image.data-v-4cd52970 {
+.info-list > view .header image.data-v-38c145f2 {
     width: 70rpx;
     height: 70rpx;
     border-radius: 35rpx;
+}
+.info-list .nickname-input.data-v-38c145f2 {
+  text-align: right;
+  padding-right: 30rpx;
+}
+.nicename-dialog input.data-v-38c145f2 {
+  border-bottom: 2rpx solid #C0C0C0;
+  font-size: 28rpx;
+  padding: 6rpx 0;
+  color: #565656;
+}
+.nicename-dialog input.data-v-38c145f2:focus {
+    border-bottom-color: #ccc;
 }
 

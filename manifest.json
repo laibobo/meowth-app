@@ -1,5 +1,5 @@
 {
-    "name" : "喵喵记账",
+    "name" : "锦鲤记账",
     "appid" : "",
     "description" : "",
     "versionName" : "1.0.0",
@@ -56,12 +56,12 @@
     "quickapp" : {},
     /* 小程序特有相关 */
     "mp-weixin" : {
-        "appid" : "wx6a316c5ee139bdad",
+        "appid" : "wx15bdc23497a855d7",
         "cloudfunctionRoot" : "static/cloudfunctions/",
         "setting" : {
             "urlCheck" : true,
             "es6" : true,
-            "minified" : true,
+            "minified" : false,
             "postcss" : true
         },
         "usingComponents" : true,

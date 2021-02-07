@@ -25,232 +25,48 @@
 /* 透明度 */
 /* 文章场景相关 */
 /*主题 相关*/
-view.v-button.data-v-59632eb4 {
-  background: #fff;
-  width: 750rpx;
-  height: 100rpx;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: flex;
-  -webkit-box-pack: center;
-  -webkit-justify-content: center;
-          justify-content: center;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-          align-items: center;
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  z-index: 10;
-  font-size: 32rpx;
-  border-top: 2rpx solid #eee;
-  background: #FFDB45;
-  color: #fff;
+.home .header.data-v-75f1e9ac {
+  background-color: #F74026;
+  border-radius: 0 0 10% 10%;
+  padding: 10rpx 40rpx 80rpx;
 }
-.right-btn.data-v-59632eb4 {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: flex;
-  color: #C9C9C9;
-  font-size: 24rpx;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-          align-items: center;
-}
-.right-btn > text.data-v-59632eb4 {
-    margin-top: -5rpx;
-}
-.ybtn.data-v-59632eb4 {
-  background-color: #FFDA44;
-  border-radius: 10rpx;
-  font-size: 24rpx;
-}
-.ybtn.data-v-59632eb4::after {
-    border: none;
-}
-.hoverstatus.data-v-59632eb4 {
-  background: #f5f5f5 !important;
-}
-.add-btn.data-v-59632eb4 {
-  position: fixed;
-  right: 40rpx;
-  bottom: 80rpx;
-  z-index: 10;
-}
-.budget-col.data-v-59632eb4 {
-  background: #fff;
-  margin: 20rpx;
-  border-radius: 8rpx;
-  overflow: hidden;
-  padding: 20rpx 40rpx 50rpx;
-  font-size: 32rpx;
-}
-.budget-col .title.data-v-59632eb4 {
+.home .header .info.data-v-75f1e9ac {
     display: -webkit-box;
     display: -webkit-flex;
     display: flex;
-    -webkit-box-pack: justify;
-    -webkit-justify-content: space-between;
-            justify-content: space-between;
     -webkit-box-align: center;
     -webkit-align-items: center;
             align-items: center;
 }
-.budget-col .title .icon.data-v-59632eb4 {
-      color: #b3b3b3;
-      text-align: right;
-      width: 30rpx;
+.home .header .info .head.data-v-75f1e9ac {
+      border: 1px solid #fff;
+      border-radius: 50%;
+      height: 120rpx;
+      width: 120rpx;
+      margin-right: 10rpx;
 }
-.budget-col .info.data-v-59632eb4 {
-    height: 200rpx;
-}
-.month-bill.data-v-59632eb4 {
-  background: #fff;
-  margin: 20rpx;
-  border-radius: 8rpx;
-  overflow: hidden;
-  margin-top: -80rpx;
-  padding: 20rpx 40rpx;
-  font-size: 32rpx;
-}
-.month-bill .title.data-v-59632eb4 {
+.home .header .statistics.data-v-75f1e9ac {
+    width: 680rpx;
+    margin: 60rpx auto 0;
     display: -webkit-box;
     display: -webkit-flex;
     display: flex;
-    -webkit-box-pack: justify;
-    -webkit-justify-content: space-between;
-            justify-content: space-between;
-    -webkit-box-align: center;
-    -webkit-align-items: center;
-            align-items: center;
 }
-.month-bill .title .icon.data-v-59632eb4 {
-      color: #b3b3b3;
-      text-align: right;
-      width: 30rpx;
-}
-.month-bill .info.data-v-59632eb4 {
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: flex;
-    color: #3f3f3f;
-    margin-top: 30rpx;
-    -webkit-box-align: end;
-    -webkit-align-items: flex-end;
-            align-items: flex-end;
-}
-.month-bill .info label.data-v-59632eb4 {
-      color: #8f8f8f;
-      font-size: 26rpx;
-}
-.month-bill .info view.data-v-59632eb4 {
-      display: -webkit-box;
-      display: -webkit-flex;
-      display: flex;
-      -webkit-box-orient: vertical;
-      -webkit-box-direction: normal;
-      -webkit-flex-direction: column;
-              flex-direction: column;
-      line-height: 50rpx;
-      width: 163.3rpx;
-}
-.month-bill .info view.month-s.data-v-59632eb4 {
-        display: -webkit-box;
-        display: -webkit-flex;
-        display: flex;
-        -webkit-box-orient: horizontal;
-        -webkit-box-direction: normal;
-        -webkit-flex-direction: row;
-                flex-direction: row;
-        height: 50rpx;
-        width: 105rpx;
-        padding-right: 20rpx;
-        margin-right: 40rpx;
-        margin-bottom: 10rpx;
-        box-sizing: border-box;
-        border-right: 2rpx solid #9b9b9b;
-}
-.month-bill .info view.month-s .month.data-v-59632eb4 {
-          font-size: 50rpx;
-          font-weight: 400;
-}
-.month-bill .info view.month-s .unit.data-v-59632eb4 {
-          font-size: 26rpx;
-          margin-top: 10rpx;
-}
-.tool.data-v-59632eb4 {
-  background: #fff;
-  margin: 20rpx;
-  border-radius: 8rpx;
-  overflow: hidden;
-  padding: 40rpx;
-}
-.tool .t-item.data-v-59632eb4 {
-    width: 100rpx;
-    height: auto;
-    text-align: center;
-}
-.tool .t-item .icon-col.data-v-59632eb4 {
-      background: #f8f8f8;
-      width: 100rpx;
-      height: 100rpx;
-      border-radius: 50rpx;
-      display: -webkit-box;
-      display: -webkit-flex;
-      display: flex;
-      -webkit-box-align: center;
-      -webkit-align-items: center;
-              align-items: center;
-      -webkit-box-pack: center;
-      -webkit-justify-content: center;
-              justify-content: center;
-}
-.tool .t-item .icon-col .iconfont.data-v-59632eb4 {
-        color: #000;
-}
-.tool .t-item text.data-v-59632eb4 {
-      font-size: 24rpx;
-      color: #333;
-}
-.header.data-v-59632eb4 {
-  background: #ffdb45;
-  border-radius: 0 0 40rpx 40rpx;
-}
-.header .userinfo.data-v-59632eb4 {
-    margin: 0 40rpx;
-    padding: 20rpx 0 0;
-    box-sizing: border-box;
-    color: #333;
-}
-.header .userinfo image.data-v-59632eb4 {
-      width: 100rpx;
-      height: 100rpx;
-      border-radius: 50rpx;
-      vertical-align: middle;
-      margin-right: 40rpx;
-}
-.header .statistic.data-v-59632eb4 {
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: flex;
-    padding: 20rpx 0 100rpx;
-}
-.header .statistic > view.data-v-59632eb4 {
+.home .header .statistics > view.data-v-75f1e9ac {
       -webkit-box-flex: 1;
       -webkit-flex: 1;
               flex: 1;
       text-align: center;
 }
-.header .statistic > view > text.data-v-59632eb4 {
-        display: block;
-        font-size: 24rpx;
+.home .header .statistics > view text.data-v-75f1e9ac {
+        font-size: 40rpx;
+        font-weight: 600;
 }
-.header .statistic > view > text.data-v-59632eb4:first-child {
-          color: #333235;
-          font-size: 36rpx;
-          font-weight: 600;
+.home .header .statistics > view .label.data-v-75f1e9ac {
+        font-size: 25rpx;
 }
-.header .statistic > view > text.data-v-59632eb4:last-child {
-          color: #565656;
+.home .panels.data-v-75f1e9ac {
+  padding: 0 30rpx;
+  margin-top: -46rpx;
 }
 

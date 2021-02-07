@@ -38,5 +38,6 @@ export default {
 page {
 	font-family: 'Helvetica Neue', Helvetica, sans-serif;
 	background: #f1f1f1;
+	color: #fff;
 }
 </style>
